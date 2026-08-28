@@ -1,0 +1,6 @@
+.env
+*.env
+__pycache__/
+*.pyc
+experiment_log.json
+research_cache.json

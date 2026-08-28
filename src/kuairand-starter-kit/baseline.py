@@ -72,8 +72,9 @@ class FM:
     def predict(self, X, bs=200_000):
         return np.concatenate([self.logits(X[i:i + bs])[0] for i in range(0, len(X), bs)])
 
-def run_fm(splits, k=16, lr=0.001, epochs=40, bs=8192, patience=4, seed=0, verbose=True):
-    enc, dim = encode(splits)
+def run_fm(splits, k=16, lr=0.001, epochs=40, bs=8192, patience=4, seed=0, verbose=True, enc=None, dim=None):
+    if enc is None or dim is None:
+        enc, dim = encode(splits)
     Xtr, ytr, _ = enc['train']; Xva, yva, uva = enc['valid']; Xte, yte, ute = enc['test']
     m = FM(dim, k=k, lr=lr, seed=seed)
     rng = np.random.default_rng(seed)

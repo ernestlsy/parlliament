@@ -1,0 +1,10 @@
+{
+  "text": "Augment the additive-plus-interaction model with leakage-safe sequential user-history features: maintain exponentially decayed counts of prior long_view-positive and long_view-negative impressions for each user, compute each impression\u2019s features using only events strictly earlier than its timestamp, and add separate learned coefficients for the two counts while leaving the pointwise long_view loss, data split, optimizer controls, checkpoint selection, and within-user ranking evaluation unchanged. Test whether recent behavioral state improves GAUC and nDCG@5 beyond static user-video affinity.",
+  "parent_experiment_id": 1,
+  "scores": {
+    "interestingness": 9,
+    "novelty": 9,
+    "feasibility": 7
+  },
+  "rationale": "This replaces the rejected auxiliary-label design with a structurally different behavioral-history feature that directly addresses the weak translation from global AUC to within-user ranking. Decayed positive and negative histories can capture changing user intent and complement the static user-video interaction learned by experiment 1. Strictly time-ordered construction prevents validation and test leakage, and the bounded two-feature representation avoids the multi-target trainer and configuration-contract failures seen in prior auxiliary-head attempts. The main feasibility risk is timestamp-ordered feature construction, but it is more contained and interpretable than introducing another supervised head; the official long_view objective and evaluation remain unchanged."
+}

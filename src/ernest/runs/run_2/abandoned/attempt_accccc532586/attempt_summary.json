@@ -1,0 +1,53 @@
+{
+  "attempt_id": "accccc532586",
+  "status": "abandoned",
+  "generation": 3,
+  "mode": "draft",
+  "parent_experiment_id": 1,
+  "hypothesis_text": "Extend experiment 1's additive-plus-16-dimensional user-video interaction model with an auxiliary censored watch-time objective: predict watch_ratio using a shared linear head, train with Huber loss for ratios below 1.0 and a one-sided lower-bound loss for completed views at ratio 1.0, weighted at 0.1; keep long_view as the sole scored output, preserve the split, optimizer, checkpoint proxy, and within-user ranking evaluation, and construct the auxiliary target only from impression-time watch fields. Test whether watch-depth supervision improves the fixed primary metric, GAUC, and nDCG@5 beyond static affinity while reducing the current high-recall/low-precision classification tradeoff.",
+  "active_sub_agents": [
+    "feature_engineer",
+    "model_designer",
+    "trainer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": "initial_patch:feature_engineer",
+  "failure_reason": "stage=initial_patch:feature_engineer; agent_or_guardrail_failure: RuntimeError: feature_engineer failed to provide an applicable patch after three responses: ValueError: invalid hunk line: '@@\\n'",
+  "failure_reports": [
+    {
+      "kind": "contract_fulfillment",
+      "message": "feature_engineer patch response was invalid: ValueError: patch context does not match reference file",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 116, in apply_unified_diff\n    raise ValueError(\"patch context does not match reference file\")\nValueError: patch context does not match reference file\n",
+      "responsible_agents": [
+        "feature_engineer"
+      ],
+      "attempt": 1,
+      "return_code": null
+    },
+    {
+      "kind": "contract_fulfillment",
+      "message": "feature_engineer patch response was invalid: ValueError: patch context does not match reference file",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 116, in apply_unified_diff\n    raise ValueError(\"patch context does not match reference file\")\nValueError: patch context does not match reference file\n",
+      "responsible_agents": [
+        "feature_engineer"
+      ],
+      "attempt": 2,
+      "return_code": null
+    },
+    {
+      "kind": "contract_fulfillment",
+      "message": "feature_engineer patch response was invalid: ValueError: invalid hunk line: '@@\\n'",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 112, in apply_unified_diff\n    raise ValueError(f\"invalid hunk line: {line[:100]!r}\")\nValueError: invalid hunk line: '@@\\n'\n",
+      "responsible_agents": [
+        "feature_engineer"
+      ],
+      "attempt": 3,
+      "return_code": null
+    }
+  ],
+  "elapsed_seconds": 72.17052289300045,
+  "available_log_files": [],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 112, in apply_unified_diff\n    raise ValueError(f\"invalid hunk line: {line[:100]!r}\")\nValueError: invalid hunk line: '@@\\n'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 233, in _run_hypothesis\n    request_and_apply_patch(agent, phase=failure_stage)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 215, in request_and_apply_patch\n    raise RuntimeError(\nRuntimeError: feature_engineer failed to provide an applicable patch after three responses: ValueError: invalid hunk line: '@@\\n'\n"
+}

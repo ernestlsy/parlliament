@@ -1,0 +1,10 @@
+{
+  "text": "Add a compact factorization-machine interaction term between user and video embeddings, trained with the existing pointwise loss and unchanged optimizer controls; compare against the additive logits to test whether user-video compatibility captures ranking signal absent from independent ID effects.",
+  "parent_experiment_id": 0,
+  "scores": {
+    "interestingness": 8,
+    "novelty": 8,
+    "feasibility": 8
+  },
+  "rationale": "User-video interactions are a concrete extension of the scaffold that can model preference specificity while remaining computationally bounded. Accept only an improvement in validation primary, using GAUC and nDCG@5 to distinguish broad ordering from top-five gains. Diagnose thresholded accuracy, balanced accuracy, precision, recall, specificity, F1, and Matthews correlation alongside global AUC, average precision, Precision@5, MAP@5, MRR@5, Recall@5, HitRate@5, positive rate, score mean, score standard deviation, minimum, and maximum."
+}

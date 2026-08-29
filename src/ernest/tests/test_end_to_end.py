@@ -52,7 +52,7 @@ class EndToEndTests(unittest.TestCase):
             contract = {
                 "data_output": {"splits": ["train", "valid", "test"]},
                 "config_keys": [
-                    "seed", "embedding_dim", "learning_rate", "l2", "batch_size",
+                    "seed", "learning_rate", "l2", "batch_size",
                     "max_epochs", "patience", "split",
                 ],
                 "model_input": {"features": "int32[N,F]"},
@@ -72,7 +72,7 @@ class EndToEndTests(unittest.TestCase):
             }
             llm = ScriptedLLMClient([
                 {"hypotheses": [{
-                    "text": "Document the FM seed without changing its behavior",
+                    "text": "Document the neutral seed without changing its behavior",
                     "parent_experiment_id": 0,
                     "scores": {"interestingness": 2, "novelty": 2, "feasibility": 10},
                     "rationale": "Pipeline smoke test",
@@ -81,8 +81,14 @@ class EndToEndTests(unittest.TestCase):
                 {"active_agents": ["model_designer"], "reasoning": "model-only", "contract": contract},
                 {"patches": {"model.py": (
                     "--- model.py\n+++ model.py\n@@ -1,1 +1,1 @@\n"
-                    "-\"\"\"Official-style NumPy Factorization Machine seed model.\"\"\"\n"
-                    "+\"\"\"Official-style NumPy Factorization Machine seed model (documented).\"\"\"\n"
+                    "-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n"
+                    "+\"\"\"Fresh-start additive ID model with no interaction or inherited architecture.\"\"\"\n"
+                    "BROKEN PATCH TRAILER\n"
+                )}},
+                {"patches": {"model.py": (
+                    "--- model.py\n+++ model.py\n@@ -1,1 +1,1 @@\n"
+                    "-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n"
+                    "+\"\"\"Fresh-start additive ID model with no interaction or inherited architecture.\"\"\"\n"
                 )}},
             ])
             config = SystemConfig(
@@ -96,6 +102,11 @@ class EndToEndTests(unittest.TestCase):
                     metrics = {
                         "GAUC": 0.7, "nDCG@5": 0.6, "primary": 0.65,
                         "users": 2, "rows": 4,
+                        "classification": {
+                            "accuracy": 0.75, "precision": 2 / 3,
+                            "recall": 1.0, "f1": 0.8,
+                        },
+                        "ranking_diagnostics": {"MAP@5": 0.7},
                     }
                     (sandbox / "metrics.json").write_text(json.dumps(metrics), encoding="utf-8")
                     (sandbox / "predictions_valid.npz").write_bytes(b"mock artifact")
@@ -108,11 +119,22 @@ class EndToEndTests(unittest.TestCase):
             experiment = config.run_dir / "experiment_1"
             self.assertTrue((experiment / "metrics.json").is_file())
             self.assertTrue((experiment / "predictions_valid.npz").is_file())
-            self.assertEqual(len(llm.calls), 4)
+            self.assertEqual(len(llm.calls), 5)
             self.assertTrue(llm.calls[0]["payload"]["research_knowledge_base"])
+            self.assertIn("classification", llm.calls[0]["payload"]["metric_catalog"])
+            self.assertEqual(llm.calls[0]["payload"]["scored_metric_history"], [])
+            seed_record = llm.calls[0]["payload"]["full_archive"][0]
+            self.assertEqual(seed_record["status"], "seed")
+            self.assertNotIn("primary", seed_record["metrics"])
             journal_record = overseer.journal.scored()[0]
             self.assertIn("model.py", journal_record["code_diff"])
             self.assertNotIn("config.json", journal_record["code_diff"])
+            self.assertEqual(journal_record["metrics"]["classification"]["f1"], 0.8)
+            patch_history = json.loads((experiment / "patch_history.json").read_text(encoding="utf-8"))
+            self.assertEqual(len(patch_history), 2)
+            self.assertTrue((experiment / "llm_events.jsonl").is_file())
+            self.assertTrue((experiment / "attempt_summary.json").is_file())
+            self.assertFalse((experiment / "failure.log").exists())
 
 
 if __name__ == "__main__":

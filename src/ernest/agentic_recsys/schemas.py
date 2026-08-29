@@ -143,9 +143,10 @@ class JournalRecord:
     code_diff: Dict[str, str]
     config_diff: str
     active_sub_agents: List[str]
-    metrics: Dict[str, float]
+    metrics: Dict[str, Any]
     status: str
     failure_reason: Optional[str]
+    failure_stage: Optional[str]
     consultant_rounds: int
     sandbox: str
     created_at: str
@@ -158,7 +159,7 @@ class JournalRecord:
 class ExperimentResult:
     status: Status
     sandbox: str
-    metrics: Dict[str, float] = field(default_factory=dict)
+    metrics: Dict[str, Any] = field(default_factory=dict)
     code_diff: Dict[str, str] = field(default_factory=dict)
     failure_reason: Optional[str] = None
     active_agents: List[str] = field(default_factory=list)

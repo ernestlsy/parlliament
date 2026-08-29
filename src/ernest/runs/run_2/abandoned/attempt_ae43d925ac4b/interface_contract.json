@@ -1,0 +1,46 @@
+{
+  "data_output": {
+    "description": "Encoded train and validation splits must preserve canonical row order and provide features with user and item indices, long_view labels, user_ids, and observed watch-time metadata. Validation ground truth is not exposed to the trainer beyond labels needed for training-only early stopping; the fixed evaluator exclusively loads ground truth for final scoring. The fixed command must write predictions_valid.npz with exactly two arrays: row_ids=np.arange(number_of_validation_rows,dtype=int64) and scores, a one-dimensional finite float array aligned to validation input order."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split",
+    "watch_time_loss_weight"
+  ],
+  "model_input": {
+    "description": "Model receives encoded user/item features plus long_view labels and, for positive long_view impressions only, observed completion-censored watch time transformed as log1p. It must retain the existing additive user/item effects and low-rank interaction, add an auxiliary watch-time prediction head or shared representation, optimize binary long_view loss plus watch_time_loss_weight*mean(max(0, observed_log_watch_time-predicted_log_watch_time)) over eligible positive rows, assign zero auxiliary target and zero auxiliary gradient to non-long-view rows, and expose predict(features) returning only the long_view logits as a one-dimensional array in input order."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

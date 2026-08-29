@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "data.py must retain source order within every split and return encoded feature matrices with one row per source event, labels, user_ids, timestamps, and canonical validation row_ids. Features must include user_id, video_id, day-of-week, day-of-period, and deterministic recency-since-previous-event bins. Training recency may use only earlier training events. Validation recency may use training events plus validation events strictly earlier than the current target timestamp; same-timestamp or later events are forbidden. Unknown categorical values use reserved indices. No ground-truth data is loaded by the data module beyond labels needed for training."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "model.py receives a two-dimensional integer feature-index matrix whose rows remain in canonical source order. It must retain additive logits equal to bias plus the sum of learned weights for each feature index, use the existing pointwise objective, and return one finite score per input row. train.py must invoke the fixed training interface and write predictions_valid.npz with exactly two arrays: row_ids, containing canonical validation row identifiers in validation order, and scores, containing aligned predictions with identical length."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

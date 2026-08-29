@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "data.py remains unchanged and supplies encoded features as an integer array of shape (n, 2), containing offset user and video IDs, plus labels and user IDs for training and early stopping. The model must not alter validation row order or require evaluator ground truth."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "model.py must accept the existing dimension, learning_rate, and l2 constructor arguments and implement logits(features), step(features, labels), predict(features, batch_size), state(), and load_state(state). Compute additive user/video effects plus a compact factorization-machine interaction between the two fields, using bounded embeddings and the existing pointwise logistic loss with unchanged Adam-style optimizer controls. Predictions must be a finite one-dimensional array of length n, deterministic for a fixed seed and training sequence, and compatible with train.py's exact np.savez output contract."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

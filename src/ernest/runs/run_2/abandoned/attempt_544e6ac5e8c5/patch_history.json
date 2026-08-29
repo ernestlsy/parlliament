@@ -1,0 +1,29 @@
+[
+  {
+    "phase": "initial_patch:trainer",
+    "agent": "trainer",
+    "patch_attempt": 1,
+    "patches": {
+      "train.py": "--- train.py\n+++ train.py\n@@ -29,6 +29,22 @@\n     return numerator / denominator if denominator else 0.5\n \n \n+def hard_negative_subset(user_ids, labels, scores):\n+    \"\"\"Keep every positive and the three highest-scoring negatives per user.\"\"\"\n+    grouped = {}\n+    for index, (user, label) in enumerate(zip(user_ids, labels)):\n+        bucket = grouped.setdefault(str(user), [[], []])\n+        bucket[0 if int(label) else 1].append(index)\n+    selected = []\n+    for positives, negatives in grouped.values():\n+        selected.extend(positives)\n+        negatives.sort(key=lambda index: (-float(scores[index]), index))\n+        selected.extend(negatives[:3])\n+    return np.asarray(selected, dtype=np.int64)\n+\n+\n def main():\n@@ -45,7 +61,7 @@\n     splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n     encoded, dimension = encode(splits)\n-    train_features, train_labels, _ = encoded[\"train\"]\n+    train_features, train_labels, train_users = encoded[\"train\"]\n     valid_features, valid_labels, valid_users = encoded[config[\"split\"]]\n@@ -64,7 +80,9 @@\n     best_score, best_state, stale = -1.0, None, 0\n     for epoch in range(1, config[\"max_epochs\"] + 1):\n-        order = rng.permutation(len(train_labels))\n+        training_scores = model.predict(train_features)\n+        subset = hard_negative_subset(train_users, train_labels, training_scores)\n+        order = subset[rng.permutation(len(subset))]\n         losses = []\n         for index in range(0, len(order), config[\"batch_size\"]):\n             batch = order[index:index + config[\"batch_size\"]]\n",
+      "config.json": ""
+    }
+  },
+  {
+    "phase": "initial_patch:trainer",
+    "agent": "trainer",
+    "patch_attempt": 2,
+    "patches": {
+      "train.py": "--- train.py\n+++ train.py\n@@ -34,6 +34,25 @@\n         denominator += positives\n     return numerator / denominator if denominator else 0.5\n \n \n+def hard_negative_indices(user_ids, labels, scores, max_negatives=3):\n+    grouped = {}\n+    for index, (user, label, score) in enumerate(zip(user_ids, labels, scores)):\n+        grouped.setdefault(str(user), []).append((index, int(label), float(score)))\n+    selected = []\n+    for rows in grouped.values():\n+        selected.extend(index for index, label, _ in rows if label)\n+        negatives = [(index, score) for index, label, score in rows if not label]\n+        negatives.sort(key=lambda item: item[1], reverse=True)\n+        selected.extend(index for index, _ in negatives[:max_negatives])\n+    return np.asarray(selected, dtype=np.int64)\n+\n+\n def main():\n@@ -52,7 +71,7 @@\n     splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n     encoded, dimension = encode(splits)\n-    train_features, train_labels, _ = encoded[\"train\"]\n+    train_features, train_labels, train_users = encoded[\"train\"]\n     valid_features, valid_labels, valid_users = encoded[config[\"split\"]]\n@@ -76,8 +95,11 @@\n     best_score, best_state, stale = -1.0, None, 0\n     for epoch in range(1, config[\"max_epochs\"] + 1):\n-        order = rng.permutation(len(train_labels))\n+        training_scores = model.predict(train_features)\n+        retained = hard_negative_indices(train_users, train_labels, training_scores)\n+        order = retained[rng.permutation(len(retained))]\n         losses = []\n         for index in range(0, len(order), config[\"batch_size\"]):\n             batch = order[index:index + config[\"batch_size\"]]\n",
+      "config.json": "--- config.json\n+++ config.json\n@@ -6,3 +6,4 @@\n   \"max_epochs\": 10,\n   \"patience\": 3,\n   \"split\": \"valid\"\n }\n+"
+    }
+  },
+  {
+    "phase": "initial_patch:trainer",
+    "agent": "trainer",
+    "patch_attempt": 3,
+    "patches": {
+      "train.py": "--- train.py\n+++ train.py\n@@ -31,6 +31,22 @@\n         denominator += positives\n     return numerator / denominator if denominator else 0.5\n \n \n+def hard_negative_subset(user_ids, labels, scores):\n+    \"\"\"Keep every positive and the three highest-scoring negatives per user.\"\"\"\n+    grouped = {}\n+    for index, user in enumerate(user_ids):\n+        grouped.setdefault(str(user), []).append(index)\n+    selected = []\n+    for indices in grouped.values():\n+        positives = [index for index in indices if labels[index]]\n+        negatives = [index for index in indices if not labels[index]]\n+        negatives.sort(key=lambda index: float(scores[index]), reverse=True)\n+        selected.extend(positives)\n+        selected.extend(negatives[:3])\n+    return np.asarray(selected, dtype=np.int64)\n+\n+\n def main():\n@@ -44,7 +60,7 @@\n     splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n     encoded, dimension = encode(splits)\n-    train_features, train_labels, _ = encoded[\"train\"]\n+    train_features, train_labels, train_users = encoded[\"train\"]\n     valid_features, valid_labels, valid_users = encoded[config[\"split\"]]\n@@ -76,8 +92,10 @@\n     best_score, best_state, stale = -1.0, None, 0\n     for epoch in range(1, config[\"max_epochs\"] + 1):\n-        order = rng.permutation(len(train_labels))\n+        train_scores = model.predict(train_features)\n+        active_rows = hard_negative_subset(train_users, train_labels, train_scores)\n+        order = rng.permutation(active_rows)\n         losses = []\n         for index in range(0, len(order), config[\"batch_size\"]):\n             batch = order[index:index + config[\"batch_size\"]]\n*** config.json\n+++ config.json\n",
+      "config.json": ""
+    }
+  }
+]

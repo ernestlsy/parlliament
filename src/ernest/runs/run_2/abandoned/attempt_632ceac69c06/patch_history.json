@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "initial_patch:model_designer",
+    "agent": "model_designer",
+    "patch_attempt": 1,
+    "patches": {
+      "model.py": "--- model.py\n+++ model.py\n@@ -14,7 +14,7 @@\n         self.item_weights = np.zeros(item_dimension, dtype=np.float32)\n         self.user_embeddings = np.zeros((user_dimension, 16), dtype=np.float32)\n-        self.item_embeddings = np.zeros((item_dimension, 16), dtype=np.float32)\n+        self.item_embeddings = np.random.normal(0.0, 0.01, (item_dimension, 16)).astype(np.float32)\n         self.bias = np.float32(0.0)\n         self.learning_rate = learning_rate\n         self.l2 = l2\n"
+    }
+  },
+  {
+    "phase": "initial_patch:model_designer",
+    "agent": "model_designer",
+    "patch_attempt": 2,
+    "patches": {
+      "model.py": "--- model.py\n+++ model.py\n@@ -14,7 +14,7 @@\n         self.item_weights = np.zeros(item_dimension, dtype=np.float32)\n         self.user_embeddings = np.zeros((user_dimension, 16), dtype=np.float32)\n-        self.item_embeddings = np.zeros((item_dimension, 16), dtype=np.float32)\n+        self.item_embeddings = np.random.normal(0.0, 0.01, (item_dimension, 16)).astype(np.float32)\n         self.bias = np.float32(0.0)\n         self.learning_rate = learning_rate\n         self.l2 = l2\n"
+    }
+  },
+  {
+    "phase": "initial_patch:model_designer",
+    "agent": "model_designer",
+    "patch_attempt": 3,
+    "patches": {
+      "model.py": "--- model.py\n+++ model.py\n@@ -16,7 +16,8 @@\n         self.item_weights = np.zeros(item_dimension, dtype=np.float32)\n         self.user_embeddings = np.zeros((user_dimension, 16), dtype=np.float32)\n-        self.item_embeddings = np.zeros((item_dimension, 16), dtype=np.float32)\n+        self.item_embeddings = np.random.normal(\n+            0.0, 0.01, size=(item_dimension, 16)).astype(np.float32)\n         self.bias = np.float32(0.0)\n*** End Patch"
+    }
+  }
+]

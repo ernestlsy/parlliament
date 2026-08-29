@@ -6,11 +6,21 @@
   binary relevance label.
 - Validation primary is the mean of positive-count-weighted per-user AUC and mean nDCG@5. A
   user-only constant cannot alter either ranking.
-- The official five-field factorization-machine baseline uses user, video, author, tab, and duration
-  bucket fields. Its published validation primary is 0.6016 with seed standard deviation around
-  0.0008.
-- Static feature expansion and larger embedding dimensions were already tested without meaningful
-  gain. Treat materially equivalent ideas as low novelty.
+- Experiment 0 is deliberately unscored and architecture-neutral. It is only a runnable user/item
+  additive scaffold; infer performance and promising directions from counted experiment records.
+
+## Diagnostic metric interpretation
+
+- `primary`, GAUC, and nDCG@5 remain the official optimization and stopping metrics.
+- Accuracy, precision, recall, F1, specificity, balanced accuracy, and Matthews correlation use a
+  validation threshold chosen to maximize F1. They diagnose class-separation tradeoffs but are
+  optimistically measured on the same split that selects their threshold.
+- Global AUC and average precision summarize row-level discrimination; GAUC remains more aligned
+  with the actual within-user task.
+- Precision@5, Recall@5, MAP@5, MRR@5, and HitRate@5 reveal different top-of-list failure modes.
+  Macro averages include zero-positive users as zero, consistent with the fixed nDCG convention.
+- Score mean and spread help flag collapsed or numerically unstable prediction distributions. Do
+  not reward arbitrary score scale changes because only ordering affects the official metrics.
 
 ## High-value hypothesis families
 
@@ -24,8 +34,8 @@
    may regularize the long-view representation. The long-view output remains the scored head.
 4. Watch-time regression is censored at video completion; one-sided or censored losses are more
    appropriate than ordinary squared error. This can be an auxiliary representation signal.
-5. DeepFM, DCN, and xDeepFM are lower priority unless paired with a better objective or a meaningful
-   interaction feature, because raw capacity was not the observed bottleneck.
+5. Interaction-capable models such as FM, DeepFM, DCN, and xDeepFM are valid hypotheses when their
+   expected benefit and resource cost are stated explicitly.
 6. Time-of-day, date, recency, and train-to-validation drift may matter. Validate that temporal
    features are known at impression time.
 7. The random-exposure log can diagnose selection-bias overfitting, but it must not change the fixed
@@ -37,5 +47,5 @@
 - Compare against the referenced parent's exact config and code, not only the global best.
 - Reject label leakage, validation fitting, prediction artifacts containing NaN/Inf, and changes that
   optimize a user-level constant.
-- Resource feasibility matters: a 1.14-million-row NumPy baseline should not be replaced by an
-  unbounded all-pairs or full-history computation.
+- Resource feasibility matters: the full dataset should not be subjected to an unbounded all-pairs
+  or full-history computation.

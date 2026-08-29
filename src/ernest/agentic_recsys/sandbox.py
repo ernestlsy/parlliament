@@ -83,6 +83,10 @@ def apply_unified_diff(root: Path, expected_file: str, patch: str) -> None:
     while index < len(lines):
         match = _HUNK.match(lines[index])
         if not match:
+            if lines[index].strip() == "@@" and not any(
+                remaining.strip() for remaining in lines[index + 1:]
+            ):
+                break
             if lines[index].strip():
                 raise ValueError(f"unexpected patch line: {lines[index][:100]!r}")
             index += 1
@@ -99,6 +103,11 @@ def apply_unified_diff(root: Path, expected_file: str, patch: str) -> None:
             if line.startswith("\\ No newline"):
                 index += 1
                 continue
+            if line.strip() == "@@" and not any(
+                remaining.strip() for remaining in lines[index + 1:]
+            ):
+                index = len(lines)
+                break
             if not line or line[0] not in " +-":
                 raise ValueError(f"invalid hunk line: {line[:100]!r}")
             prefix, content = line[0], line[1:]

@@ -20,9 +20,17 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--run-name", default="run_1")
     providers = run.add_mutually_exclusive_group(required=True)
     providers.add_argument("--llm-command", help="local command accepting JSON stdin and emitting JSON stdout")
-    providers.add_argument("--model", help="model for an OpenAI-compatible chat-completions API")
+    providers.add_argument("--model", help="model for an OpenAI or compatible HTTP API")
     run.add_argument("--base-url", default="https://api.openai.com/v1")
     run.add_argument("--api-key", default=None)
+    run.add_argument(
+        "--api-mode", choices=["auto", "responses", "chat"], default="auto",
+        help="API endpoint style; auto uses Responses for api.openai.com and Chat Completions elsewhere",
+    )
+    run.add_argument(
+        "--no-json-mode", action="store_true",
+        help="omit provider-side JSON mode fields for compatible providers that do not support them",
+    )
     run.add_argument("--max-experiments", type=int, default=50)
     run.add_argument("--timeout", type=int, default=900)
     run.add_argument("--max-debug-attempts", type=int, default=3)
@@ -37,13 +45,22 @@ def main(argv=None) -> int:
     args = _parser().parse_args(argv)
     if args.command == "status":
         journal = Journal(Path(args.run_dir) / "journal.jsonl")
+        records = journal.records()
         scored = journal.scored()
+        abandoned = [record for record in records if record["status"] == "abandoned"]
         print(json.dumps({
-            "records": len(journal.records()),
+            "records": len(records),
             "scored": len(scored),
-            "abandoned": len(journal.records()) - len(scored),
+            "abandoned": len(abandoned),
             "latest_primary": scored[-1]["metrics"]["primary"] if scored else None,
             "converged": journal.converged(),
+            "recent_failures": [{
+                "attempt_id": record["attempt_id"],
+                "generation": record["generation"],
+                "failure_stage": record.get("failure_stage"),
+                "failure_reason": record.get("failure_reason"),
+                "sandbox": record.get("sandbox"),
+            } for record in abandoned[-10:]],
         }, indent=2))
         return 0
 
@@ -59,11 +76,16 @@ def main(argv=None) -> int:
     if args.llm_command:
         llm = CommandLLMClient(shlex.split(args.llm_command))
     else:
-        llm = OpenAICompatibleClient(args.model, base_url=args.base_url, api_key=args.api_key)
+        llm = OpenAICompatibleClient(
+            args.model,
+            base_url=args.base_url,
+            api_key=args.api_key,
+            api_mode=args.api_mode,
+            json_mode=not args.no_json_mode,
+        )
     print(json.dumps(Overseer(config, llm).run(), indent=2))
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

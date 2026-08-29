@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "data.py load() continues returning raw rows as (date, user_id, video_id, label). encode() builds user_id and video_id vocabularies from the training split only, derives weekday directly from each row date using a deterministic seven-category mapping, and returns each split as (features, labels, users), where features is an int32 matrix with columns [encoded_user_id, encoded_video_id, encoded_weekday], labels is float32, and users preserves original validation user IDs and row order. Unknown user, video, or weekday values use reserved training-derived indices. No future-event aggregation, validation labels, or evaluator metrics are used."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "model.py Model.logits(), step(), predict(), state(), and load_state() accept the encoded three-column feature matrix [user_id, video_id, weekday]. The logit is bias + user effect + video effect + user-video embedding dot product + weekday embedding dot video embedding dot product. Training remains pointwise binary cross-entropy with the existing optimizer and L2 behavior. predict() returns one finite float score per input row in identical order. train.py must emit predictions_valid.npz containing exactly two arrays, row_ids=np.arange(len(validation_rows), dtype=int64) and scores, with no ground-truth array; row_ids and scores must follow canonical validation row order."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

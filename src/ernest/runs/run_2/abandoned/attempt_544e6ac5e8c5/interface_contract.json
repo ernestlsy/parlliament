@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "The fixed training command must write predictions_valid.npz containing exactly two arrays: row_ids and scores. row_ids must be int64 identifiers in canonical validation row order, equal to np.arange(len(validation_rows)); scores must be a one-dimensional finite array with exactly one prediction per validation row and no additional output arrays."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "The trainer receives encoded train and validation features produced by data.py, with each row represented by user and video indices in canonical split order. The model interface remains Model(dimension, learning_rate, l2), with step(features, labels) for BCE updates and predict(features) returning one score per input row."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

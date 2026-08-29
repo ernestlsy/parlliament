@@ -1,0 +1,44 @@
+{
+  "attempt_id": "c0d028b0978d",
+  "status": "scored",
+  "generation": 1,
+  "mode": "draft",
+  "parent_experiment_id": 0,
+  "hypothesis_text": "Add a compact factorization-machine interaction term between user and video embeddings, trained with the existing pointwise loss and unchanged optimizer controls; compare against the additive logits to test whether user-video compatibility captures ranking signal absent from independent ID effects.",
+  "active_sub_agents": [
+    "model_designer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [
+    {
+      "kind": "contract_fulfillment",
+      "message": "model_designer patch response was invalid: ValueError: invalid hunk line: '@@\\n'",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 112, in apply_unified_diff\n    raise ValueError(f\"invalid hunk line: {line[:100]!r}\")\nValueError: invalid hunk line: '@@\\n'\n",
+      "responsible_agents": [
+        "model_designer"
+      ],
+      "attempt": 1,
+      "return_code": null
+    },
+    {
+      "kind": "contract_fulfillment",
+      "message": "model_designer patch response was invalid: ValueError: invalid hunk line: '@@\\n'",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 112, in apply_unified_diff\n    raise ValueError(f\"invalid hunk line: {line[:100]!r}\")\nValueError: invalid hunk line: '@@\\n'\n",
+      "responsible_agents": [
+        "model_designer"
+      ],
+      "attempt": 2,
+      "return_code": null
+    }
+  ],
+  "elapsed_seconds": 87.43046902599963,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

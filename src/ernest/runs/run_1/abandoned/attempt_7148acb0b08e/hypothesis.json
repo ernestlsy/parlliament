@@ -1,0 +1,10 @@
+{
+  "text": "Replace pointwise BCE with within-user Bayesian Personalized Ranking: for each training user, sample one long_view-positive and one negative impression, optimize softplus(-(score_positive-score_negative)) with the existing ID-sum scorer, and retain the same validation early stopping and fixed primary metric.",
+  "parent_experiment_id": 0,
+  "scores": {
+    "interestingness": 9,
+    "novelty": 7,
+    "feasibility": 8
+  },
+  "rationale": "This directly targets GAUC and nDCG@5 while preserving the additive architecture and bounded sampled-pair cost. Compare primary first, then inspect GAUC, nDCG@5, MAP@5, MRR@5, HitRate@5, classification metrics, and score distribution diagnostics for ranking gains or collapse."
+}

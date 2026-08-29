@@ -9,6 +9,8 @@ from .schemas import (
     AGENT_FILES,
     ExperimentPlan,
     FailureReport,
+    FIXED_CONTRACT_COMMAND,
+    FIXED_TRAIN_COMMAND,
     Hypothesis,
     InterfaceContract,
     Mode,
@@ -27,10 +29,31 @@ def _files(path: Path) -> Dict[str, str]:
     }
 
 
+def _scored_metric_history(archive: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Preserve complete nested metric objects in execution order for Judge analysis."""
+    return [
+        {
+            "experiment_id": item["experiment_id"],
+            "generation": item["generation"],
+            "parent_experiment_id": item["parent_experiment_id"],
+            "hypothesis_text": item["hypothesis_text"],
+            "metrics": item["metrics"],
+        }
+        for item in archive
+        if item.get("status") == "scored"
+    ]
+
+
 class EvolutionJudge:
-    def __init__(self, llm: LLMClient, knowledge_documents: Optional[List[Dict[str, str]]] = None):
+    def __init__(
+        self,
+        llm: LLMClient,
+        knowledge_documents: Optional[List[Dict[str, str]]] = None,
+        metric_catalog: Optional[Dict[str, Any]] = None,
+    ):
         self.llm = llm
         self.knowledge_documents = knowledge_documents or []
+        self.metric_catalog = metric_catalog or {}
 
     def propose(
         self,
@@ -46,7 +69,11 @@ class EvolutionJudge:
         system = (
             "You are the Evolution Judge for a recommender-system MLE loop. Propose concrete, "
             "testable hypotheses, not broad research themes. Honor the fixed within-user ranking "
-            "metrics and avoid duplicates in all scored and abandoned history. In improve mode, "
+            "metrics and avoid duplicates in all scored and abandoned history. Treat primary as "
+            "the optimization/stopping objective, but use classification, ranking, and data "
+            "diagnostics in every scored archive record to diagnose weaknesses and motivate changes. "
+            "The full metric catalog explains every available field; do not ignore nested metrics. "
+            "In improve mode, "
             "derive exactly one hypothesis from the supplied recent reference. In draft mode, mix "
             "strong and diverse/under-explored references from the full archive. Every proposal "
             "must reference exactly one available experiment ID and score interestingness, novelty, "
@@ -57,9 +84,17 @@ class EvolutionJudge:
             "mode": mode.value,
             "requested_count": count,
             "full_archive": archive,
+            "scored_metric_history": _scored_metric_history(archive),
+            "metric_catalog": self.metric_catalog,
             "research_knowledge_base": self.knowledge_documents,
             "reference_experiments_with_code": reference_snapshots,
+            "available_parent_ids": [int(item["experiment_id"]) for item in reference_snapshots],
+            "reference_rule": (
+                "parent_experiment_id must be chosen from available_parent_ids. It must identify "
+                "an already-existing parent, never the experiment currently being proposed."
+            ),
             "revision_feedback": revision_feedback,
+            "validation_feedback": None,
             "failed_attempt_to_avoid": failed_attempt,
             "response_schema": {
                 "hypotheses": [{
@@ -69,38 +104,54 @@ class EvolutionJudge:
                 }]
             },
         }
-        raw = self.llm.complete_json(role="evolution_judge", system=system, payload=payload)
-        proposals = [hypothesis_from_dict(item) for item in raw.get("hypotheses", [])]
-        if mode is Mode.IMPROVE and len(proposals) != 1:
-            raise LLMError("Improve mode must return exactly one hypothesis")
-        if not 1 <= len(proposals) <= count:
-            raise LLMError(f"Judge returned {len(proposals)} hypotheses; expected 1-{count}")
         allowed = {int(s["experiment_id"]) for s in reference_snapshots}
-        for proposal in proposals:
-            if proposal.parent_experiment_id not in allowed:
-                raise LLMError(
-                    f"hypothesis references unavailable experiment {proposal.parent_experiment_id}"
-                )
-        if mode is Mode.DRAFT and len(proposals) > 1 and len(allowed) > 1:
-            selected = {proposal.parent_experiment_id for proposal in proposals}
-            top_id = int(max(
-                reference_snapshots,
-                key=lambda item: float(item["metrics"]["primary"]),
-            )["experiment_id"])
-            child_counts = {
-                experiment_id: sum(
-                    int(item.get("parent_experiment_id", -1)) == experiment_id
-                    for item in archive
-                )
-                for experiment_id in allowed
-            }
-            diverse_candidates = [item for item in allowed if item != top_id] or list(allowed)
-            diverse_id = min(diverse_candidates, key=lambda item: (child_counts[item], item))
-            if top_id not in selected or diverse_id not in selected:
-                raise LLMError(
-                    "multi-hypothesis Draft output must mix the top-scoring and an under-explored parent"
-                )
-        return proposals
+        last_error = ""
+        for response_attempt in range(1, 4):
+            payload["response_attempt"] = response_attempt
+            payload["validation_feedback"] = last_error or None
+            raw = self.llm.complete_json(role="evolution_judge", system=system, payload=payload)
+            try:
+                proposals = [hypothesis_from_dict(item) for item in raw.get("hypotheses", [])]
+                if mode is Mode.IMPROVE and len(proposals) != 1:
+                    raise ValueError("Improve mode must return exactly one hypothesis")
+                if not 1 <= len(proposals) <= count:
+                    raise ValueError(
+                        f"Judge returned {len(proposals)} hypotheses; expected 1-{count}"
+                    )
+                for proposal in proposals:
+                    if proposal.parent_experiment_id not in allowed:
+                        raise ValueError(
+                            f"hypothesis references unavailable experiment "
+                            f"{proposal.parent_experiment_id}; available parents are {sorted(allowed)}"
+                        )
+                if mode is Mode.DRAFT and len(proposals) > 1 and len(allowed) > 1:
+                    selected = {proposal.parent_experiment_id for proposal in proposals}
+
+                    def primary_score(item):
+                        value = item.get("metrics", {}).get("primary")
+                        return float(value) if value is not None else float("-inf")
+
+                    top_id = int(max(reference_snapshots, key=primary_score)["experiment_id"])
+                    child_counts = {
+                        experiment_id: sum(
+                            int(item.get("parent_experiment_id", -1)) == experiment_id
+                            for item in archive
+                        )
+                        for experiment_id in allowed
+                    }
+                    diverse_candidates = [item for item in allowed if item != top_id] or list(allowed)
+                    diverse_id = min(
+                        diverse_candidates, key=lambda item: (child_counts[item], item)
+                    )
+                    if top_id not in selected or diverse_id not in selected:
+                        raise ValueError(
+                            "multi-hypothesis Draft output must mix the top-scoring and an "
+                            "under-explored parent"
+                        )
+                return proposals
+            except (TypeError, ValueError) as exc:
+                last_error = f"Response validation failed: {type(exc).__name__}: {exc}"
+        raise LLMError(f"Evolution Judge returned invalid proposals three times; {last_error}")
 
     def revise(
         self,
@@ -122,6 +173,8 @@ class EvolutionJudge:
                 "rejected_hypothesis": asdict(hypothesis),
                 "consultant_feedback": feedback,
                 "full_archive": archive,
+                "scored_metric_history": _scored_metric_history(archive),
+                "metric_catalog": self.metric_catalog,
                 "research_knowledge_base": self.knowledge_documents,
                 "available_parent_ids": list(available_parent_ids),
                 "response_schema": {"hypothesis": {
@@ -210,12 +263,10 @@ class Orchestrator:
             "feature_engineer(data.py), model_designer(model.py), trainer(train.py/config.json). "
             + JSON_ONLY
         )
-        raw = self.llm.complete_json(
-            role="orchestrator",
-            system=system,
-            payload={
+        payload = {
                 "hypothesis": asdict(hypothesis),
                 "parent_files": _files(parent_dir),
+                "validation_feedback": None,
                 "response_schema": {
                     "active_agents": ["model_designer"],
                     "reasoning": "string",
@@ -223,30 +274,37 @@ class Orchestrator:
                         "data_output": {"description": "string"},
                         "config_keys": ["seed"],
                         "model_input": {"description": "string"},
-                        "prediction_artifact": {
-                            "path": "predictions_valid.npz",
-                            "arrays": ["row_ids", "scores"],
-                        },
-                        "train_command": [
-                            "{python}", "train.py", "--config", "config.json",
-                            "--data-dir", "{data_dir}", "--output", "{output}",
-                        ],
-                        "contract_command": [
-                            "{python}", "train.py", "--config", "config.json",
-                            "--data-dir", "{data_dir}", "--output", "{output}",
-                            "--contract-check",
-                        ],
                     },
                 },
-            },
-        )
-        plan = ExperimentPlan(
-            active_agents=list(raw.get("active_agents", [])),
-            contract=InterfaceContract.from_dict(raw.get("contract", {})),
-            reasoning=str(raw.get("reasoning", "")),
-        )
-        plan.validate()
-        return plan
+            }
+        last_error = ""
+        for response_attempt in range(1, 4):
+            payload["response_attempt"] = response_attempt
+            payload["validation_feedback"] = last_error or None
+            raw = self.llm.complete_json(
+                role="orchestrator",
+                system=system,
+                payload=payload,
+            )
+            try:
+                contract_data = dict(raw.get("contract", {}))
+                # Execution and evaluation boundaries are system-owned, not LLM-owned.
+                contract_data["train_command"] = list(FIXED_TRAIN_COMMAND)
+                contract_data["contract_command"] = list(FIXED_CONTRACT_COMMAND)
+                contract_data["prediction_artifact"] = {
+                    "path": "predictions_valid.npz",
+                    "arrays": ["row_ids", "scores"],
+                }
+                plan = ExperimentPlan(
+                    active_agents=list(raw.get("active_agents", [])),
+                    contract=InterfaceContract.from_dict(contract_data),
+                    reasoning=str(raw.get("reasoning", "")),
+                )
+                plan.validate()
+                return plan
+            except (TypeError, ValueError) as exc:
+                last_error = f"Response validation failed: {type(exc).__name__}: {exc}"
+        raise LLMError(f"Orchestrator returned invalid plans three times; {last_error}")
 
     def generate_patches(
         self,

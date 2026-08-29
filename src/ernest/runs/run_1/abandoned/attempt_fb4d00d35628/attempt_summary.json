@@ -1,0 +1,18 @@
+{
+  "attempt_id": "fb4d00d35628",
+  "status": "abandoned",
+  "generation": 1,
+  "mode": "draft",
+  "parent_experiment_id": 0,
+  "hypothesis_text": "Add leakage-safe sequential user features: before each target impression, aggregate the previous 20 interactions from that user into recency-weighted counts of prior long_view positives and negatives, concatenate these two features with the existing user/item IDs, and train with pointwise BCE using only events earlier than the target timestamp.",
+  "active_sub_agents": [],
+  "consultant_rounds": 1,
+  "failure_stage": "orchestrator_plan",
+  "failure_reason": "stage=orchestrator_plan; agent_or_guardrail_failure: LLMError: Orchestrator returned invalid plans three times; Response validation failed: ValueError: interface contract missing keys: ['config_keys', 'model_input']",
+  "failure_reports": [],
+  "elapsed_seconds": 34.23239779800042,
+  "available_log_files": [],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 218, in _run_hypothesis\n    plan = self.orchestrator.plan(hypothesis, parent_dir)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/agents.py\", line 289, in plan\n    raise LLMError(f\"Orchestrator returned invalid plans three times; {last_error}\")\nagentic_recsys.llm.LLMError: Orchestrator returned invalid plans three times; Response validation failed: ValueError: interface contract missing keys: ['config_keys', 'model_input']\n"
+}

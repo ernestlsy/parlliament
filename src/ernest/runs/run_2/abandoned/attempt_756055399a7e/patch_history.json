@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "initial_patch:model_designer",
+    "agent": "model_designer",
+    "patch_attempt": 1,
+    "patches": {
+      "model.py": "--- model.py\n+++ model.py\n@@ -42,7 +42,13 @@\n         logits = self.logits(features)\n         probabilities = sigmoid(logits)\n-        gradient = ((probabilities - labels) / size).astype(np.float32)\n+        _, inverse, counts = np.unique(users, return_inverse=True,\n+                                       return_counts=True)\n+        raw_weights = 1.0 / np.maximum(1.0, counts[inverse].astype(np.float32))\n+        weights = (size * raw_weights / raw_weights.sum()).astype(np.float32)\n+        gradient = ((probabilities - labels) * weights / size).astype(np.float32)\n@@ -74,8 +80,9 @@\n             parameter -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n         self.bias -= self.learning_rate * gradient.sum()\n-        return float(-np.mean(labels * np.log(probabilities + 1e-9)\n-                              + (1 - labels) * np.log(1 - probabilities + 1e-9)))\n+        loss = -(labels * np.log(probabilities + 1e-9)\n+                 + (1 - labels) * np.log(1 - probabilities + 1e-9))\n+        return float(np.mean(weights * loss))\n"
+    }
+  },
+  {
+    "phase": "initial_patch:model_designer",
+    "agent": "model_designer",
+    "patch_attempt": 2,
+    "patches": {
+      "model.py": "--- model.py\n+++ model.py\n@@ -38,7 +38,12 @@\n         logits = self.logits(features)\n         probabilities = sigmoid(logits)\n-        gradient = ((probabilities - labels) / size).astype(np.float32)\n+        _, inverse, counts = np.unique(users, return_inverse=True,\n+                                       return_counts=True)\n+        raw_weights = 1.0 / np.maximum(1, counts[inverse])\n+        weights = (size * raw_weights / raw_weights.sum()).astype(np.float32)\n+        gradient = ((probabilities - labels) * weights / size).astype(np.float32)\n@@ -69,8 +74,8 @@\n             parameter -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n         self.bias -= self.learning_rate * gradient.sum()\n-        return float(-np.mean(labels * np.log(probabilities + 1e-9)\n-                              + (1 - labels) * np.log(1 - probabilities + 1e-9)))\n+        return float(-np.sum(weights * (labels * np.log(probabilities + 1e-9)\n+                              + (1 - labels) * np.log(1 - probabilities + 1e-9)))\n+                     / size)\n"
+    }
+  },
+  {
+    "phase": "initial_patch:model_designer",
+    "agent": "model_designer",
+    "patch_attempt": 3,
+    "patches": {
+      "model.py": "--- model.py\n+++ model.py\n@@ -37,7 +37,10 @@\n         logits = self.logits(features)\n         probabilities = sigmoid(logits)\n-        gradient = ((probabilities - labels) / size).astype(np.float32)\n+        _, inverse, counts = np.unique(users, return_inverse=True,\n+                                       return_counts=True)\n+        raw_weights = 1.0 / np.maximum(1, counts[inverse])\n+        weights = (size * raw_weights / raw_weights.sum()).astype(np.float32)\n+        gradient = ((probabilities - labels) * weights / size).astype(np.float32)\n@@ -67,8 +70,9 @@\n             parameter -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n         self.bias -= self.learning_rate * gradient.sum()\n-        return float(-np.mean(labels * np.log(probabilities + 1e-9)\n-                              + (1 - labels) * np.log(1 - probabilities + 1e-9)))\n+        loss = -(labels * np.log(probabilities + 1e-9)\n+                 + (1 - labels) * np.log(1 - probabilities + 1e-9))\n+        return float(np.sum(weights * loss) / size)\n"
+    }
+  }
+]

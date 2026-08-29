@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "The fixed training command writes predictions_valid.npz containing exactly two arrays: row_ids, an int64 array of canonical validation row positions in evaluator order, and scores, a one-dimensional finite float array of identical length aligned positionally with row_ids. No ground-truth labels may be included or loaded by training; ground truth is loaded only by the fixed evaluator."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "Model(dimension, learning_rate, l2) must preserve the existing interface. It receives encoded train or validation feature matrices shaped (n, 2), with column 0 containing offset user indices and column 1 containing offset video indices, plus float labels only for training steps. Initialize user_embeddings and item_embeddings as float32 arrays shaped (user_dimension, 16) and (item_dimension, 16), respectively, from a reproducible normal distribution with mean 0 and standard deviation 0.01 using config['seed']; additive weights remain zero. Preserve logits, pointwise binary cross-entropy gradients, Adam controls, state/load_state, predict output shape, and all existing dimensions."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

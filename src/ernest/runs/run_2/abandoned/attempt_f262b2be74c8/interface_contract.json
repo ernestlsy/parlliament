@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "Provide the existing encoded split contract with features shaped [N,4] and columns [user_id_index, video_id_index, decayed_prior_long_view_positive_count, decayed_prior_long_view_negative_count], labels shaped [N], and user_ids shaped [N]. History columns must be precomputed in chronological order using only events with timestamps strictly earlier than the current event, with deterministic ordering for equal timestamps and no cross-split leakage. Rows must retain source order within every split, especially validation order, so the fixed trainer writes canonical row_ids and scores without reordering. No evaluator ground truth is included in model outputs."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "Model receives the [N,4] feature matrix and binary long_view labels for pointwise training. Preserve additive user/item effects and low-rank interaction, and add two independently learned scalar coefficients for the positive-history and negative-history columns. Keep the existing optimizer controls, loss, validation proxy, early stopping, checkpoint restoration, and prediction API. Predictions must be one finite score per input row in input order; the fixed training command must write an NPZ containing exactly row_ids and scores."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

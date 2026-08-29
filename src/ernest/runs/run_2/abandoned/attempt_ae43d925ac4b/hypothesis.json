@@ -1,0 +1,10 @@
+{
+  "text": "Add an auxiliary censored watch-time objective to the additive-plus-interaction representation: for long_view-positive impressions, regress log watch time only up to the observed completion-censored value using a one-sided hinge loss that penalizes predictions below observed watch time, while assigning no watch-time regression target to non-long-view impressions; weight this auxiliary loss at 0.1 and keep the long_view head as the sole scored output with unchanged within-user metrics.",
+  "parent_experiment_id": 1,
+  "scores": {
+    "interestingness": 9,
+    "novelty": 9,
+    "feasibility": 6
+  },
+  "rationale": "The parent\u2019s primary is 0.588542 (GAUC 0.649869, nDCG@5 0.527215), and its top-five diagnostics\u2014Precision@5 0.371826, Recall@5 0.593115, MAP@5 0.474292, MRR@5 0.533214, and HitRate@5 0.674264\u2014leave room for richer engagement supervision. Classification remains imbalanced at positive rate 0.313284, with precision 0.457115 versus recall 0.772897, F1 0.574471, specificity 0.581240, balanced accuracy 0.677068, accuracy 0.641283, and Matthews correlation 0.329099; censored watch-time signal may regularize the shared representation while avoiding invalid ordinary regression on completed views."
+}

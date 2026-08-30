@@ -19,6 +19,11 @@ class SystemConfig:
     max_consultant_rounds: int = 3
     max_backfills_per_slot: int = 2
     max_draft_hypotheses: int = 3
+    candidate_pool_size: int = 12
+    screening_timeout_seconds: int = 900
+    screening_holdout_fraction: float = 0.25
+    screening_seed: int = 0
+    force_rescreen: bool = False
     python_executable: str = ""
 
     def __post_init__(self) -> None:
@@ -31,11 +36,14 @@ class SystemConfig:
             "max_experiments", "convergence_window", "max_debug_attempts",
             "experiment_timeout_seconds", "max_consultant_rounds",
             "max_backfills_per_slot", "max_draft_hypotheses",
+            "candidate_pool_size", "screening_timeout_seconds",
         ):
             if getattr(self, name) <= 0:
                 raise ValueError(f"{name} must be positive")
         if self.convergence_epsilon <= 0:
             raise ValueError("convergence_epsilon must be positive")
+        if not 0.1 <= self.screening_holdout_fraction <= 0.5:
+            raise ValueError("screening_holdout_fraction must be between 0.1 and 0.5")
 
     @property
     def run_dir(self) -> Path:
@@ -51,4 +59,3 @@ class SystemConfig:
 
     def public_dict(self) -> Dict[str, Any]:
         return asdict(self)
-

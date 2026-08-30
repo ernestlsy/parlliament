@@ -11,16 +11,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
 
-from agentic_recsys.agents import EvolutionJudge
+from agentic_recsys.agents import EvolutionJudge, FeatureAnalyst
 from agentic_recsys.evaluation import METRIC_CATALOG, evaluate
 from agentic_recsys.experimentor import Experimentor
 from agentic_recsys.journal import Journal
 from agentic_recsys.llm import LLMError, OpenAICompatibleClient, ScriptedLLMClient
 from agentic_recsys.config import SystemConfig
 from agentic_recsys.overseer import Overseer
+from agentic_recsys.research import temporal_partition
 from agentic_recsys.sandbox import GuardrailViolation, apply_unified_diff, guarded_path
 from agentic_recsys.schemas import (
     FailureKind, Hypothesis, HypothesisScores, InterfaceContract, JournalRecord, Mode,
+    hypothesis_from_dict,
 )
 
 
@@ -274,6 +276,87 @@ class EvolutionJudgeMetricAccessTests(unittest.TestCase):
         self.assertIn("available parents are [0]", llm.calls[1]["payload"]["validation_feedback"])
 
 
+class ResearchPlanningTests(unittest.TestCase):
+    def test_probability_confidence_is_normalized_to_ten_point_scale(self):
+        hypothesis = hypothesis_from_dict({
+            "text": "normalize model confidence",
+            "parent_experiment_id": 0,
+            "scores": {"interestingness": 5, "novelty": 5, "feasibility": 5},
+            "confidence": 0.62,
+        })
+        self.assertEqual(hypothesis.confidence, 6)
+
+    def test_temporal_partition_uses_latest_dates_as_holdout(self):
+        development, holdout = temporal_partition(
+            [20220408, 20220409, 20220410, 20220411], 0.25
+        )
+        self.assertEqual(development, [20220408, 20220409, 20220410])
+        self.assertEqual(holdout, [20220411])
+        self.assertLess(max(development), min(holdout))
+
+    def test_feature_analyst_repairs_unknown_evidence_reference(self):
+        invalid = {
+            "priorities": [{
+                "evidence_ids": ["screen:not_real"],
+                "finding": "unsupported",
+                "recommended_action": "avoid",
+            }]
+        }
+        valid = {
+            "priorities": [{
+                "evidence_ids": ["screen:item_metadata"],
+                "finding": "stable lift",
+                "recommended_action": "prioritize",
+            }],
+            "avoid": [],
+            "metric_diagnosis": "top-list weakness",
+        }
+        llm = ScriptedLLMClient([invalid, valid])
+        result = FeatureAnalyst(llm).analyze(
+            research_brief={}, available_evidence_ids=["screen:item_metadata"]
+        )
+        self.assertEqual(result["priorities"][0]["finding"], "stable lift")
+        self.assertIn("unavailable evidence", llm.calls[1]["payload"]["validation_feedback"])
+
+    def test_tournament_candidate_contract_rejects_high_leakage(self):
+        candidates = []
+        for index, risk in enumerate(("low", "high"), 1):
+            candidates.append({
+                "candidate_id": f"c{index}",
+                "text": f"candidate {index}",
+                "parent_experiment_id": 0,
+                "scores": {"interestingness": 5, "novelty": 5, "feasibility": 5},
+                "rationale": "test",
+                "evidence_ids": ["screen:item_metadata"],
+                "exact_ablation": f"change {index}",
+                "expected_effect": {"GAUC": "up", "nDCG@5": "up"},
+                "expected_primary_gain": 0.003,
+                "confidence": 7,
+                "leakage_risk": risk,
+                "runtime_risk": "low",
+                "active_components": ["feature_engineer"],
+            })
+        valid = dict(candidates[1])
+        valid["leakage_risk"] = "low"
+        llm = ScriptedLLMClient([
+            {"candidates": candidates},
+            {"candidates": [candidates[0], valid]},
+        ])
+        judge = EvolutionJudge(llm)
+        result = judge.generate_candidates(
+            mode=Mode.DRAFT,
+            generation=1,
+            archive=[],
+            reference_snapshots=[{"experiment_id": 0, "files": {}, "metrics": {}}],
+            candidate_count=2,
+            research_brief={},
+            analyst_assessment={},
+            available_evidence_ids=["screen:item_metadata"],
+        )
+        self.assertEqual(len(result), 2)
+        self.assertIn("high leakage risk", llm.calls[1]["payload"]["validation_feedback"])
+
+
 class ReferenceRefreshTests(unittest.TestCase):
     def test_newly_scored_experiment_becomes_replacement_parent(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -293,6 +376,26 @@ class ReferenceRefreshTests(unittest.TestCase):
 
 
 class HTTPClientTests(unittest.TestCase):
+    @mock.patch("agentic_recsys.llm.urllib.request.urlopen")
+    def test_read_timeout_is_retried(self, urlopen):
+        response = mock.MagicMock()
+        response.__enter__.return_value = response
+        response.read.return_value = json.dumps({
+            "output": [{
+                "type": "message",
+                "content": [{"type": "output_text", "text": '{"ok": true}'}],
+            }],
+        }).encode("utf-8")
+        urlopen.side_effect = [TimeoutError("read timed out"), response]
+        client = OpenAICompatibleClient(
+            "test-model", api_key="secret", max_retries=1, retry_backoff_seconds=0,
+        )
+        self.assertEqual(
+            client.complete_json(role="judge", system="return JSON", payload={}),
+            {"ok": True},
+        )
+        self.assertEqual(urlopen.call_count, 2)
+
     @mock.patch("agentic_recsys.llm.urllib.request.urlopen")
     def test_openai_auto_mode_uses_responses_api(self, urlopen):
         response = mock.MagicMock()

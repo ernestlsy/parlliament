@@ -1,0 +1,19 @@
+{
+  "text": "Add a shared factorization-machine representation with an auxiliary impression-level is_click BCE head weighted at 0.2 alongside the existing long_view BCE head; use only training labels, retain the long_view head for scoring, and keep features, split, ranking metrics, and evaluation protocol unchanged.",
+  "parent_experiment_id": 2,
+  "scores": {
+    "interestingness": 8,
+    "novelty": 8,
+    "feasibility": 7
+  },
+  "rationale": "The current model separates long_view reasonably well but still has weak within-user top-five performance in long-duration impressions and extremely sparse context slices. A click auxiliary task can provide denser behavioral supervision and regularize the shared user-item-context representation without altering the fixed long_view ranking objective. Test success as an increase in primary, requiring gains in both GAUC and nDCG@5; inspect classification, ranking diagnostics, score distribution, and segment metrics for improved recall/average precision without NaN or Inf predictions.",
+  "candidate_id": "",
+  "evidence_ids": [],
+  "exact_ablation": "",
+  "expected_effect": {},
+  "expected_primary_gain": null,
+  "confidence": null,
+  "leakage_risk": "",
+  "runtime_risk": "",
+  "active_components": []
+}

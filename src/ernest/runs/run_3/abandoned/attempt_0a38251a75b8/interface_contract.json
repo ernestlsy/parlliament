@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "The fixed training command must write predictions_valid.npz containing exactly two arrays: row_ids and scores. row_ids must be int64 values arange(len(valid_rows)) in canonical validation-row order, and scores must be a finite one-dimensional float array of identical length in that same order. Ground-truth labels must not be written, loaded for training decisions, or used outside the fixed evaluator."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "The model must retain the existing encoded FM feature interface for prediction: predict(features) accepts a two-dimensional integer feature matrix and returns one finite score per row. Pairwise training must accept aligned positive_features and negative_features matrices with identical shape and compute BPR on score(positive_features)-score(negative_features), including existing L2 regularization and optimizer state. The trainer owns within-user sampling: users with at least one positive and one negative training impression contribute exactly one sampled positive-negative pair per training update cycle; no validation labels or test data may influence sampling."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

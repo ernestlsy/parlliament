@@ -1,0 +1,27 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:2:metrics"
+      ],
+      "finding": "Request-context features are the only screened group with positive primary lift (+0.00221), full coverage, and mostly positive daily lifts. The official experiment improves primary from 0.58854 to 0.60293 and achieves GAUC 0.66891, indicating useful within-user ranking signal rather than only classification gain.",
+      "recommended_action": "Retain and prioritize tab, hourmin, and weekday in the scorer. Proceed with this feature group, but stop broad feature expansion under the early-stopping budget unless a new candidate has comparable train-only evidence."
+    },
+    {
+      "evidence_ids": [
+        "experiment:2:segment:tab:8",
+        "experiment:2:segment:tab:3",
+        "experiment:2:segment:tab:0",
+        "experiment:2:segment:hour:3"
+      ],
+      "finding": "Post-score diagnostics show concentrated weaknesses despite strong global GAUC: tab 8 has GAUC 0.35185 and primary 0.18909, tab 3 has GAUC 0.5 and primary 0.25309, tab 0 has GAUC 0.55009 and primary 0.30614, and hour 3 has GAUC 0.53182 and primary 0.45909. These are ranking failures, not merely top-five weaknesses, because GAUC is also low in the worst slices.",
+      "recommended_action": "Run a narrowly scoped diagnostic or calibration follow-up for the worst tabs and hour 3 before adding new feature families; do not interpret the global GAUC as resolving these segment failures."
+    }
+  ],
+  "avoid": [
+    "Reject user-profile, historical user-author affinity, upload-recency, content-duration, item-metadata, historical-author-response, and historical-item-response groups because their training-only primary lifts are negative: screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response.",
+    "Do not use current-impression outcomes or aggregate snapshots without impression-time availability. Treat outcome-like features and unavailable-timestamp aggregates as leakage or quarantined inputs rather than candidate improvements; the available feature evidence for historical response and item metadata does not establish safe availability: feature:historical_author_response, feature:historical_item_response, feature:item_metadata."
+  ],
+  "metric_diagnosis": "The experiment's global GAUC of 0.66891 and primary of 0.60293 support stable within-user ordering overall, while nDCG@5 of 0.53696, HitRate@5 of 0.67726, and Recall@5 of 0.60027 show useful top-five retrieval. However, the worst tab and hour slices have both low GAUC and very weak top-five metrics, so their problems are not limited to top-five concentration. Conversely, user-positive-count slices are retrospective validation-label diagnostics and should not drive feature selection: experiment:2:segment:user_positive_count:zero, experiment:2:segment:user_positive_count:one, experiment:2:segment:user_positive_count:two_to_four, experiment:2:segment:user_positive_count:five_plus."
+}

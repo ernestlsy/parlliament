@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "The fixed training command must emit the requested output NPZ containing exactly two arrays: row_ids and scores. row_ids must equal np.arange(len(validation_rows), dtype=np.int64), and scores must be a one-dimensional finite array of identical length, aligned with the canonical validation row order produced by data.load and data.encode. The model must not load ground truth outside the training data path; validation labels remain exclusively available to the fixed evaluator."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "Model must preserve Model(dimension, learning_rate=..., l2=...) and the existing logits(features), step(features, labels), predict(features, batch_size=...), state(), and load_state(state) interfaces. features is an integer array of shape (batch_size, 2), containing the encoded user and item field indices. Implement a bounded factorization-machine scorer: bias plus first-order user/item weights plus a learned user-item interaction represented by fixed-dimension embeddings, with pointwise BCE gradients, L2 regularization, finite one-dimensional logits, and no new features, leakage-prone signals, or changes to validation ordering. Existing config keys and fixed training invocation must remain valid; any interaction dimension or related bounds should have safe defaults internal to model.py rather than requiring trainer changes."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

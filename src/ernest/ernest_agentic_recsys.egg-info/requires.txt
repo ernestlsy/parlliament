@@ -1,1 +1,3 @@
 numpy>=1.23
+pandas<3.0,>=2.0
+scikit-learn<2.0,>=1.3

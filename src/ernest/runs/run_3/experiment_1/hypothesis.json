@@ -1,0 +1,19 @@
+{
+  "text": "Replace the additive user/item ID scorer with a factorization-machine scorer that includes a learned user-item interaction term, while keeping pointwise BCE training, the feature set, data split, and evaluation protocol unchanged.",
+  "parent_experiment_id": 0,
+  "scores": {
+    "interestingness": 8,
+    "novelty": 7,
+    "feasibility": 8
+  },
+  "rationale": "The rejected BPR proposal is structurally unsuitable for an additive scorer because the user term cancels from within-user score differences, preventing user-specific preference learning. This replacement introduces a bounded user-item interaction while preserving the existing pointwise training objective and all protocol components, so user identity can influence item ranking through personalized interaction effects without excluding users lacking both labels. Compare the exact parent configuration against this single scorer change using GAUC, nDCG@5, and primary as the stopping metrics; inspect Precision@5, Recall@5, MAP@5, MRR@5, and HitRate@5 for top-five gains; use threshold-selected classification metrics, global AUC, and average precision as diagnostics; verify positive_rate and score distribution statistics for instability; and break out official and top-five metrics across the existing warm/cold, activity, context, duration, and positive-count segments. Keep embedding dimension and regularization bounded to control runtime and prevent overfitting, and preserve the fixed validation/test protocol with no additional interaction features or leakage-prone signals.",
+  "candidate_id": "",
+  "evidence_ids": [],
+  "exact_ablation": "",
+  "expected_effect": {},
+  "expected_primary_gain": null,
+  "confidence": null,
+  "leakage_risk": "",
+  "runtime_risk": "",
+  "active_components": []
+}

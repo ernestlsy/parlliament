@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.86,
+      "rationale": "Best evidence-to-risk tradeoff: the only prioritized feature group has a positive screening lift of 0.00221 with full coverage, and the ablation is narrow, leakage-safe, low-runtime, and preserves the validated protocol. Daily variance weakens confidence but does not outweigh the direct evidence."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 2,
+      "utility_score": 0.82,
+      "rationale": "Strong task alignment because BPR directly targets within-user ordering and has a plausible 0.002-0.008 GAUC upside. It is a clean single-component ablation, but evidence is conceptual rather than measured and pair construction adds medium runtime and stability risk."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 3,
+      "utility_score": 0.73,
+      "rationale": "Targets a clear training mismatch between row-uniform sampling and user-weighted GAUC, with moderate expected gain and a single controlled training change. Medium runtime and possible degradation on the positive-count-weighted aggregate reduce utility."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 4,
+      "utility_score": 0.7,
+      "rationale": "Directly addresses the severe rare-item weakness and has potentially meaningful nDCG upside while computing weights from training data only. However, weighting can sacrifice warm-item performance, has medium runtime risk, and lacks direct experimental evidence."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 5,
+      "utility_score": 0.67,
+      "rationale": "Uses the strongest available context signal and targets weak hour/tab slices, but duplicates much of c01 while adding user-context interactions. The broader architecture-plus-feature change, sparse interaction risk, and medium runtime lower its priority."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 6,
+      "utility_score": 0.62,
+      "rationale": "Listwise training is well aligned with nDCG and is meaningfully distinct from BCE, but its evidence is weaker than BPR, one-positive users may create high variance, and bounded group handling introduces medium runtime and implementation risk."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 7,
+      "utility_score": 0.58,
+      "rationale": "Potentially the largest upside through leakage-safe sequential personalization, but it has high runtime, medium leakage risk, substantial implementation scope, and limited direct evidence. It is too risky for the one scarce experiment despite strong novelty."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 8,
+      "utility_score": 0.43,
+      "rationale": "A clean, cheap capacity ablation with some rationale from sparse-pair weakness, but the expected gain is small, confidence is low, and the result may be neutral or negative. It is less promising than targeted data or objective changes."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 9,
+      "utility_score": 0.39,
+      "rationale": "Very feasible and isolated, but zero versus small Gaussian initialization has weak evidence and uncertain optimization effects. Expected gain is small and could be negative, making it a low-value use of the scarce run."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 10,
+      "utility_score": 0.34,
+      "rationale": "Increasing capacity is a plausible hypothesis but conflicts with the observed rare-item and sparsity weaknesses. The low expected gain, low confidence, and medium runtime make overfitting more likely than a reliable improvement."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 11,
+      "utility_score": 0.29,
+      "rationale": "Optimizer replacement is isolated but weakly supported, requires tuning despite the fixed budget, and risks slower or unstable convergence. Its expected benefit is small and the cited segment variation does not specifically establish an optimizer problem."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 12,
+      "utility_score": 0.22,
+      "rationale": "Lowest priority because clipping is speculative, has minimal expected gain, and may suppress useful rare-event gradients. Although cheap and safe from leakage, the weak evidence and risk of reducing score separation make it a poor scarce-experiment choice."
+    }
+  ]
+}

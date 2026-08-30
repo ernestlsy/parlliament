@@ -49,6 +49,15 @@ METRIC_CATALOG = {
         "score_min": "Minimum raw prediction score.",
         "score_max": "Maximum raw prediction score.",
     },
+    "segment_diagnostics": {
+        "description": (
+            "Post-score validation slices by warm/cold entities, activity, context, duration, "
+            "and positive-count buckets. Diagnostic only; never an independent test estimate."
+        ),
+        "metrics": [
+            "GAUC", "nDCG@5", "primary", "Precision@5", "Recall@5", "MAP@5", "MRR@5",
+        ],
+    },
 }
 
 

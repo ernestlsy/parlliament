@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "initial_patch:feature_engineer",
+    "agent": "feature_engineer",
+    "patch_attempt": 1,
+    "patches": {
+      "data.py": "--- data.py\n+++ data.py\n@@ -1,6 +1,6 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Neutral seed data contract with user, item, and request-context features.\"\"\"\n@@ -10,7 +10,7 @@\n SPLITS = {\n     \"train\": (20220408, 20220421),\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hourmin\", \"weekday\"]\n@@ -24,8 +24,8 @@\n             for row in csv.DictReader(handle):\n                 rows.append((\n-                    int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n-                    1 if row[LABEL] != \"0\" else 0,\n+                    int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n+                    row[\"tab\"], row[\"hourmin\"], row[\"weekday\"],\n+                    1 if row[LABEL] != \"0\" else 0,\n                 ))\n@@ -41,7 +41,7 @@\n     if not train:\n         raise ValueError(\"training split is empty\")\n     def raw(row):\n-        return [row[1], row[2]]\n+        return [row[1], row[2], row[3], row[4], row[5]]\n@@ -59,7 +59,7 @@\n                 features[row_index, field_index] = (\n                     vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n                 )\n-            labels[row_index] = row[3]\n+            labels[row_index] = row[6]\n             users[row_index] = row[1]\n*** End Patch"
+    }
+  },
+  {
+    "phase": "initial_patch:feature_engineer",
+    "agent": "feature_engineer",
+    "patch_attempt": 2,
+    "patches": {
+      "data.py": "--- data.py\n+++ data.py\n@@ -1,7 +1,7 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Neutral seed data contract with user, item, and request-context features.\"\"\"\n@@\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hourmin\", \"weekday\"]\n@@\n                 rows.append((\n-                    int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n+                    int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n+                    row[\"tab\"], row[\"hourmin\"], row[\"weekday\"],\n                     1 if row[LABEL] != \"0\" else 0,\n                 ))\n@@\n     def raw(row):\n-        return [row[1], row[2]]\n+        return [row[1], row[2], row[3], row[4], row[5]]\n@@\n-            labels[row_index] = row[3]\n+            labels[row_index] = row[6]\n             users[row_index] = row[1]\n*** End Patch"
+    }
+  },
+  {
+    "phase": "initial_patch:feature_engineer",
+    "agent": "feature_engineer",
+    "patch_attempt": 3,
+    "patches": {
+      "data.py": "--- data.py\n+++ data.py\n@@ -1,60 +1,61 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Neutral additive data contract with user, item, and request-context features.\"\"\"\n \n import csv\n import os\n@@ -9,7 +10,7 @@\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hourmin\", \"weekday\"]\n \n \n def load(data_dir, max_rows_per_split=None):\n@@ -20,8 +21,9 @@\n             for row in csv.DictReader(handle):\n                 rows.append((\n                     int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n+                    row[\"tab\"], row[\"hourmin\"], row[\"weekday\"],\n                     1 if row[LABEL] != \"0\" else 0,\n                 ))\n@@ -34,7 +36,7 @@\n     if not train:\n         raise ValueError(\"training split is empty\")\n     def raw(row):\n-        return [row[1], row[2]]\n+        return [row[1], row[2], row[3], row[4], row[5]]\n \n     vocabs = [dict() for _ in FIELDS]\n@@ -54,7 +56,7 @@\n                 features[row_index, field_index] = (\n                     vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n                 )\n-            labels[row_index] = row[3]\n+            labels[row_index] = row[6]\n             users[row_index] = row[1]\n         encoded[name] = (features, labels, users)\n     return encoded, int(sum(dimensions))\n"
+    }
+  }
+]

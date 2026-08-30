@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "The fixed training command must write predictions_valid.npz at the requested output path containing exactly two arrays: row_ids and scores. row_ids must be int64 values identifying validation impressions in canonical validation row order, normally np.arange(len(validation_rows)); scores must be a one-dimensional finite float array with exactly the same length and order. The artifact must not contain labels, user IDs, diagnostics, or any additional arrays. Ground truth is loaded only by the fixed evaluator."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "The trainer passes encoded features as a two-dimensional integer matrix shaped (n_impressions, 5), binary long_view labels as a float vector shaped (n_impressions,), and complete-user group boundaries or equivalent contiguous user-group metadata. Each loss-bearing group must contain at least one positive and one negative impression; all-positive and all-negative groups are excluded from the listwise objective. The model returns one finite raw score per impression, preserving input order. Listwise normalization uses stable per-group log-sum-exp, with target probabilities equal to labels divided by the group's positive-label count, and gradients must be averaged consistently without changing the FM feature, request-context, split, checkpoint, or prediction interfaces."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

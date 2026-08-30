@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from enum import Enum
+import math
 from typing import Any, Dict, List, Optional
 
 
@@ -54,6 +55,15 @@ class Hypothesis:
     parent_experiment_id: int
     scores: HypothesisScores
     rationale: str = ""
+    candidate_id: str = ""
+    evidence_ids: List[str] = field(default_factory=list)
+    exact_ablation: str = ""
+    expected_effect: Dict[str, Any] = field(default_factory=dict)
+    expected_primary_gain: Optional[float] = None
+    confidence: Optional[int] = None
+    leakage_risk: str = ""
+    runtime_risk: str = ""
+    active_components: List[str] = field(default_factory=list)
 
     def validate(self) -> None:
         if not self.text.strip():
@@ -61,6 +71,28 @@ class Hypothesis:
         if self.parent_experiment_id < 0:
             raise ValueError("parent_experiment_id must be non-negative")
         self.scores.validate()
+
+    def validate_tournament_candidate(self, available_evidence_ids: set[str]) -> None:
+        self.validate()
+        if not self.candidate_id.strip():
+            raise ValueError("tournament candidate_id cannot be empty")
+        if not self.evidence_ids or not set(self.evidence_ids).issubset(available_evidence_ids):
+            unknown = sorted(set(self.evidence_ids) - available_evidence_ids)
+            raise ValueError(f"candidate must cite available evidence; unknown={unknown}")
+        if not self.exact_ablation.strip():
+            raise ValueError("candidate requires one exact ablation")
+        if self.expected_primary_gain is None or not math.isfinite(self.expected_primary_gain):
+            raise ValueError("candidate requires a finite expected_primary_gain")
+        if self.confidence is None or not 1 <= self.confidence <= 10:
+            raise ValueError("candidate confidence must be an integer from 1 to 10")
+        if self.leakage_risk not in {"low", "medium", "high"}:
+            raise ValueError("candidate leakage_risk must be low, medium, or high")
+        if self.runtime_risk not in {"low", "medium", "high"}:
+            raise ValueError("candidate runtime_risk must be low, medium, or high")
+        if not {"GAUC", "nDCG@5"}.issubset(self.expected_effect):
+            raise ValueError("candidate expected_effect requires GAUC and nDCG@5")
+        # This is advisory planning metadata. The Orchestrator independently validates and chooses
+        # the actual AGENT_FILES roles, so conceptual values such as "loss" are allowed here.
 
 
 @dataclass
@@ -150,6 +182,7 @@ class JournalRecord:
     consultant_rounds: int
     sandbox: str
     created_at: str
+    hypothesis_prediction: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -167,6 +200,15 @@ class ExperimentResult:
 
 def hypothesis_from_dict(value: Dict[str, Any]) -> Hypothesis:
     raw_scores = value.get("scores", value.get("hypothesis_scores", {}))
+    raw_confidence = value.get("confidence")
+    confidence = None
+    if raw_confidence is not None:
+        numeric_confidence = float(raw_confidence)
+        # Models commonly express confidence as a probability despite a 1-10 schema.
+        if 0.0 <= numeric_confidence <= 1.0:
+            confidence = max(1, min(10, int(round(numeric_confidence * 10))))
+        else:
+            confidence = int(round(numeric_confidence))
     item = Hypothesis(
         text=str(value.get("text", value.get("hypothesis_text", ""))),
         parent_experiment_id=int(value.get("parent_experiment_id", -1)),
@@ -176,6 +218,18 @@ def hypothesis_from_dict(value: Dict[str, Any]) -> Hypothesis:
             feasibility=int(raw_scores.get("feasibility", 0)),
         ),
         rationale=str(value.get("rationale", "")),
+        candidate_id=str(value.get("candidate_id", "")),
+        evidence_ids=[str(item) for item in value.get("evidence_ids", [])],
+        exact_ablation=str(value.get("exact_ablation", "")),
+        expected_effect=dict(value.get("expected_effect", {})),
+        expected_primary_gain=(
+            None if value.get("expected_primary_gain") is None
+            else float(value["expected_primary_gain"])
+        ),
+        confidence=confidence,
+        leakage_risk=str(value.get("leakage_risk", "")),
+        runtime_risk=str(value.get("runtime_risk", "")),
+        active_components=[str(item) for item in value.get("active_components", [])],
     )
     item.validate()
     return item

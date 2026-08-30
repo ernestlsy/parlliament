@@ -12,7 +12,8 @@ The implementation keeps the specification's responsibilities separate:
 | Component | Implementation |
 |---|---|
 | Overseer | `agentic_recsys/overseer.py`: generations, sandboxes, counted IDs, backfill, stopping |
-| Evolution Judge / Consultant | `agentic_recsys/agents.py`: full-history proposals, scoring, novelty review, capped revision |
+| Research engine | `agentic_recsys/research.py`: leakage policy, profiling, temporal screening, cached evidence |
+| Feature Analyst / Evolution Judge / Consultant | `agentic_recsys/agents.py`: evidence review, candidate tournament, selection |
 | Literature knowledge base | `agentic_recsys/knowledge/`: read-only research and known-result context for the Judge |
 | Orchestrator | `agentic_recsys/agents.py`: interface contract, selective delegation, targeted debugging |
 | Feature Engineer / Model Designer / Trainer | role-specific prompts in `agents.py`, restricted to `data.py`, `model.py`, and `train.py`/`config.json` |
@@ -20,6 +21,7 @@ The implementation keeps the specification's responsibilities separate:
 | Journal | `agentic_recsys/journal.py`: durable append-only JSONL archive and convergence checks |
 | Guardrails | `agentic_recsys/sandbox.py`: sandbox-contained paths and strict single-file unified diffs |
 | Fixed evaluator | `agentic_recsys/evaluation.py`: official scores plus classification and ranking diagnostics |
+| Segment analyzer | `agentic_recsys/diagnostics.py`: post-score warm/cold, context, and activity slices |
 | Seed scaffold | `agentic_recsys/seed/`: neutral two-ID additive learner, represented as unscored parent 0 |
 
 The seed is a fresh, unscored code scaffold—not a prior experiment and not a reference to the
@@ -30,25 +32,29 @@ Successful descendants are atomically renamed to `runs/<run>/experiment_<id>`. F
 
 ## Execution flow
 
-1. Odd generations run Draft mode (one to three proposals over the full scored archive); even
-   generations run Improve mode (one proposal from the best experiment in the newest scored
-   generation). Eligible parents are recomputed from the durable journal before every initial or
-   replacement Judge call, so experiments scored earlier in the same generation are immediately
-   available as parents. Invalid or self-referential parent IDs are returned to the Judge for up to
-   three response attempts.
-2. The Consultant checks every proposal against the full journal. Revisions are capped at three.
-3. The Orchestrator fixes the machine-readable contract and activates only relevant code agents.
-4. Each code agent returns unified diffs. Ernest rejects absolute/traversing paths, unmanaged files,
+1. Before the first Judge call, the Research Engine profiles the dataset and screens feature groups
+   on a temporal holdout entirely inside the April 8-21 training period. It never reads official
+   validation rows, writes official predictions, creates a journal record, or consumes an ID.
+2. The Feature Analyst interprets the cached screen and the latest post-score error slices. The
+   Evolution Judge creates 12 evidence-citing candidates, the Consultant ranks every candidate
+   head-to-head, and the Judge selects exactly one winner. The full tournament is retained under
+   `runs/<run>/planning/generation_<n>/` without affecting convergence.
+3. Odd generations retain Draft context over the full archive; even generations use the globally
+   best scored parent as Improve context. Only the tournament winner proceeds to implementation.
+   Eligible parents are recomputed from the durable journal before every initial or replacement call.
+4. The Orchestrator fixes the machine-readable contract and activates only relevant code agents.
+5. Each code agent returns unified diffs. Ernest rejects absolute/traversing paths, unmanaged files,
    mismatched patch headers, and stale patch context.
-5. Before training, a small-slice `--contract-check` validates the connected data/model/train path.
+6. Before training, a small-slice `--contract-check` validates the connected data/model/train path.
    The full process then writes `predictions_valid.npz` containing exactly canonical `row_ids` and
    `scores`. The fixed evaluator independently reloads users and labels from the official validation
    rows, so generated code cannot redefine the ground truth or evaluation population.
-6. The fixed Experimentor computes GAUC, nDCG@5, classification diagnostics, and supplementary
-   ranking diagnostics, then assigns the next ID only after scoring.
+7. The fixed Experimentor computes GAUC, nDCG@5, classification diagnostics, and supplementary
+   ranking diagnostics. After official scoring succeeds, a non-blocking analyzer adds segment
+   diagnostics; only then is the sandbox finalized and the next experiment ID journaled.
    Failures are routed to responsible agents for at most three total attempts and one shared
    wall-clock budget. A repeatedly resource-failing configuration is reclassified as semantic.
-7. After every score, Ernest stops immediately if 50 experiments are counted or if the newest score
+8. After every score, Ernest stops immediately if 50 experiments are counted or if the newest score
    minus the score two counted experiments earlier is strictly less than `0.002`.
 
 The default backfill ceiling is two replacements per abandoned generation slot. This bounds the
@@ -69,6 +75,9 @@ Evolution Judge:
   HitRate@5. Per-user top-k metrics are macro-averaged, with zero-positive users contributing zero.
 - `data_diagnostics`: label prevalence and prediction-score mean, standard deviation, minimum, and
   maximum. These help detect score collapse and distribution changes.
+- `segment_diagnostics`: official-validation error slices by warm/cold user and item, activity,
+  request tab, hour, duration, and user positive count. These are retrospective diagnostics, not
+  independent test estimates.
 
 The F1-selected classification metrics are diagnostics on the same validation split, so they should
 not be treated as unbiased test estimates. The Judge prompt and knowledge base explicitly retain
@@ -84,6 +93,7 @@ diagnostics directly available for hypothesis decisions without changing the off
 From this directory:
 
 ```bash
+python -m pip install -r requirements.txt
 python -m pip install -e .
 ernest run \
   --workspace . \
@@ -101,6 +111,9 @@ rejects provider-side JSON mode, add `--no-json-mode`; Ernest still validates th
 HTTP failures include the endpoint, status, request ID when supplied, and the provider's response
 body. This makes model-access, unsupported-parameter, and endpoint mismatch errors visible. The
 adapter deliberately omits `temperature`, which is not accepted by every current model.
+Transient read timeouts, network failures, rate limits, and server errors are retried with bounded
+exponential backoff. `--llm-timeout` controls the timeout for each request (default 300 seconds), and
+`--llm-retries` controls the number of HTTP retries (default 2).
 
 For a local or custom provider, pass `--llm-command "your-adapter --json"`. The command receives one
 JSON object on stdin:
@@ -134,7 +147,15 @@ malformed code patches are automatically returned to the responsible agent for u
 repairs before abandonment.
 
 Important options include `--max-experiments` (default 50), `--timeout` (one wall-clock budget per
-experiment), `--max-debug-attempts` (default 3), and `--max-backfills` (default 2).
+experiment), `--max-debug-attempts` (default 3), `--max-backfills` (default 2),
+`--candidate-pool-size` (default 12), `--screening-timeout` (default 900 seconds),
+`--screening-holdout-fraction` (default 0.25), `--llm-timeout` (default 300 seconds),
+`--llm-retries` (default 2), and `--force-rescreen`.
+
+The screen writes `runs/<run>/research/feature_catalog.json`, `screening_report.json`, and
+`manifest.json`. The manifest records the internal date boundary, dataset fingerprint, dependency
+versions, and the fact that no official-validation data or experiment IDs were used. Valid cached
+screens are reused when a run resumes.
 
 ## Invariants and trust boundary
 
@@ -146,6 +167,8 @@ experiment), `--max-debug-attempts` (default 3), and `--max-backfills` (default 
   rejects omissions.
 - Every completed or abandoned attempt is journaled with lineage, scores, diffs, active agents,
   revision count, metrics/failure reason, and sandbox path.
+- Research and planning artifacts are deliberately outside the journal and cannot advance the
+  experiment counter or the convergence window.
 - The host process controls files it writes. Generated Python is trusted to run as ordinary local
   experiment code; use an OS/container sandbox if the LLM itself is not trusted.
 

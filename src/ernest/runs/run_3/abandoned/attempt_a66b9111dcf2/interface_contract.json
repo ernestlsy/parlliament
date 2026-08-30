@@ -1,0 +1,47 @@
+{
+  "data_output": {
+    "description": "The fixed training command must write predictions_valid.npz at the requested output path with exactly two arrays named row_ids and scores, with no additional arrays. row_ids must be np.arange(len(valid_rows), dtype=np.int64), where valid_rows are the encoded validation rows in the original canonical validation order produced by data.load and data.encode. scores must be a finite one-dimensional float array of exactly the same length and in that identical row order. The artifact must not include ground-truth labels, user IDs, reordered rows, or evaluator metrics."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split",
+    "negatives_per_positive",
+    "objective"
+  ],
+  "model_input": {
+    "description": "model.py must preserve Model(dimension, learning_rate, l2), logits(features), predict(features, batch_size), state(), and load_state(state). Add a listwise training operation accepting a float/int feature tensor shaped [groups, candidates, fields], where candidate index 0 is the selected positive and candidates 1..4 are sampled negatives, with exactly five candidates when negatives_per_positive is 4. It must optimize mean stable cross-entropy of the within-group softmax over logits, backpropagate through the existing FM architecture and Adam parameters, apply existing L2 regularization, return a finite scalar loss, and leave predict() producing one finite score per input row. train.py must use a seeded RNG, select only eligible training users with at least one positive and four negatives, sample one positive and four negatives per group without validation/test access, preserve validation-row order for prediction, checkpoint by the existing validation proxy, and invoke the unchanged fixed evaluator after producing the artifact."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

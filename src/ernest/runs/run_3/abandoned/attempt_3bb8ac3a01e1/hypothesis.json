@@ -1,0 +1,27 @@
+{
+  "text": "Replace pointwise BCE with within-user pairwise BPR while retaining the factorization-machine architecture, user/item IDs, request-context fields, split, and evaluation protocol.",
+  "parent_experiment_id": 2,
+  "scores": {
+    "interestingness": 9,
+    "novelty": 8,
+    "feasibility": 7
+  },
+  "rationale": "The current scorer reaches GAUC 0.66891 and nDCG@5 0.53696, but the objective is ranking; pairwise training directly optimizes positive-over-negative ordering.",
+  "candidate_id": "c01",
+  "evidence_ids": [
+    "experiment:2:metrics"
+  ],
+  "exact_ablation": "Ablate pointwise BCE training and use one sampled positive-negative pairwise BPR loss per eligible user, leaving model, features, split, and evaluation unchanged.",
+  "expected_effect": {
+    "GAUC": "Increase approximately 0.003 to 0.010 by improving within-user positive-versus-negative ordering.",
+    "nDCG@5": "Increase approximately 0.002 to 0.008, with potentially larger gains for users whose current top-five retrieval is weak."
+  },
+  "expected_primary_gain": 0.006,
+  "confidence": 6,
+  "leakage_risk": "low",
+  "runtime_risk": "medium",
+  "active_components": [
+    "loss",
+    "training"
+  ]
+}

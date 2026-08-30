@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -124,13 +125,20 @@ class OpenAICompatibleClient(LLMClient):
 
     def __init__(
         self, model: str, *, base_url: str = "https://api.openai.com/v1",
-        api_key: Optional[str] = None, timeout_seconds: int = 180,
+        api_key: Optional[str] = None, timeout_seconds: int = 300,
+        max_retries: int = 2, retry_backoff_seconds: float = 1.0,
         api_mode: str = "auto", json_mode: bool = True,
     ):
         self.model = model
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
         self.timeout_seconds = timeout_seconds
+        self.max_retries = max_retries
+        self.retry_backoff_seconds = retry_backoff_seconds
+        if self.timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be positive")
+        if self.max_retries < 0 or self.retry_backoff_seconds < 0:
+            raise ValueError("retry settings cannot be negative")
         if api_mode not in {"auto", "responses", "chat"}:
             raise ValueError("api_mode must be one of: auto, responses, chat")
         self.api_mode = api_mode
@@ -146,28 +154,46 @@ class OpenAICompatibleClient(LLMClient):
 
     def _post(self, endpoint: str, body: Dict[str, Any]) -> Dict[str, Any]:
         encoded = json.dumps(body).encode("utf-8")
-        request = urllib.request.Request(
-            f"{self.base_url}/{endpoint}", data=encoded, method="POST",
-            headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
-                raw = response.read().decode("utf-8")
-        except urllib.error.HTTPError as exc:
+        raw = ""
+        retryable_statuses = {408, 409, 429, 500, 502, 503, 504}
+        for attempt in range(self.max_retries + 1):
+            request = urllib.request.Request(
+                f"{self.base_url}/{endpoint}", data=encoded, method="POST",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+            )
             try:
-                detail = exc.read().decode("utf-8", errors="replace").strip()
-            except Exception:
-                detail = ""
-            request_id = exc.headers.get("x-request-id", "") if exc.headers else ""
-            exc.close()
-            suffix = f"; request_id={request_id}" if request_id else ""
-            if detail:
-                suffix += f"; response={detail[:8000]}"
-            raise LLMError(
-                f"LLM HTTP {exc.code} {exc.reason} at {endpoint}{suffix}"
-            ) from exc
-        except urllib.error.URLError as exc:
-            raise LLMError(f"LLM network request failed at {endpoint}: {exc}") from exc
+                with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
+                    raw = response.read().decode("utf-8")
+                break
+            except urllib.error.HTTPError as exc:
+                try:
+                    detail = exc.read().decode("utf-8", errors="replace").strip()
+                except Exception:
+                    detail = ""
+                request_id = exc.headers.get("x-request-id", "") if exc.headers else ""
+                should_retry = exc.code in retryable_statuses and attempt < self.max_retries
+                exc.close()
+                if should_retry:
+                    time.sleep(self.retry_backoff_seconds * (2 ** attempt))
+                    continue
+                suffix = f"; request_id={request_id}" if request_id else ""
+                if detail:
+                    suffix += f"; response={detail[:8000]}"
+                raise LLMError(
+                    f"LLM HTTP {exc.code} {exc.reason} at {endpoint}{suffix}; "
+                    f"attempts={attempt + 1}"
+                ) from exc
+            except (TimeoutError, urllib.error.URLError) as exc:
+                if attempt < self.max_retries:
+                    time.sleep(self.retry_backoff_seconds * (2 ** attempt))
+                    continue
+                raise LLMError(
+                    f"LLM network request failed at {endpoint} after {attempt + 1} attempts; "
+                    f"timeout_seconds={self.timeout_seconds}; {type(exc).__name__}: {exc}"
+                ) from exc
         try:
             result = json.loads(raw)
         except json.JSONDecodeError as exc:

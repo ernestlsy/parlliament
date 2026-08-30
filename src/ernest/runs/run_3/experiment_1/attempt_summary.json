@@ -1,0 +1,23 @@
+{
+  "attempt_id": "6e17fb2b537e",
+  "status": "scored",
+  "generation": 1,
+  "mode": "draft",
+  "parent_experiment_id": 0,
+  "hypothesis_text": "Replace the additive user/item ID scorer with a factorization-machine scorer that includes a learned user-item interaction term, while keeping pointwise BCE training, the feature set, data split, and evaluation protocol unchanged.",
+  "active_sub_agents": [
+    "model_designer"
+  ],
+  "consultant_rounds": 2,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 56.05332534199988,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

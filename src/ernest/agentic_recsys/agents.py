@@ -44,6 +44,61 @@ def _scored_metric_history(archive: List[Dict[str, Any]]) -> List[Dict[str, Any]
     ]
 
 
+class FeatureAnalyst:
+    """Turns deterministic research artifacts into a concise planning assessment."""
+
+    def __init__(self, llm: LLMClient):
+        self.llm = llm
+
+    def analyze(
+        self, *, research_brief: Dict[str, Any], available_evidence_ids: Sequence[str]
+    ) -> Dict[str, Any]:
+        system = (
+            "You are the Feature Analyst for a recommender experiment budget with a strict early "
+            "stopping rule. Interpret train-only screening and post-score segment diagnostics. "
+            "Prioritize stable within-user ranking evidence, distinguish GAUC from top-five "
+            "weaknesses, and reject leakage. Cite only available_evidence_ids. " + JSON_ONLY
+        )
+        payload = {
+            "research_brief": research_brief,
+            "available_evidence_ids": list(available_evidence_ids),
+            "validation_feedback": None,
+            "response_schema": {
+                "priorities": [{
+                    "evidence_ids": ["screen:item_metadata"],
+                    "finding": "string",
+                    "recommended_action": "string",
+                }],
+                "avoid": ["string"],
+                "metric_diagnosis": "string",
+            },
+        }
+        allowed = set(available_evidence_ids)
+        last_error = ""
+        for response_attempt in range(1, 4):
+            payload["response_attempt"] = response_attempt
+            payload["validation_feedback"] = last_error or None
+            result = self.llm.complete_json(
+                role="feature_analyst", system=system, payload=payload
+            )
+            try:
+                priorities = result.get("priorities")
+                if not isinstance(priorities, list) or not priorities:
+                    raise ValueError("feature analyst requires at least one priority")
+                for priority in priorities:
+                    cited = priority.get("evidence_ids", [])
+                    if not cited or not set(cited).issubset(allowed):
+                        raise ValueError(f"feature analyst cited unavailable evidence: {cited}")
+                    if not str(priority.get("finding", "")).strip():
+                        raise ValueError("feature analyst priority requires a finding")
+                result.setdefault("avoid", [])
+                result.setdefault("metric_diagnosis", "")
+                return result
+            except (AttributeError, TypeError, ValueError) as exc:
+                last_error = f"Response validation failed: {type(exc).__name__}: {exc}"
+        raise LLMError(f"Feature Analyst returned invalid analysis three times; {last_error}")
+
+
 class EvolutionJudge:
     def __init__(
         self,
@@ -149,9 +204,134 @@ class EvolutionJudge:
                             "under-explored parent"
                         )
                 return proposals
-            except (TypeError, ValueError) as exc:
+            except (AttributeError, TypeError, ValueError) as exc:
                 last_error = f"Response validation failed: {type(exc).__name__}: {exc}"
         raise LLMError(f"Evolution Judge returned invalid proposals three times; {last_error}")
+
+    def generate_candidates(
+        self,
+        *,
+        mode: Mode,
+        generation: int,
+        archive: List[Dict[str, Any]],
+        reference_snapshots: List[Dict[str, Any]],
+        candidate_count: int,
+        research_brief: Dict[str, Any],
+        analyst_assessment: Dict[str, Any],
+        available_evidence_ids: Sequence[str],
+    ) -> List[Hypothesis]:
+        system = (
+            "Generate a portfolio of materially distinct, concrete recommender hypotheses before "
+            "one scarce official experiment is selected. Every candidate must make exactly one "
+            "interpretable ablation, cite measured evidence, predict separate GAUC and nDCG@5 "
+            "effects, and state downside risks. Never use forbidden or quarantined features. "
+            "Candidates may vary in model, loss, training, or feature family, but evidence citations "
+            "must come from available_evidence_ids. active_components is advisory and may use "
+            "conceptual labels such as features, architecture, loss, or training; the Orchestrator "
+            "will choose actual implementation agents later. " + JSON_ONLY
+        )
+        schema = {
+            "candidate_id": "c01",
+            "text": "string",
+            "parent_experiment_id": 0,
+            "scores": {"interestingness": 1, "novelty": 1, "feasibility": 1},
+            "rationale": "string",
+            "evidence_ids": ["screen:item_metadata"],
+            "exact_ablation": "string",
+            "expected_effect": {"GAUC": "string", "nDCG@5": "string"},
+            "expected_primary_gain": 0.003,
+            "confidence": 1,
+            "leakage_risk": "low|medium|high",
+            "runtime_risk": "low|medium|high",
+            "active_components": ["feature_engineer"],
+        }
+        payload = {
+            "generation": generation,
+            "mode": mode.value,
+            "candidate_count": candidate_count,
+            "full_archive": archive,
+            "scored_metric_history": _scored_metric_history(archive),
+            "metric_catalog": self.metric_catalog,
+            "research_knowledge_base": self.knowledge_documents,
+            "research_brief": research_brief,
+            "feature_analyst_assessment": analyst_assessment,
+            "reference_experiments_with_code": reference_snapshots,
+            "available_parent_ids": [int(item["experiment_id"]) for item in reference_snapshots],
+            "available_evidence_ids": list(available_evidence_ids),
+            "validation_feedback": None,
+            "response_schema": {"candidates": [schema]},
+        }
+        parents = set(payload["available_parent_ids"])
+        evidence = set(available_evidence_ids)
+        last_error = ""
+        for response_attempt in range(1, 4):
+            payload["response_attempt"] = response_attempt
+            payload["validation_feedback"] = last_error or None
+            result = self.llm.complete_json(
+                role="evolution_judge_candidates", system=system, payload=payload
+            )
+            try:
+                candidates = [hypothesis_from_dict(item) for item in result.get("candidates", [])]
+                if len(candidates) != candidate_count:
+                    raise ValueError(
+                        f"candidate portfolio requires exactly {candidate_count}; got {len(candidates)}"
+                    )
+                identifiers = [item.candidate_id for item in candidates]
+                if len(set(identifiers)) != len(identifiers):
+                    raise ValueError("candidate_id values must be unique")
+                ablations = [" ".join(item.exact_ablation.lower().split()) for item in candidates]
+                if len(set(ablations)) != len(ablations):
+                    raise ValueError("candidate exact_ablation values must be materially distinct")
+                for candidate in candidates:
+                    if candidate.parent_experiment_id not in parents:
+                        raise ValueError(
+                            f"candidate {candidate.candidate_id} uses unavailable parent "
+                            f"{candidate.parent_experiment_id}"
+                        )
+                    candidate.validate_tournament_candidate(evidence)
+                    if candidate.leakage_risk == "high":
+                        raise ValueError(f"candidate {candidate.candidate_id} has high leakage risk")
+                return candidates
+            except (AttributeError, TypeError, ValueError) as exc:
+                last_error = f"Response validation failed: {type(exc).__name__}: {exc}"
+        raise LLMError(f"Evolution Judge returned invalid candidate portfolios; {last_error}")
+
+    def select_winner(
+        self,
+        *,
+        candidates: Sequence[Hypothesis],
+        ranking: Dict[str, Any],
+        research_brief: Dict[str, Any],
+    ) -> Tuple[Hypothesis, str]:
+        system = (
+            "Select exactly one candidate for the next scarce counted experiment. Use measured "
+            "evidence, expected primary gain, confidence, downside risk, and the Consultant's "
+            "head-to-head ranking. Prefer a reliable improvement over novelty alone. " + JSON_ONLY
+        )
+        payload = {
+            "candidates": [asdict(item) for item in candidates],
+            "consultant_ranking": ranking,
+            "research_brief": research_brief,
+            "validation_feedback": None,
+            "response_schema": {
+                "winner_candidate_id": "c01",
+                "selection_rationale": "string",
+            },
+        }
+        by_id = {item.candidate_id: item for item in candidates}
+        last_error = ""
+        for response_attempt in range(1, 4):
+            payload["response_attempt"] = response_attempt
+            payload["validation_feedback"] = last_error or None
+            result = self.llm.complete_json(
+                role="evolution_judge_selection", system=system, payload=payload
+            )
+            winner_id = str(result.get("winner_candidate_id", ""))
+            rationale = str(result.get("selection_rationale", ""))
+            if winner_id in by_id and rationale.strip():
+                return by_id[winner_id], rationale
+            last_error = f"winner_candidate_id must be one of {sorted(by_id)} and include rationale"
+        raise LLMError(f"Evolution Judge returned invalid winner three times; {last_error}")
 
     def revise(
         self,
@@ -224,6 +404,55 @@ class Consultant:
         result.setdefault("feedback", "")
         result.setdefault("final_action", "not_applicable")
         return result
+
+    def rank_candidates(
+        self,
+        *,
+        candidates: Sequence[Hypothesis],
+        archive: List[Dict[str, Any]],
+        research_brief: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        system = (
+            "Rank every proposed recommender candidate head-to-head for one scarce experiment. "
+            "Penalize weak evidence, duplication, validation overfitting, leakage, excessive scope, "
+            "and runtime risk. Ranking position 1 is best. " + JSON_ONLY
+        )
+        payload = {
+            "candidates": [asdict(item) for item in candidates],
+            "full_archive": archive,
+            "research_brief": research_brief,
+            "validation_feedback": None,
+            "response_schema": {"ranking": [{
+                "candidate_id": "c01",
+                "rank": 1,
+                "utility_score": 0.0,
+                "rationale": "string",
+            }]},
+        }
+        expected = {item.candidate_id for item in candidates}
+        last_error = ""
+        for response_attempt in range(1, 4):
+            payload["response_attempt"] = response_attempt
+            payload["validation_feedback"] = last_error or None
+            result = self.llm.complete_json(
+                role="consultant_tournament", system=system, payload=payload
+            )
+            try:
+                ranking = result.get("ranking")
+                if not isinstance(ranking, list) or len(ranking) != len(candidates):
+                    raise ValueError("ranking must contain every candidate exactly once")
+                identifiers = [str(item.get("candidate_id", "")) for item in ranking]
+                ranks = [int(item.get("rank", 0)) for item in ranking]
+                if set(identifiers) != expected or len(set(identifiers)) != len(identifiers):
+                    raise ValueError("ranking candidate IDs do not match the portfolio")
+                if sorted(ranks) != list(range(1, len(candidates) + 1)):
+                    raise ValueError("ranking positions must be consecutive from 1")
+                if not all(str(item.get("rationale", "")).strip() for item in ranking):
+                    raise ValueError("each ranking entry requires a rationale")
+                return {"ranking": sorted(ranking, key=lambda item: int(item["rank"]))}
+            except (AttributeError, TypeError, ValueError) as exc:
+                last_error = f"Response validation failed: {type(exc).__name__}: {exc}"
+        raise LLMError(f"Consultant returned invalid tournament rankings; {last_error}")
 
     def resolve(
         self,
@@ -302,7 +531,7 @@ class Orchestrator:
                 )
                 plan.validate()
                 return plan
-            except (TypeError, ValueError) as exc:
+            except (AttributeError, TypeError, ValueError) as exc:
                 last_error = f"Response validation failed: {type(exc).__name__}: {exc}"
         raise LLMError(f"Orchestrator returned invalid plans three times; {last_error}")
 

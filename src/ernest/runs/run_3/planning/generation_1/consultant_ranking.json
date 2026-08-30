@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.91,
+      "rationale": "Strongest candidate: it directly tests the only positively screened feature family, has full coverage, low leakage and runtime risk, and preserves a clean one-group ablation. The measured +0.00221 lift provides the best available evidence."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 2,
+      "utility_score": 0.78,
+      "rationale": "Directly aligns training with the within-user ranking objective and has the strongest loss-level expected gain with moderate confidence. It is less evidence-backed than c01 and carries pair-sampling/runtime risk, but remains a focused single-component experiment."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 3,
+      "utility_score": 0.72,
+      "rationale": "Listwise loss is well aligned with nDCG and offers potentially strong top-ranking gains, but bounded grouping and truncation introduce feasibility and validation risks. Confidence is lower than for BPR."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 4,
+      "utility_score": 0.64,
+      "rationale": "A focused, low-risk decomposition of the validated request-context signal. Hourmin has plausible mechanism-level value and avoids confounding, though its individual contribution is unmeasured and expected gain is modest."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 5,
+      "utility_score": 0.61,
+      "rationale": "Clean and inexpensive single-field test of a positively screened feature family. It is useful diagnostically, but tab's isolated contribution is unknown and the expected gain is smaller than the full context group."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 6,
+      "utility_score": 0.58,
+      "rationale": "Tests a plausible source of conditional context value without adding features, but has only indirect screening evidence, medium runtime risk, and a meaningful sparse interaction overfitting risk."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 7,
+      "utility_score": 0.52,
+      "rationale": "A reasonably bounded architecture test of missing user-item compatibility, but there is no direct evidence that nonlinear interactions are the bottleneck. Medium runtime and overfitting risk reduce its scarce-experiment value."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 8,
+      "utility_score": 0.47,
+      "rationale": "Hard negatives could improve top-of-list ordering, but this is dependent on BPR, adds training complexity, and risks noisy or unstable optimization. It also duplicates much of the rationale of the higher-ranked loss experiment."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 9,
+      "utility_score": 0.39,
+      "rationale": "Low-cost and available at serving time, but date has no isolated positive evidence and may overfit temporal drift. Its expected gain is small and could be negative."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 10,
+      "utility_score": 0.35,
+      "rationale": "Safe, interpretable decomposition of request context, but weekday is weakly motivated relative to hourmin, has no isolated evidence, and has the lowest expected gain among the context singletons."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 11,
+      "utility_score": 0.29,
+      "rationale": "Tests personalization of context response, but combines a new crossed representation with a feature change, has medium runtime risk, sparse user-tab parameters, low confidence, and greater validation overfitting risk than simpler context tests."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 12,
+      "utility_score": 0.12,
+      "rationale": "The only directly measured evidence for this feature group is negative, with a reject recommendation and a negative primary lift. Although feasible and low risk operationally, scarce experimentation should prioritize candidates with positive or at least untested evidence."
+    }
+  ]
+}

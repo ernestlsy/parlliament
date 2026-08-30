@@ -1,0 +1,51 @@
+{
+  "attempt_id": "17dae2e4401b",
+  "status": "abandoned",
+  "generation": 1,
+  "mode": "draft",
+  "parent_experiment_id": 0,
+  "hypothesis_text": "Add impression-time request-context features tab, hourmin, and weekday to the neutral user/item additive scaffold while leaving the model and pointwise BCE training unchanged.",
+  "active_sub_agents": [
+    "feature_engineer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": "initial_patch:feature_engineer",
+  "failure_reason": "stage=initial_patch:feature_engineer; agent_or_guardrail_failure: RuntimeError: feature_engineer failed to provide an applicable patch after three responses: ValueError: patch context does not match reference file",
+  "failure_reports": [
+    {
+      "kind": "contract_fulfillment",
+      "message": "feature_engineer patch response was invalid: ValueError: patch context does not match reference file",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 281, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 116, in apply_unified_diff\n    raise ValueError(\"patch context does not match reference file\")\nValueError: patch context does not match reference file\n",
+      "responsible_agents": [
+        "feature_engineer"
+      ],
+      "attempt": 1,
+      "return_code": null
+    },
+    {
+      "kind": "contract_fulfillment",
+      "message": "feature_engineer patch response was invalid: ValueError: invalid hunk line: '@@\\n'",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 281, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 112, in apply_unified_diff\n    raise ValueError(f\"invalid hunk line: {line[:100]!r}\")\nValueError: invalid hunk line: '@@\\n'\n",
+      "responsible_agents": [
+        "feature_engineer"
+      ],
+      "attempt": 2,
+      "return_code": null
+    },
+    {
+      "kind": "contract_fulfillment",
+      "message": "feature_engineer patch response was invalid: ValueError: patch context does not match reference file",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 281, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 116, in apply_unified_diff\n    raise ValueError(\"patch context does not match reference file\")\nValueError: patch context does not match reference file\n",
+      "responsible_agents": [
+        "feature_engineer"
+      ],
+      "attempt": 3,
+      "return_code": null
+    }
+  ],
+  "elapsed_seconds": 36.53556585799379,
+  "available_log_files": [],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 281, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 116, in apply_unified_diff\n    raise ValueError(\"patch context does not match reference file\")\nValueError: patch context does not match reference file\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 315, in _run_hypothesis\n    request_and_apply_patch(agent, phase=failure_stage)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 297, in request_and_apply_patch\n    raise RuntimeError(\nRuntimeError: feature_engineer failed to provide an applicable patch after three responses: ValueError: patch context does not match reference file\n"
+}

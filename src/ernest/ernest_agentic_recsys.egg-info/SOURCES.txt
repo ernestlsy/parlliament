@@ -5,12 +5,14 @@ agentic_recsys/__main__.py
 agentic_recsys/agents.py
 agentic_recsys/cli.py
 agentic_recsys/config.py
+agentic_recsys/diagnostics.py
 agentic_recsys/evaluation.py
 agentic_recsys/experimentor.py
 agentic_recsys/journal.py
 agentic_recsys/knowledge.py
 agentic_recsys/llm.py
 agentic_recsys/overseer.py
+agentic_recsys/research.py
 agentic_recsys/sandbox.py
 agentic_recsys/schemas.py
 agentic_recsys/knowledge/recommender_research.md
@@ -26,3 +28,4 @@ ernest_agentic_recsys.egg-info/requires.txt
 ernest_agentic_recsys.egg-info/top_level.txt
 tests/test_core.py
 tests/test_end_to_end.py
+tests/test_research.py

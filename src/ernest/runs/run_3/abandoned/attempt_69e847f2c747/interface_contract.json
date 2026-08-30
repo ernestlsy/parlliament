@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "The fixed training command must emit predictions_valid.npz containing exactly two arrays: row_ids and scores. row_ids must be int64 identifiers in canonical validation row order, and scores must be finite one-dimensional long_view-head predictions with exactly one score per validation row. The evaluator alone loads validation ground truth."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "Model receives encoded impression features in the existing two-dimensional integer matrix format, training long_view labels, and training-only is_click labels aligned row-for-row. It optimizes the shared factorization-machine representation with long_view BCE plus 0.2 times is_click BCE, while predict(features) returns only long_view-head logits in input row order. No validation or test labels may enter fitting, early stopping, or prediction."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

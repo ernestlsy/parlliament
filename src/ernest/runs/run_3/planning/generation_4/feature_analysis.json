@@ -1,0 +1,20 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "feature:request_context",
+        "experiment:2:metrics"
+      ],
+      "finding": "Prioritize request-context features tab, hourmin, and weekday. Training-only temporal screening shows a positive primary lift of 0.00221 with full coverage and positive daily lift on all four holdout dates. The official validation result supports stable within-user ranking improvement: GAUC is 0.6689 and nDCG@5 is 0.5370, although top-five precision is weaker at 0.3754.",
+      "recommended_action": "Spend the remaining budget on request-context integration and validation, then early-stop further feature additions unless an independently timed confirmation reverses this decision."
+    }
+  ],
+  "avoid": [
+    "Reject user-profile, historical user-author affinity, upload-recency, content-duration, item-metadata, historical-author-response, and historical-item-response additions based on negative or unstable training-only screening evidence.",
+    "Do not treat post-score segment diagnostics as independent test estimates or as evidence for further feature selection.",
+    "Do not use user_positive_count as a deployable ranking feature; it uses validation labels retrospectively and is diagnostic only.",
+    "Do not add current-impression outcome fields or undated aggregate snapshots, because they are unavailable at ranking time or create leakage risk."
+  ],
+  "metric_diagnosis": "The experiment provides meaningful within-user ordering overall, with GAUC 0.6689, but top-five quality remains materially weaker than global ranking quality: nDCG@5 is 0.5370 and precision@5 is 0.3754. The weakest operational slice is tab 8, where GAUC is 0.3519 and nDCG@5 is 0.0263, while the zero-positive-count slice is label-defined and not actionable for deployment. This indicates that the priority should be robustifying top-five behavior in sparse or problematic request contexts rather than adding broad profile, metadata, recency, duration, or historical-response features. Relevant diagnostics: [experiment:2:metrics], [experiment:2:segment:tab:8], [experiment:2:segment:user_positive_count:zero]."
+}

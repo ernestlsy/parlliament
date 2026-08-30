@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "data.py load/encode must return encoded[split] as (features, labels, users), where features is an int32 matrix with columns ordered user_id, video_id, tab, hourmin, weekday; labels is the long_view float32 vector; users is the original validation user_id vector. Feature vocabularies and offsets are fitted only on train rows, unseen values map to per-field unknown buckets, and split row order is preserved exactly."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "model.py remains unchanged and receives the expanded additive feature matrix plus its total encoded dimension. It must sum the learned weights for every feature column, apply the existing sigmoid/logit behavior, and train with the existing pointwise BCE step; no interactions, architecture changes, or baseline-derived features are permitted."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

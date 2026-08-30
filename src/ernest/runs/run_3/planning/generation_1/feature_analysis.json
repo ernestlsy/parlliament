@@ -1,0 +1,34 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "feature:tab",
+        "feature:hourmin"
+      ],
+      "finding": "The request-context group is the only positive training-only candidate, with primary lift 0.00221 and full coverage. Its within-user ranking signal is stronger on GAUC for cold users (0.654) than warm users/items (0.631), while nDCG@5 is weaker for cold users (0.492 versus 0.508), indicating useful broad ranking discrimination but limited top-five concentration in that segment.",
+      "recommended_action": "Advance only request_context to the next controlled experiment, with daily and segment-level monitoring. Do not expand the feature budget until the positive lift is replicated beyond the internal temporal holdout."
+    }
+  ],
+  "avoid": [
+    "screen:user_profile",
+    "screen:historical_user_author_affinity",
+    "screen:upload_recency",
+    "screen:content_duration",
+    "screen:item_metadata",
+    "screen:historical_author_response",
+    "screen:historical_item_response",
+    "feature:comment_stay_time",
+    "feature:is_click",
+    "feature:is_comment",
+    "feature:is_follow",
+    "feature:is_forward",
+    "feature:is_hate",
+    "feature:is_like",
+    "feature:is_profile_enter",
+    "feature:long_view",
+    "feature:play_time_ms",
+    "feature:profile_stay_time"
+  ],
+  "metric_diagnosis": "Stop further screening and reject all non-request-context groups. User-profile evidence is slightly negative overall and unstable by day; affinity, recency, duration, and item metadata are negative, with metadata also weakening GAUC. Historical author/item response features are consistently and materially negative in warm-user-and-item GAUC (about 0.467), so they do not provide stable within-user ranking evidence. The request-context lift is modest and daily variability is high, and its cold-item segment is uninformative (GAUC 0.5 on only 8 rows); therefore treat it as a provisional candidate rather than a confirmed win. Exclude current-impression outcomes and quarantine aggregate snapshots because their availability would create leakage."
+}

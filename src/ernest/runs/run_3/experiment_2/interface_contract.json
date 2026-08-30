@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "data.py must load the existing CSVs and preserve their original row order. It must retain user_id and video_id and add exactly tab, hourmin, and weekday as categorical fields derived from each impression timestamp/request context. encode(splits) must fit vocabularies on the training split only, map unseen validation/test values to per-field unknown buckets, return encoded[name] as (features, labels, users), and return the total flattened feature dimension. Validation features must remain in canonical evaluator row order, with no labels or ground-truth data written to predictions_valid.npz."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "model.py must accept feature matrices shaped (n_rows, 5), with columns ordered user_id, video_id, tab, hourmin, weekday and flattened nonnegative integer indices. The factorization machine must score all supplied fields using the existing linear terms and pairwise embeddings, retain interaction_dimension=16, pointwise BCE gradients, Adam-style updates, learning rate, L2 regularization, state checkpointing, and prediction as a finite one-dimensional score array. train.py must emit predictions_valid.npz containing exactly row_ids and scores; row_ids must be np.arange(n_valid) and scores must correspond to the canonical validation feature order. Ground truth may be used only internally by the fixed evaluator, not by the artifact producer."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

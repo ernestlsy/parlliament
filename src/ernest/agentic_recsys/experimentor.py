@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 from typing import Optional, Tuple
 
+from .diagnostics import attach_segment_diagnostics
 from .evaluation import score_prediction_artifact
 from .schemas import AGENT_FILES, ExperimentPlan, FailureKind, FailureReport
 
@@ -146,5 +147,18 @@ class Experimentor:
                 FailureKind.CONTRACT_FULFILLMENT,
                 f"invalid prediction artifact: {exc}", repr(exc), ["trainer"], attempt,
             )
+        try:
+            metrics = attach_segment_diagnostics(
+                metrics,
+                output,
+                Path(self.data_dir),
+                sandbox / "segment_diagnostics.json",
+            )
+        except Exception as exc:
+            # Diagnostics are advisory and must never invalidate a correctly scored experiment.
+            metrics["segment_diagnostics"] = {
+                "status": "unavailable",
+                "error": f"{type(exc).__name__}: {exc}",
+            }
         (sandbox / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
         return metrics, None

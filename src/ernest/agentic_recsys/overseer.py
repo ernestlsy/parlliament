@@ -9,13 +9,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-from .agents import Consultant, EvolutionJudge, Orchestrator
+from .agents import Consultant, EvolutionJudge, FeatureAnalyst, Orchestrator
 from .config import SystemConfig
 from .experimentor import Experimentor
 from .evaluation import METRIC_CATALOG
 from .journal import Journal
 from .knowledge import KnowledgeBase
 from .llm import AuditedLLMClient, LLMClient
+from .research import ResearchEngine, ScreeningConfig
 from .sandbox import (
     apply_agent_patches,
     config_diff,
@@ -36,10 +37,21 @@ class Overseer:
         self.llm = AuditedLLMClient(llm, config.run_dir / "llm_events.jsonl")
         knowledge = KnowledgeBase(Path(__file__).parent / "knowledge").documents()
         self.judge = EvolutionJudge(self.llm, knowledge, METRIC_CATALOG)
+        self.feature_analyst = FeatureAnalyst(self.llm)
         self.consultant = Consultant(self.llm, config.max_consultant_rounds)
         self.orchestrator = Orchestrator(self.llm)
         self.experimentor = Experimentor(config.python_executable, config.data_dir)
         self.seed_dir = Path(__file__).parent / "seed"
+        self.research = ResearchEngine(
+            Path(config.data_dir),
+            config.run_dir,
+            ScreeningConfig(
+                holdout_fraction=config.screening_holdout_fraction,
+                seed=config.screening_seed,
+                timeout_seconds=config.screening_timeout_seconds,
+                force=config.force_rescreen,
+            ),
+        )
 
     def initialize(self) -> None:
         self.config.run_dir.mkdir(parents=True, exist_ok=True)
@@ -86,9 +98,7 @@ class Overseer:
         if mode is Mode.IMPROVE:
             if not scored:
                 return [seed]
-            latest_generation = max(int(r["generation"]) for r in scored)
-            recent = [r for r in scored if int(r["generation"]) == latest_generation]
-            return [max(recent, key=lambda r: float(r["metrics"]["primary"]))]
+            return [max(scored, key=lambda r: float(r["metrics"]["primary"]))]
         return [seed] + scored
 
     def _parent_dir(self, experiment_id: int) -> Path:
@@ -136,6 +146,78 @@ class Overseer:
                     "failure_reason": None,
                 })
         return accepted
+
+    def _run_tournament(
+        self,
+        *,
+        generation: int,
+        mode: Mode,
+        archive: List[Dict[str, Any]],
+        snapshots: List[Dict[str, Any]],
+    ) -> Tuple[Hypothesis, int, Optional[str]]:
+        """Spend planning calls, not scored iterations, to choose one experiment."""
+        research_brief = self.research.build_brief(archive)
+        evidence_ids = self.research.evidence_ids(archive)
+        planning_dir = self.config.run_dir / "planning" / f"generation_{generation}"
+        planning_dir.mkdir(parents=True, exist_ok=True)
+
+        self.llm.set_context(
+            phase="feature_analysis", generation=generation, mode=mode.value
+        )
+        assessment = self.feature_analyst.analyze(
+            research_brief=research_brief,
+            available_evidence_ids=evidence_ids,
+        )
+        (planning_dir / "feature_analysis.json").write_text(
+            json.dumps(assessment, indent=2), encoding="utf-8"
+        )
+
+        self.llm.set_context(
+            phase="candidate_generation", generation=generation, mode=mode.value
+        )
+        candidates = self.judge.generate_candidates(
+            mode=mode,
+            generation=generation,
+            archive=archive,
+            reference_snapshots=snapshots,
+            candidate_count=self.config.candidate_pool_size,
+            research_brief=research_brief,
+            analyst_assessment=assessment,
+            available_evidence_ids=evidence_ids,
+        )
+        (planning_dir / "candidates.json").write_text(
+            json.dumps([asdict(item) for item in candidates], indent=2), encoding="utf-8"
+        )
+
+        self.llm.set_context(
+            phase="candidate_ranking", generation=generation, mode=mode.value
+        )
+        ranking = self.consultant.rank_candidates(
+            candidates=candidates,
+            archive=archive,
+            research_brief=research_brief,
+        )
+        (planning_dir / "consultant_ranking.json").write_text(
+            json.dumps(ranking, indent=2), encoding="utf-8"
+        )
+
+        self.llm.set_context(
+            phase="candidate_selection", generation=generation, mode=mode.value
+        )
+        winner, rationale = self.judge.select_winner(
+            candidates=candidates,
+            ranking=ranking,
+            research_brief=research_brief,
+        )
+        selection = {
+            "winner": asdict(winner),
+            "selection_rationale": rationale,
+            "counted_experiments_consumed": 0,
+        }
+        (planning_dir / "selection.json").write_text(
+            json.dumps(selection, indent=2), encoding="utf-8"
+        )
+        return winner, 1, None
 
     def _run_hypothesis(
         self,
@@ -312,6 +394,16 @@ class Overseer:
             consultant_rounds=consultant_rounds,
             sandbox=str(final_path.resolve()),
             created_at=datetime.now(timezone.utc).isoformat(),
+            hypothesis_prediction={
+                "candidate_id": hypothesis.candidate_id,
+                "evidence_ids": hypothesis.evidence_ids,
+                "expected_effect": hypothesis.expected_effect,
+                "expected_primary_gain": hypothesis.expected_primary_gain,
+                "confidence": hypothesis.confidence,
+                "leakage_risk": hypothesis.leakage_risk,
+                "runtime_risk": hypothesis.runtime_risk,
+                "exact_ablation": hypothesis.exact_ablation,
+            },
         )
         (final_path / "patch_history.json").write_text(
             json.dumps(patch_history, indent=2, default=str), encoding="utf-8"
@@ -380,21 +472,20 @@ class Overseer:
             self.config.convergence_epsilon,
             self.config.convergence_window,
         )
+        if stop is None:
+            self.llm.set_context(phase="train_only_feature_screening")
+            self.research.ensure()
         generation = self.journal.latest_generation() + 1
         while stop is None:
             mode = Mode.IMPROVE if generation % 2 == 0 else Mode.DRAFT
-            archive, references, snapshots, parent_ids = self._current_judge_context(mode)
-            requested = 1 if mode is Mode.IMPROVE else self.config.max_draft_hypotheses
-            self.llm.set_context(phase="evolution_judge", generation=generation, mode=mode.value)
-            proposals = self.judge.propose(
-                mode=mode,
+            archive, _references, snapshots, _parent_ids = self._current_judge_context(mode)
+            winner = self._run_tournament(
                 generation=generation,
+                mode=mode,
                 archive=archive,
-                reference_snapshots=snapshots,
-                count=requested,
+                snapshots=snapshots,
             )
-            accepted = self._consult(proposals, archive, parent_ids)
-            for hypothesis, rounds, caveat in accepted:
+            for hypothesis, rounds, caveat in [winner]:
                 backfills = 0
                 while True:
                     record = self._run_hypothesis(
@@ -450,4 +541,5 @@ class Overseer:
             "converged_score": scored[-1]["metrics"]["primary"] if scored else None,
             "last_experiment_id": scored[-1]["experiment_id"] if scored else None,
             "journal": str(self.journal.path.resolve()),
+            "screening_report": str(self.research.report_path.resolve()),
         }

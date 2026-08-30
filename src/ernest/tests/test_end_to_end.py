@@ -71,13 +71,45 @@ class EndToEndTests(unittest.TestCase):
                 ],
             }
             llm = ScriptedLLMClient([
-                {"hypotheses": [{
+                {"priorities": [{
+                    "evidence_ids": ["screen:item_metadata"],
+                    "finding": "item metadata is stable",
+                    "recommended_action": "use it",
+                }], "avoid": [], "metric_diagnosis": "smoke test"},
+                {"candidates": [{
+                    "candidate_id": "c1",
                     "text": "Document the neutral seed without changing its behavior",
                     "parent_experiment_id": 0,
                     "scores": {"interestingness": 2, "novelty": 2, "feasibility": 10},
                     "rationale": "Pipeline smoke test",
+                    "evidence_ids": ["screen:item_metadata"],
+                    "exact_ablation": "change the model docstring",
+                    "expected_effect": {"GAUC": "neutral", "nDCG@5": "neutral"},
+                    "expected_primary_gain": 0.0,
+                    "confidence": 10,
+                    "leakage_risk": "low",
+                    "runtime_risk": "low",
+                    "active_components": ["model_designer"],
+                }, {
+                    "candidate_id": "c2",
+                    "text": "Change only the learning rate",
+                    "parent_experiment_id": 0,
+                    "scores": {"interestingness": 3, "novelty": 3, "feasibility": 9},
+                    "rationale": "Distinct smoke candidate",
+                    "evidence_ids": ["screen:item_metadata"],
+                    "exact_ablation": "change only learning rate",
+                    "expected_effect": {"GAUC": "unknown", "nDCG@5": "unknown"},
+                    "expected_primary_gain": -0.001,
+                    "confidence": 5,
+                    "leakage_risk": "low",
+                    "runtime_risk": "low",
+                    "active_components": ["trainer"],
                 }]},
-                {"accepted": True, "feedback": "feasible", "final_action": "not_applicable"},
+                {"ranking": [
+                    {"candidate_id": "c1", "rank": 1, "utility_score": 9, "rationale": "safe"},
+                    {"candidate_id": "c2", "rank": 2, "utility_score": 3, "rationale": "weaker"},
+                ]},
+                {"winner_candidate_id": "c1", "selection_rationale": "highest confidence"},
                 {"active_agents": ["model_designer"], "reasoning": "model-only", "contract": contract},
                 {"patches": {"model.py": (
                     "--- model.py\n+++ model.py\n@@ -1,1 +1,1 @@\n"
@@ -93,9 +125,27 @@ class EndToEndTests(unittest.TestCase):
             ])
             config = SystemConfig(
                 workspace=str(root / "workspace"), data_dir=str(data),
-                max_experiments=1, experiment_timeout_seconds=60,
+                max_experiments=1, experiment_timeout_seconds=60, candidate_pool_size=2,
             )
             overseer = Overseer(config, llm)
+
+            class DeterministicResearch:
+                report_path = root / "screening_report.json"
+
+                def ensure(self):
+                    self.report_path.write_text("{}", encoding="utf-8")
+                    return {}
+
+                def evidence_ids(self, archive=None):
+                    return ["screen:item_metadata"]
+
+                def build_brief(self, archive):
+                    return {
+                        "screening_scope": "training_only_internal_temporal_holdout",
+                        "ranked_feature_evidence": [{"evidence_id": "screen:item_metadata"}],
+                    }
+
+            overseer.research = DeterministicResearch()
 
             class DeterministicExperimentor:
                 def run(self, sandbox, plan, *, attempt, timeout_seconds):
@@ -119,17 +169,18 @@ class EndToEndTests(unittest.TestCase):
             experiment = config.run_dir / "experiment_1"
             self.assertTrue((experiment / "metrics.json").is_file())
             self.assertTrue((experiment / "predictions_valid.npz").is_file())
-            self.assertEqual(len(llm.calls), 5)
-            self.assertTrue(llm.calls[0]["payload"]["research_knowledge_base"])
-            self.assertIn("classification", llm.calls[0]["payload"]["metric_catalog"])
-            self.assertEqual(llm.calls[0]["payload"]["scored_metric_history"], [])
-            seed_record = llm.calls[0]["payload"]["full_archive"][0]
+            self.assertEqual(len(llm.calls), 7)
+            self.assertTrue(llm.calls[1]["payload"]["research_knowledge_base"])
+            self.assertIn("classification", llm.calls[1]["payload"]["metric_catalog"])
+            self.assertEqual(llm.calls[1]["payload"]["scored_metric_history"], [])
+            seed_record = llm.calls[1]["payload"]["full_archive"][0]
             self.assertEqual(seed_record["status"], "seed")
             self.assertNotIn("primary", seed_record["metrics"])
             journal_record = overseer.journal.scored()[0]
             self.assertIn("model.py", journal_record["code_diff"])
             self.assertNotIn("config.json", journal_record["code_diff"])
             self.assertEqual(journal_record["metrics"]["classification"]["f1"], 0.8)
+            self.assertEqual(journal_record["hypothesis_prediction"]["candidate_id"], "c1")
             patch_history = json.loads((experiment / "patch_history.json").read_text(encoding="utf-8"))
             self.assertEqual(len(patch_history), 2)
             self.assertTrue((experiment / "llm_events.jsonl").is_file())

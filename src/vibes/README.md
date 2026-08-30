@@ -18,9 +18,15 @@ The implementation keeps the specification's responsibilities separate:
 | Feature Engineer / Model Designer / Trainer | role-specific prompts in `agents.py`, restricted to `data.py`, `model.py`, and `train.py`/`config.json` |
 | Experimentor | `agentic_recsys/experimentor.py`: contract probe, bounded subprocess, error classification |
 | Journal | `agentic_recsys/journal.py`: durable append-only JSONL archive and convergence checks |
-| Guardrails | `agentic_recsys/sandbox.py`: sandbox-contained paths and strict single-file unified diffs |
+| Guardrails | `agentic_recsys/sandbox.py`: sandbox-contained paths, per-role file allowlist, literal single-file SEARCH/REPLACE edits |
 | Fixed evaluator | `agentic_recsys/evaluation.py`: official scores plus classification and ranking diagnostics |
 | Seed scaffold | `agentic_recsys/seed/`: neutral two-ID additive learner, represented as unscored parent 0 |
+
+Seed parameters are initialised from a small seeded random normal, never from zeros: a parameter
+that appears only inside a product has a gradient proportional to its partner, so two zero blocks
+stay zero and the interaction is inert forever. `train.py` verifies after training that every
+block named by `Model.parameter_blocks()` actually moved, so a dead-gradient experiment fails
+loudly instead of silently reproducing its parent's score.
 
 The seed is a fresh, unscored code scaffold—not a prior experiment and not a reference to the
 published KuaiRand baseline. It uses only user/item IDs and a minimal additive pointwise learner so
@@ -38,8 +44,11 @@ Successful descendants are atomically renamed to `runs/<run>/experiment_<id>`. F
    three response attempts.
 2. The Consultant checks every proposal against the full journal. Revisions are capped at three.
 3. The Orchestrator fixes the machine-readable contract and activates only relevant code agents.
-4. Each code agent returns unified diffs. Ernest rejects absolute/traversing paths, unmanaged files,
-   mismatched patch headers, and stale patch context.
+4. Each code agent returns SEARCH/REPLACE blocks: the exact current text, then its replacement,
+   applied by literal match. Ernest rejects absolute/traversing paths, unmanaged files, SEARCH text
+   that is absent, and SEARCH text that matches more than once — an ambiguous edit is a contract
+   failure routed back to the agent, never applied to the first hit. The journal still stores a
+   unified diff against the parent, computed after the fact.
 5. Before training, a small-slice `--contract-check` validates the connected data/model/train path.
    The full process then writes `predictions_valid.npz` containing exactly canonical `row_ids` and
    `scores`. The fixed evaluator independently reloads users and labels from the official validation

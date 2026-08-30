@@ -54,11 +54,37 @@ class Journal:
                 return record
         return None
 
+    def primary_scores(self) -> List[float]:
+        return [float(r["metrics"]["primary"]) for r in self.scored()]
+
+    def running_best(self) -> List[float]:
+        """Cumulative maximum of validation primary, in scored-experiment order.
+
+        Convergence is measured on this series rather than on raw scores. The official
+        rule asks whether the run has *improved*; a raw comparison also fires when the
+        newest experiment is merely worse than an older one, so one dud halts the run
+        (this ended run_2 at 3 of 50). A running best is monotone non-decreasing, so a
+        dud can only fail to advance it, never reverse it.
+        """
+        best: List[float] = []
+        current = float("-inf")
+        for score in self.primary_scores():
+            current = max(current, score)
+            best.append(current)
+        return best
+
+    def best_record(self) -> Optional[Dict[str, Any]]:
+        """The validation-best scored experiment — the checkpoint that gets submitted."""
+        scored = self.scored()
+        if not scored:
+            return None
+        return max(scored, key=lambda r: float(r["metrics"]["primary"]))
+
     def converged(self, epsilon: float = 0.002, window: int = 3) -> bool:
-        scores = [float(r["metrics"]["primary"]) for r in self.scored()]
-        if len(scores) < window:
+        best = self.running_best()
+        if len(best) < window:
             return False
-        recent = scores[-window:]
+        recent = best[-window:]
         return recent[-1] - recent[0] < epsilon
 
     def stop_reason(self, max_experiments: int, epsilon: float, window: int) -> Optional[str]:

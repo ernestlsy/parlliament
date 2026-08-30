@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .llm import LLMClient, LLMError
+from .sandbox import BLOCK_FORMAT_HELP
 from .schemas import (
     AGENT_FILES,
     ExperimentPlan,
@@ -316,10 +317,19 @@ class Orchestrator:
         failure: Optional[FailureReport] = None,
     ) -> Dict[str, str]:
         allowed_files = AGENT_FILES[agent]
+        role_note = (
+            "model.py must keep a parameter_blocks() method returning every trainable array "
+            "by name. Training fails loudly if a listed block never changes, so any parameter "
+            "that only appears inside a product must not be initialised to zero. "
+            if agent == "model_designer" else ""
+        )
         system = (
-            f"You are the {agent}. Modify only {list(allowed_files)} and return unified diffs "
-            "against the supplied current files. Preserve all unrelated working behavior. Never "
-            "write evaluation logic. Patches must use exact file names in both --- and +++ headers. "
+            f"You are the {agent}. Modify only {list(allowed_files)} and return every edit as "
+            "SEARCH/REPLACE blocks against the supplied current files. Preserve all unrelated "
+            "working behavior. Never write evaluation logic. "
+            + role_note
+            + BLOCK_FORMAT_HELP
+            + " "
             + JSON_ONLY
         )
         raw = self.llm.complete_json(
@@ -332,7 +342,12 @@ class Orchestrator:
                     name: (sandbox / name).read_text(encoding="utf-8") for name in allowed_files
                 },
                 "structured_error": None if failure is None else asdict(failure),
-                "response_schema": {"patches": {name: "unified diff string" for name in allowed_files}},
+                "response_schema": {
+                    "patches": {
+                        name: "one or more SEARCH/REPLACE blocks, as described above"
+                        for name in allowed_files
+                    }
+                },
             },
         )
         patches = raw.get("patches")

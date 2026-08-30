@@ -11,6 +11,28 @@ from .llm import CommandLLMClient, OpenAICompatibleClient
 from .overseer import Overseer
 
 
+def _usage_totals(run_dir: Path) -> dict:
+    """Sum token usage over a run's audited LLM events for the resource report."""
+    totals = {"calls": 0, "input_tokens": 0, "output_tokens": 0, "total_tokens": 0, "models": {}}
+    path = run_dir / "llm_events.jsonl"
+    if not path.is_file():
+        return totals
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        event = json.loads(line)
+        totals["calls"] += 1
+        model = event.get("model")
+        if model:
+            totals["models"][model] = totals["models"].get(model, 0) + 1
+        usage = event.get("usage") or {}
+        for field in ("input_tokens", "output_tokens", "total_tokens"):
+            value = usage.get(field)
+            if isinstance(value, int):
+                totals[field] += value
+    return totals
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ernest", description="Autonomous recommender MLE loop")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -44,7 +66,8 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv=None) -> int:
     args = _parser().parse_args(argv)
     if args.command == "status":
-        journal = Journal(Path(args.run_dir) / "journal.jsonl")
+        run_dir = Path(args.run_dir)
+        journal = Journal(run_dir / "journal.jsonl")
         records = journal.records()
         scored = journal.scored()
         abandoned = [record for record in records if record["status"] == "abandoned"]
@@ -53,7 +76,9 @@ def main(argv=None) -> int:
             "scored": len(scored),
             "abandoned": len(abandoned),
             "latest_primary": scored[-1]["metrics"]["primary"] if scored else None,
+            "best_primary": max((float(r["metrics"]["primary"]) for r in scored), default=None),
             "converged": journal.converged(),
+            "token_usage": _usage_totals(run_dir),
             "recent_failures": [{
                 "attempt_id": record["attempt_id"],
                 "generation": record["generation"],

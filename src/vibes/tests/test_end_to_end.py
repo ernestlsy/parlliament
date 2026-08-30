@@ -80,15 +80,18 @@ class EndToEndTests(unittest.TestCase):
                 {"accepted": True, "feedback": "feasible", "final_action": "not_applicable"},
                 {"active_agents": ["model_designer"], "reasoning": "model-only", "contract": contract},
                 {"patches": {"model.py": (
-                    "--- model.py\n+++ model.py\n@@ -1,1 +1,1 @@\n"
-                    "-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n"
-                    "+\"\"\"Fresh-start additive ID model with no interaction or inherited architecture.\"\"\"\n"
-                    "BROKEN PATCH TRAILER\n"
+                    "<<<<<<< SEARCH\n"
+                    "\"\"\"A docstring that is not in the current file.\"\"\"\n"
+                    "=======\n"
+                    "\"\"\"Fresh-start additive ID model with no interaction or inherited architecture.\"\"\"\n"
+                    ">>>>>>> REPLACE\n"
                 )}},
                 {"patches": {"model.py": (
-                    "--- model.py\n+++ model.py\n@@ -1,1 +1,1 @@\n"
-                    "-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n"
-                    "+\"\"\"Fresh-start additive ID model with no interaction or inherited architecture.\"\"\"\n"
+                    "<<<<<<< SEARCH\n"
+                    "\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n"
+                    "=======\n"
+                    "\"\"\"Fresh-start additive ID model with no interaction or inherited architecture.\"\"\"\n"
+                    ">>>>>>> REPLACE\n"
                 )}},
             ])
             config = SystemConfig(
@@ -116,6 +119,10 @@ class EndToEndTests(unittest.TestCase):
             result = overseer.run()
             self.assertEqual(result["stop_reason"], "experiment_cap")
             self.assertEqual(result["counted_experiments"], 1)
+            self.assertEqual(result["best_experiment_id"], 1)
+            self.assertEqual(result["best_primary"], 0.65)
+            self.assertEqual(result["token_usage"]["calls"], len(llm.calls))
+            self.assertEqual(result["token_usage"]["models"], {"scripted": len(llm.calls)})
             experiment = config.run_dir / "experiment_1"
             self.assertTrue((experiment / "metrics.json").is_file())
             self.assertTrue((experiment / "predictions_valid.npz").is_file())

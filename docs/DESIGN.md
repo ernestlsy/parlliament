@@ -398,7 +398,7 @@ Overseer ──> Evolution Judge ──> Consultant ──> Orchestrator ──�
 | Feature Engineer / Model Designer / Trainer | `agents.py` | Patch only their allowlisted file |
 | Experimentor | `experimentor.py` | Contract probe, bounded subprocess, error classification |
 | Journal | `journal.py` | Append-only JSONL, lineage, convergence checks |
-| Guardrails | `sandbox.py` | Path containment, strict single-file unified diffs |
+| Guardrails | `sandbox.py` | Path containment, per-role allowlist, literal SEARCH/REPLACE edits |
 | Fixed evaluator | `evaluation.py` | Official scores + classification/ranking diagnostics. **Agents cannot edit this.** |
 | Seed | `seed/` | Neutral two-ID additive learner, unscored "parent 0" |
 

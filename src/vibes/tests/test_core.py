@@ -18,7 +18,9 @@ from agentic_recsys.journal import Journal
 from agentic_recsys.llm import LLMError, OpenAICompatibleClient, ScriptedLLMClient
 from agentic_recsys.config import SystemConfig
 from agentic_recsys.overseer import Overseer
-from agentic_recsys.sandbox import GuardrailViolation, apply_unified_diff, guarded_path
+from agentic_recsys.sandbox import (
+    GuardrailViolation, apply_agent_patches, apply_search_replace, guarded_path,
+)
 from agentic_recsys.schemas import (
     FailureKind, Hypothesis, HypothesisScores, InterfaceContract, JournalRecord, Mode,
 )
@@ -139,6 +141,48 @@ class JournalTests(unittest.TestCase):
             journal.append(record(4, 0.5025))
             self.assertTrue(journal.converged(0.002, 3))
 
+    def test_single_dud_does_not_halt_an_improving_run(self):
+        """The raw-score rule ended run_2 at 3 of 50; a running best cannot regress."""
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Journal(Path(directory) / "journal.jsonl")
+            for index, score in enumerate((0.50, 0.53, 0.40), 1):
+                journal.append(record(index, score))
+            self.assertEqual(journal.running_best(), [0.50, 0.53, 0.53])
+            self.assertFalse(journal.converged(0.002, 3))
+            self.assertIsNone(journal.stop_reason(50, 0.002, 3))
+
+    def test_genuine_plateau_still_converges(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Journal(Path(directory) / "journal.jsonl")
+            for index, score in enumerate((0.5885, 0.5885, 0.5769), 1):
+                journal.append(record(index, score))
+            self.assertTrue(journal.converged(0.002, 3))
+            self.assertEqual(journal.stop_reason(50, 0.002, 3), "converged")
+
+    def test_running_best_is_monotone_and_names_the_best_record(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Journal(Path(directory) / "journal.jsonl")
+            for index, score in enumerate((0.55, 0.61, 0.58, 0.60), 1):
+                journal.append(record(index, score))
+            best = journal.running_best()
+            self.assertEqual(best, sorted(best))
+            self.assertEqual(journal.best_record()["experiment_id"], 2)
+            self.assertIsNone(Journal(Path(directory) / "empty.jsonl").best_record())
+
+    def test_abandoned_records_never_enter_the_convergence_window(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Journal(Path(directory) / "journal.jsonl")
+            journal.append(record(1, 0.50))
+            journal.append(record(901, 0, "abandoned"))
+            journal.append(record(2, 0.60))
+            journal.append(record(902, 0, "abandoned"))
+            self.assertEqual(journal.primary_scores(), [0.50, 0.60])
+            self.assertFalse(journal.converged(0.002, 3))
+
+
+def block(search, replace):
+    return f"<<<<<<< SEARCH\n{search}\n=======\n{replace}\n>>>>>>> REPLACE\n"
+
 
 class SandboxTests(unittest.TestCase):
     def test_guarded_path_rejects_escape(self):
@@ -146,32 +190,132 @@ class SandboxTests(unittest.TestCase):
             with self.assertRaises(GuardrailViolation):
                 guarded_path(Path(directory), "../outside.py")
 
-    def test_applies_scoped_unified_diff(self):
+    def test_applies_scoped_search_replace(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "model.py").write_text("one\ntwo\n", encoding="utf-8")
-            apply_unified_diff(
-                root,
-                "model.py",
-                "--- model.py\n+++ model.py\n@@ -1,2 +1,2 @@\n one\n-two\n+three\n",
-            )
+            apply_search_replace(root, "model.py", block("two", "three"))
             self.assertEqual((root / "model.py").read_text(encoding="utf-8"), "one\nthree\n")
 
     def test_patch_cannot_target_evaluator(self):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaises(GuardrailViolation):
-                apply_unified_diff(Path(directory), "evaluation.py", "")
+                apply_search_replace(Path(directory), "evaluation.py", "")
 
-    def test_tolerates_llm_trailing_hunk_marker(self):
+    def test_applies_several_blocks_in_order(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "model.py").write_text("old\n", encoding="utf-8")
-            apply_unified_diff(
+            (root / "model.py").write_text("alpha\nbeta\ngamma\n", encoding="utf-8")
+            apply_search_replace(
                 root,
                 "model.py",
-                "--- model.py\n+++ model.py\n@@ -1,1 +1,1 @@\n-old\n+new\n@@\n",
+                "commentary the model added\n"
+                + block("alpha", "ALPHA")
+                + block("gamma", "GAMMA"),
             )
-            self.assertEqual((root / "model.py").read_text(encoding="utf-8"), "new\n")
+            self.assertEqual(
+                (root / "model.py").read_text(encoding="utf-8"), "ALPHA\nbeta\nGAMMA\n"
+            )
+
+    def test_multi_line_block_preserves_surroundings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "model.py").write_text(
+                "def step(self):\n    a = 1\n    b = 2\n    return a\n", encoding="utf-8"
+            )
+            apply_search_replace(
+                root,
+                "model.py",
+                block("    a = 1\n    b = 2", "    a = 10\n    b = 20\n    c = 30"),
+            )
+            self.assertEqual(
+                (root / "model.py").read_text(encoding="utf-8"),
+                "def step(self):\n    a = 10\n    b = 20\n    c = 30\n    return a\n",
+            )
+
+    def test_ambiguous_search_is_rejected_rather_than_applied_to_first_hit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original = "x = 1\ny = 0\nz = 1\ny = 0\n"
+            (root / "model.py").write_text(original, encoding="utf-8")
+            with self.assertRaises(ValueError) as caught:
+                apply_search_replace(root, "model.py", block("y = 0", "y = 5"))
+            self.assertIn("matched 2 times", str(caught.exception))
+            self.assertEqual((root / "model.py").read_text(encoding="utf-8"), original)
+
+    def test_missing_search_text_is_reported_with_the_file_name(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "model.py").write_text("one\n", encoding="utf-8")
+            with self.assertRaises(ValueError) as caught:
+                apply_search_replace(root, "model.py", block("absent", "new"))
+            self.assertIn("not found in model.py", str(caught.exception))
+
+    def test_trailing_whitespace_is_tolerated_when_the_match_stays_unique(self):
+        """Models routinely drop or add trailing spaces; the fallback stays literal."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "model.py").write_text("keep\n    value = 1\nafter\n", encoding="utf-8")
+            apply_search_replace(
+                root, "model.py", block("    value = 1   ", "    value = 2")
+            )
+            self.assertEqual(
+                (root / "model.py").read_text(encoding="utf-8"),
+                "keep\n    value = 2\nafter\n",
+            )
+
+    def test_whitespace_fallback_still_refuses_an_ambiguous_match(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original = "value = 1\nmiddle\nvalue = 1  \n"
+            (root / "model.py").write_text(original, encoding="utf-8")
+            with self.assertRaises(ValueError) as caught:
+                apply_search_replace(root, "model.py", block("value = 1     ", "value = 2"))
+            self.assertIn("matched 2 places", str(caught.exception))
+            self.assertEqual((root / "model.py").read_text(encoding="utf-8"), original)
+
+    def test_rejects_empty_and_no_op_blocks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "model.py").write_text("one\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                apply_search_replace(root, "model.py", block("", "added"))
+            with self.assertRaises(ValueError) as caught:
+                apply_search_replace(root, "model.py", block("one", "one"))
+            self.assertIn("no-op", str(caught.exception))
+
+    def test_malformed_block_explains_the_expected_format(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "model.py").write_text("one\n", encoding="utf-8")
+            with self.assertRaises(ValueError) as caught:
+                apply_search_replace(root, "model.py", "<<<<<<< SEARCH\none\n")
+            self.assertIn("=======", str(caught.exception))
+            with self.assertRaises(ValueError) as caught:
+                apply_search_replace(root, "model.py", "just prose, no blocks")
+            self.assertIn("no SEARCH/REPLACE blocks", str(caught.exception))
+
+    def test_unified_diff_is_rejected_as_a_malformed_patch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "model.py").write_text("one\ntwo\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                apply_search_replace(
+                    root,
+                    "model.py",
+                    "--- model.py\n+++ model.py\n@@ -1,2 +1,2 @@\n one\n-two\n+three\n",
+                )
+
+    def test_allowlist_still_bounds_which_files_an_agent_may_touch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "model.py").write_text("one\n", encoding="utf-8")
+            (root / "train.py").write_text("two\n", encoding="utf-8")
+            with self.assertRaises(GuardrailViolation):
+                apply_agent_patches(
+                    root, {"train.py": block("two", "three")}, ["model.py"]
+                )
+            self.assertEqual((root / "train.py").read_text(encoding="utf-8"), "two\n")
 
 
 class FailureClassificationTests(unittest.TestCase):

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import re
 import shutil
 import uuid
@@ -54,74 +53,137 @@ def finalize_sandbox(
     return destination
 
 
-_HUNK = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
+# Search/replace blocks replaced unified diffs as the agent-facing edit format. Every
+# abandonment in run_2 was "patch context does not match reference file" with correct
+# code inside the rejected patch: models are unreliable at hunk headers and line-count
+# arithmetic, and reliable at quoting a span of code they were just shown. The journal
+# still stores a unified diff, computed against the parent after the fact.
+_BLOCK_START = re.compile(r"^<{5,}\s*(?:SEARCH)?\s*$")
+_BLOCK_DIVIDER = re.compile(r"^={5,}\s*$")
+_BLOCK_END = re.compile(r"^>{5,}\s*(?:REPLACE)?\s*$")
+
+BLOCK_FORMAT_HELP = (
+    "Each edit is a block of the form:\n"
+    "<<<<<<< SEARCH\n"
+    "<exact text copied from the current file>\n"
+    "=======\n"
+    "<replacement text>\n"
+    ">>>>>>> REPLACE\n"
+    "SEARCH must reproduce the current file exactly and must appear exactly once in it; "
+    "include surrounding lines to make it unique. Emit several blocks to make several "
+    "edits."
+)
 
 
-def apply_unified_diff(root: Path, expected_file: str, patch: str) -> None:
-    """Apply a strict single-file unified diff without invoking a shell."""
-    if expected_file not in MANAGED_FILES:
-        raise GuardrailViolation(f"file is not agent-managed: {expected_file}")
-    lines = patch.splitlines(keepends=True)
-    if len(lines) < 2 or not lines[0].startswith("--- ") or not lines[1].startswith("+++ "):
-        raise ValueError("patch must begin with unified diff file headers")
+def _preview(text: str) -> str:
+    lines = text.splitlines() or [""]
+    extra = "" if len(lines) == 1 else f" (+{len(lines) - 1} more lines)"
+    return repr(lines[0].strip()[:120]) + extra
 
-    def header_name(line: str) -> str:
-        value = line[4:].strip().split("\t", 1)[0].replace("\\", "/")
-        if value.startswith(("a/", "b/")):
-            value = value[2:]
-        return value
 
-    old_name, new_name = header_name(lines[0]), header_name(lines[1])
-    if old_name != expected_file or new_name != expected_file:
-        raise GuardrailViolation(f"patch targets {old_name!r}->{new_name!r}, expected {expected_file!r}")
-    path = guarded_path(root, expected_file)
-    original = path.read_text(encoding="utf-8").splitlines(keepends=True)
-    output: List[str] = []
-    source_index = 0
-    index = 2
-    saw_hunk = False
+def parse_search_replace(patch: str) -> List[Tuple[str, str]]:
+    """Parse SEARCH/REPLACE blocks; text outside a block is commentary and is ignored."""
+    lines = patch.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    blocks: List[Tuple[str, str]] = []
+    index = 0
     while index < len(lines):
-        match = _HUNK.match(lines[index])
-        if not match:
-            if lines[index].strip() == "@@" and not any(
-                remaining.strip() for remaining in lines[index + 1:]
-            ):
-                break
-            if lines[index].strip():
-                raise ValueError(f"unexpected patch line: {lines[index][:100]!r}")
+        if not _BLOCK_START.match(lines[index]):
             index += 1
             continue
-        saw_hunk = True
-        old_start = int(match.group(1)) - 1
-        if old_start < source_index or old_start > len(original):
-            raise ValueError("invalid or overlapping hunk location")
-        output.extend(original[source_index:old_start])
-        source_index = old_start
+        start_line = index + 1
         index += 1
-        while index < len(lines) and not lines[index].startswith("@@ "):
-            line = lines[index]
-            if line.startswith("\\ No newline"):
-                index += 1
-                continue
-            if line.strip() == "@@" and not any(
-                remaining.strip() for remaining in lines[index + 1:]
-            ):
-                index = len(lines)
-                break
-            if not line or line[0] not in " +-":
-                raise ValueError(f"invalid hunk line: {line[:100]!r}")
-            prefix, content = line[0], line[1:]
-            if prefix in " -":
-                if source_index >= len(original) or original[source_index].rstrip("\r\n") != content.rstrip("\r\n"):
-                    raise ValueError("patch context does not match reference file")
-                source_index += 1
-            if prefix in " +":
-                output.append(content)
+        search: List[str] = []
+        while index < len(lines) and not _BLOCK_DIVIDER.match(lines[index]):
+            if _BLOCK_START.match(lines[index]) or _BLOCK_END.match(lines[index]):
+                raise ValueError(
+                    f"SEARCH block opened at line {start_line} is missing its '=======' "
+                    f"divider. {BLOCK_FORMAT_HELP}"
+                )
+            search.append(lines[index])
             index += 1
-    if not saw_hunk:
-        raise ValueError("patch contains no hunks")
-    output.extend(original[source_index:])
-    path.write_text("".join(output), encoding="utf-8")
+        if index >= len(lines):
+            raise ValueError(
+                f"SEARCH block opened at line {start_line} is missing its '=======' "
+                f"divider. {BLOCK_FORMAT_HELP}"
+            )
+        index += 1
+        replace: List[str] = []
+        while index < len(lines) and not _BLOCK_END.match(lines[index]):
+            if _BLOCK_START.match(lines[index]) or _BLOCK_DIVIDER.match(lines[index]):
+                raise ValueError(
+                    f"block opened at line {start_line} is missing its '>>>>>>> REPLACE' "
+                    f"terminator. {BLOCK_FORMAT_HELP}"
+                )
+            replace.append(lines[index])
+            index += 1
+        if index >= len(lines):
+            raise ValueError(
+                f"block opened at line {start_line} is missing its '>>>>>>> REPLACE' "
+                f"terminator. {BLOCK_FORMAT_HELP}"
+            )
+        index += 1
+        blocks.append(("\n".join(search), "\n".join(replace)))
+    if not blocks:
+        raise ValueError(f"patch contains no SEARCH/REPLACE blocks. {BLOCK_FORMAT_HELP}")
+    return blocks
+
+
+def _apply_block(content: str, search: str, replace: str, expected_file: str) -> str:
+    if not search.strip():
+        raise ValueError(
+            f"empty SEARCH text for {expected_file}; SEARCH must quote the exact current "
+            "text being replaced. To rewrite the file wholesale, SEARCH its full contents."
+        )
+    if search == replace:
+        raise ValueError(
+            f"SEARCH and REPLACE are identical for {expected_file}; the block is a no-op"
+        )
+    occurrences = content.count(search)
+    if occurrences == 1:
+        return content.replace(search, replace, 1)
+    if occurrences > 1:
+        raise ValueError(
+            f"SEARCH text matched {occurrences} times in {expected_file}; it must match "
+            f"exactly once. Extend the block with surrounding lines to make it unique. "
+            f"First line was {_preview(search)}"
+        )
+    # Second tier: whole-line match ignoring trailing whitespace, which models drop.
+    # Still literal, and still required to be unique, so it cannot silently pick a hit.
+    file_lines = content.split("\n")
+    search_lines = [line.rstrip() for line in search.split("\n")]
+    stripped = [line.rstrip() for line in file_lines]
+    span = len(search_lines)
+    matches = [
+        start for start in range(len(stripped) - span + 1)
+        if stripped[start:start + span] == search_lines
+    ]
+    if len(matches) == 1:
+        start = matches[0]
+        return "\n".join(
+            file_lines[:start] + replace.split("\n") + file_lines[start + span:]
+        )
+    if len(matches) > 1:
+        raise ValueError(
+            f"SEARCH text matched {len(matches)} places in {expected_file} once trailing "
+            f"whitespace is ignored; it must match exactly once. Extend the block with "
+            f"surrounding lines. First line was {_preview(search)}"
+        )
+    raise ValueError(
+        f"SEARCH text was not found in {expected_file}; it must reproduce the current file "
+        f"exactly, character for character, from the copy supplied in current_files. "
+        f"First line was {_preview(search)}"
+    )
+
+
+def apply_search_replace(root: Path, expected_file: str, patch: str) -> None:
+    """Apply literal SEARCH/REPLACE blocks to one agent-managed file."""
+    if expected_file not in MANAGED_FILES:
+        raise GuardrailViolation(f"file is not agent-managed: {expected_file}")
+    path = guarded_path(root, expected_file)
+    content = path.read_text(encoding="utf-8")
+    for search, replace in parse_search_replace(patch):
+        content = _apply_block(content, search, replace, expected_file)
+    path.write_text(content, encoding="utf-8", newline="\n")
 
 
 def apply_agent_patches(root: Path, patches: Dict[str, str], allowed_files: Iterable[str]) -> None:
@@ -132,7 +194,7 @@ def apply_agent_patches(root: Path, patches: Dict[str, str], allowed_files: Iter
     if unexpected:
         raise GuardrailViolation(f"agent attempted disallowed files: {sorted(unexpected)}")
     for filename, patch in patches.items():
-        apply_unified_diff(root, filename, patch)
+        apply_search_replace(root, filename, patch)
 
 
 def config_diff(patches: Dict[str, str]) -> str:

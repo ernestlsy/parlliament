@@ -444,10 +444,16 @@ class Overseer:
                     break
             generation += 1
         scored = self.journal.scored()
+        best = self.journal.best_record()
         return {
             "stop_reason": stop,
             "counted_experiments": len(scored),
             "converged_score": scored[-1]["metrics"]["primary"] if scored else None,
             "last_experiment_id": scored[-1]["experiment_id"] if scored else None,
+            # The submitted checkpoint is the validation-best at the stopping point,
+            # which is not necessarily the last one scored.
+            "best_primary": best["metrics"]["primary"] if best else None,
+            "best_experiment_id": best["experiment_id"] if best else None,
+            "token_usage": self.llm.usage_report(),
             "journal": str(self.journal.path.resolve()),
         }

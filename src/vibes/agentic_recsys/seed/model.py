@@ -8,14 +8,38 @@ def sigmoid(value):
 
 
 class Model:
-    def __init__(self, dimension, learning_rate=0.01, l2=1e-6):
-        self.weights = np.zeros(dimension, dtype=np.float32)
+    """Additive per-field weights over encoded ID features.
+
+    Parameters are initialised from a small random normal, never from zeros. Zeros are
+    harmless for this purely additive scoring function, but any descendant that adds a
+    multiplicative interaction term inherits a dead gradient from them: with an
+    interaction u . v, grad(u) is proportional to v and grad(v) is proportional to u, so
+    two zero blocks stay zero forever and the interaction never learns. Descendants must
+    keep a non-zero init for every block that appears in a product.
+    """
+
+    def __init__(self, dimension, learning_rate=0.01, l2=1e-6, seed=0, init_scale=0.01):
+        generator = np.random.default_rng(seed)
+        self.weights = (
+            generator.normal(0.0, init_scale, size=dimension).astype(np.float32)
+        )
         self.bias = np.float32(0.0)
         self.learning_rate = learning_rate
         self.l2 = l2
+        self.init_scale = init_scale
         self.first_moment = np.zeros_like(self.weights)
         self.second_moment = np.zeros_like(self.weights)
         self.step_number = 0
+
+    def parameter_blocks(self):
+        """Every trainable array, by name, for the dead-gradient check in train.py.
+
+        A descendant that adds parameters (embeddings, interaction factors, per-task
+        heads) must list them here. Training fails loudly if a listed block does not
+        change, so an inert term cannot silently report its parent's score.
+        Optimizer state (moments, step counters) is not a parameter and stays out.
+        """
+        return {"weights": self.weights, "bias": np.asarray(self.bias)}
 
     def logits(self, features):
         return self.bias + self.weights[features].sum(1)

@@ -34,6 +34,41 @@ def within_user_auc(user_ids, labels, scores):
     return numerator / denominator if denominator else 0.5
 
 
+def parameter_snapshot(model):
+    """Copy every trainable block so training can be checked for movement afterwards."""
+    if not hasattr(model, "parameter_blocks"):
+        raise RuntimeError(
+            "model.py must expose parameter_blocks() returning every trainable array by "
+            "name; the dead-gradient check below depends on it"
+        )
+    return {
+        name: np.array(value, copy=True)
+        for name, value in model.parameter_blocks().items()
+    }
+
+
+def assert_parameters_moved(model, before):
+    """Fail loudly when a parameter block never moved during training.
+
+    A block that is zero on both sides of a multiplicative term receives zero gradient
+    forever, so the term is inert and the experiment silently reproduces its parent's
+    score. That is indistinguishable from a neutral result in the journal, so it has to
+    be an error rather than a warning.
+    """
+    after = model.parameter_blocks()
+    dead = sorted(
+        name for name, value in after.items()
+        if name in before and np.array_equal(np.asarray(value), before[name])
+    )
+    if dead:
+        raise RuntimeError(
+            f"dead gradient in model.py: parameter block(s) {dead} did not change during "
+            "training. Check the initialisation and the update rule for those blocks; "
+            "parameters that only appear inside a product must not start at zero."
+        )
+    print(f"parameter_movement=ok blocks={sorted(after)}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
@@ -51,6 +86,8 @@ def main():
         dimension,
         learning_rate=config["learning_rate"],
         l2=config["l2"],
+        seed=config["seed"],
+        init_scale=config.get("init_scale", 0.01),
     )
     if args.contract_check:
         probe_size = min(8, len(train_labels))
@@ -65,6 +102,7 @@ def main():
         print(json.dumps({"contract": "ok", "feature_shape": list(train_features.shape)}))
         return
     rng = np.random.default_rng(config["seed"])
+    initial_parameters = parameter_snapshot(model)
     best_score, best_state, stale = -1.0, None, 0
     for epoch in range(1, config["max_epochs"] + 1):
         order = rng.permutation(len(train_labels))
@@ -81,6 +119,7 @@ def main():
             stale += 1
             if stale >= config["patience"]:
                 break
+    assert_parameters_moved(model, initial_parameters)
     if best_state is None:
         raise RuntimeError("training produced no checkpoint")
     model.load_state(best_state)

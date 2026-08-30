@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ernest-agentic-recsys"
+version = "0.1.0"
+description = "Sequential, hypothesis-driven autonomous recommender-system experimentation"
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.23"]
+
+[project.scripts]
+ernest = "agentic_recsys.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agentic_recsys*"]
+
+[tool.setuptools.package-data]
+agentic_recsys = ["seed/*.py", "seed/*.json", "knowledge/*.md"]

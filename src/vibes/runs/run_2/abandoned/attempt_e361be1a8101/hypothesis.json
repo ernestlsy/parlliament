@@ -1,0 +1,10 @@
+{
+  "text": "Add an impression-date context feature by encoding the calendar day of week as a learned categorical embedding and include its interaction with the video embedding in the long_view logit, while retaining the existing user/video effects, pointwise binary cross-entropy, optimizer, split, checkpointing, and fixed within-user evaluation. Construct the feature directly from each impression date with no future-event aggregation. This tests whether weekday-specific exposure and content affinity improve the primary mean of GAUC and nDCG@5 beyond static user-video affinity.",
+  "parent_experiment_id": 1,
+  "scores": {
+    "interestingness": 8,
+    "novelty": 9,
+    "feasibility": 8
+  },
+  "rationale": "The current scored model has strong row-level discrimination and recall but relatively weak Precision@5 and nDCG@5, indicating that static affinity may not distinguish candidates under changing exposure conditions. A bounded weekday-video interaction is leakage-safe, computationally modest, and directly testable against the fixed primary objective while classification, ranking, and score-distribution diagnostics can reveal whether gains come from better within-user ordering rather than threshold behavior."
+}

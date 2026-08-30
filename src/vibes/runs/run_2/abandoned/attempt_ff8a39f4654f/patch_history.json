@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "initial_patch:model_designer",
+    "agent": "model_designer",
+    "patch_attempt": 1,
+    "patches": {
+      "model.py": "--- model.py\n+++ model.py\n@@ -7,7 +7,7 @@\n \n \n class Model:\n-    def __init__(self, dimension, learning_rate=0.01, l2=1e-6):\n+    def __init__(self, dimension, learning_rate=0.01, l2=1e-6, seed=0):\n         if np.isscalar(dimension):\n             user_dimension = item_dimension = int(dimension)\n         else:\n@@ -15,8 +15,9 @@\n         self.user_weights = np.zeros(user_dimension, dtype=np.float32)\n         self.item_weights = np.zeros(item_dimension, dtype=np.float32)\n-        self.user_embeddings = np.zeros((user_dimension, 16), dtype=np.float32)\n-        self.item_embeddings = np.zeros((item_dimension, 16), dtype=np.float32)\n+        rng = np.random.default_rng(seed)\n+        self.user_embeddings = rng.normal(0.0, 0.01, (user_dimension, 16)).astype(np.float32)\n+        self.item_embeddings = rng.normal(0.0, 0.01, (item_dimension, 16)).astype(np.float32)\n         self.bias = np.float32(0.0)\n         self.learning_rate = learning_rate\n         self.l2 = l2\n"
+    }
+  },
+  {
+    "phase": "initial_patch:model_designer",
+    "agent": "model_designer",
+    "patch_attempt": 2,
+    "patches": {
+      "model.py": "--- model.py\n+++ model.py\n@@ -12,8 +12,10 @@\n         self.user_weights = np.zeros(user_dimension, dtype=np.float32)\n         self.item_weights = np.zeros(item_dimension, dtype=np.float32)\n-        self.user_embeddings = np.zeros((user_dimension, 16), dtype=np.float32)\n-        self.item_embeddings = np.zeros((item_dimension, 16), dtype=np.float32)\n+        self.user_embeddings = np.random.normal(\n+            0.0, 0.01, size=(user_dimension, 16)).astype(np.float32)\n+        self.item_embeddings = np.random.normal(\n+            0.0, 0.01, size=(item_dimension, 16)).astype(np.float32)\n         self.bias = np.float32(0.0)\n         self.learning_rate = learning_rate\n         self.l2 = l2\n"
+    }
+  },
+  {
+    "phase": "initial_patch:model_designer",
+    "agent": "model_designer",
+    "patch_attempt": 3,
+    "patches": {
+      "model.py": "--- model.py\n+++ model.py\n@@ -7,7 +7,7 @@\n \n \n class Model:\n-    def __init__(self, dimension, learning_rate=0.01, l2=1e-6):\n+    def __init__(self, dimension, learning_rate=0.01, l2=1e-6, seed=0):\n         if np.isscalar(dimension):\n             user_dimension = item_dimension = int(dimension)\n         else:\n@@ -15,8 +15,9 @@\n         self.user_weights = np.zeros(user_dimension, dtype=np.float32)\n         self.item_weights = np.zeros(item_dimension, dtype=np.float32)\n-        self.user_embeddings = np.zeros((user_dimension, 16), dtype=np.float32)\n-        self.item_embeddings = np.zeros((item_dimension, 16), dtype=np.float32)\n+        rng = np.random.default_rng(seed)\n+        self.user_embeddings = rng.normal(0.0, 0.01, (user_dimension, 16)).astype(np.float32)\n+        self.item_embeddings = rng.normal(0.0, 0.01, (item_dimension, 16)).astype(np.float32)\n         self.bias = np.float32(0.0)\n         self.learning_rate = learning_rate\n         self.l2 = l2\n"
+    }
+  }
+]

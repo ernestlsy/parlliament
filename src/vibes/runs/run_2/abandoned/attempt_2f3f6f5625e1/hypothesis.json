@@ -1,0 +1,10 @@
+{
+  "text": "Starting from experiment 1, replace pointwise long_view binary cross-entropy with focal binary cross-entropy using gamma=1.5, while retaining the additive-plus-16-dimensional user-video interaction model, optimizer, split, checkpoint proxy, and fixed within-user evaluation. Apply the focal factor to each impression using its current predicted probability, keep the long_view logit as the sole scored output, and compare primary, GAUC, and nDCG@5 against the parent.",
+  "parent_experiment_id": 1,
+  "scores": {
+    "interestingness": 8,
+    "novelty": 8,
+    "feasibility": 9
+  },
+  "rationale": "The parent reaches primary 0.5885 from GAUC 0.6499 and nDCG@5 0.5272, while ranking diagnostics show only 0.3718 Precision@5 despite 0.5931 Recall@5 and 0.6743 HitRate@5. Classification similarly favors recall (0.7729) over precision (0.4571), with a 0.5297 predicted-positive rate against a 0.3133 positive rate. Focal weighting should reduce the influence of already-easy negatives and positives, concentrating updates on ambiguous impressions that determine within-user ordering and potentially improving top-five precision without changing labels or evaluation. The score distribution is non-collapsed (mean -0.8451, standard deviation 1.1076, range -5.9868 to 2.6822), so this is a targeted loss change rather than a remedy for numerical collapse."
+}

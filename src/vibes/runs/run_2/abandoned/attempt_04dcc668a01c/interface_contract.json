@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "The fixed training command must write the requested NPZ output containing exactly two arrays: row_ids and scores. row_ids must equal np.arange(len(validation_rows), dtype=np.int64), and scores must be a one-dimensional finite float array of identical length. Both arrays must follow the canonical validation order produced by data.load/encode; no sorting, filtering, deduplication, or user regrouping may affect validation output order. scores must be the model's raw logits, not thresholded labels or probabilities. Ground-truth validation labels may be used only by the fixed evaluator, not by the training command except for the existing training-only early-stop proxy if that proxy remains part of the fixed command contract."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Training receives encoded feature rows shaped (n,2), float binary labels shaped (n,), and user grouping derived from the encoded user feature or equivalent training user IDs. Each optimization group must contain all impressions for one user in a step; only users with at least one positive and one negative are eligible. The model must compute logits using the unchanged additive user/item weights plus 16-dimensional dot-product interaction. For each eligible user group, compute a stable softmax over that user's logits and minimize positive-label-weighted negative log likelihood, with gradients aggregated over groups and compatible with the existing Adam moments, learning rate, L2 penalty, and checkpoint serialization. Users without both classes contribute no listwise loss. Prediction must retain the existing one-dimensional raw-logit interface and accept validation rows in canonical order."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

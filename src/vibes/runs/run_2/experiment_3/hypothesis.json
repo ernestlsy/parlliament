@@ -1,0 +1,10 @@
+{
+  "text": "Extend the additive-plus-16-dimensional interaction model with a zero-initialized hashed user-video cross-feature residual: map each encoded user-video pair to one of 262144 deterministic hash buckets, add the corresponding scalar to the long_view logit, and train it with the existing pointwise BCE, Adam settings, split, checkpoint proxy, and fixed within-user ranking evaluation unchanged. Use L2 regularization on the cross-feature vector to limit collision-driven overfitting. This tests whether a compact memorization component improves the primary mean of GAUC and nDCG@5 beyond the current static interaction model.",
+  "parent_experiment_id": 1,
+  "scores": {
+    "interestingness": 7,
+    "novelty": 8,
+    "feasibility": 8
+  },
+  "rationale": "The reference reaches primary 0.5885 from GAUC 0.6499 and nDCG@5 0.5272, while ranking diagnostics show only 0.3718 Precision@5, 0.4743 MAP@5, and 0.6743 HitRate@5 despite 0.5931 Recall@5. Classification likewise has high recall (0.7729) but low precision (0.4571), suggesting overbroad scores; a regularized pair residual may sharpen user-specific ordering. The current interaction model's zero score spread is not collapsed (std 1.1076; range -5.9868 to 2.6822), and the 124909-row, 22377-user dataset makes a bounded 262144-entry residual feasible without changing labels or evaluation."
+}

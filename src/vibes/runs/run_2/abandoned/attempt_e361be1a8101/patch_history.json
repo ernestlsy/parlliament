@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "initial_patch:feature_engineer",
+    "agent": "feature_engineer",
+    "patch_attempt": 1,
+    "patches": {
+      "data.py": "--- data.py\n+++ data.py\n@@ -1,8 +1,9 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Data contract with user, item, and impression-weekday features.\"\"\"\n \n import csv\n+import datetime\n import os\n \n import numpy as np\n@@ -14,7 +15,7 @@\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"weekday\"]\n@@ -40,9 +41,10 @@\n     if not train:\n         raise ValueError(\"training split is empty\")\n+\n     def raw(row):\n-        return [row[1], row[2]]\n+        weekday = datetime.datetime.strptime(str(row[0]), \"%Y%m%d\").weekday()\n+        return [row[1], row[2], weekday]\n \n     vocabs = [dict() for _ in FIELDS]\n*** End patch"
+    }
+  },
+  {
+    "phase": "initial_patch:feature_engineer",
+    "agent": "feature_engineer",
+    "patch_attempt": 2,
+    "patches": {
+      "data.py": "--- data.py\n+++ data.py\n@@ -1,8 +1,9 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Data contract with user, item, and impression-weekday identifiers.\"\"\"\n \n import csv\n+from datetime import datetime\n import os\n \n import numpy as np\n@@ -14,7 +15,7 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"weekday\"]\n@@ -39,9 +40,12 @@\n     if not train:\n         raise ValueError(\"training split is empty\")\n+\n+    def weekday(date):\n+        return datetime.strptime(str(int(date)), \"%Y%m%d\").weekday()\n+\n     def raw(row):\n-        return [row[1], row[2]]\n+        return [row[1], row[2], weekday(row[0])]\n \n     vocabs = [dict() for _ in FIELDS]\n@@ -58,7 +62,7 @@\n     for name, rows in splits.items():\n         features = np.empty((len(rows), len(FIELDS)), dtype=np.int32)\n         labels = np.empty(len(rows), dtype=np.float32)\n-        users = np.empty(len(rows), dtype=\"U32\")\n+        users = np.empty(len(rows), dtype=object)\n         for row_index, row in enumerate(rows):\n             for field_index, value in enumerate(raw(row)):\n                 features[row_index, field_index] = (\n*** End Patch"
+    }
+  },
+  {
+    "phase": "initial_patch:feature_engineer",
+    "agent": "feature_engineer",
+    "patch_attempt": 3,
+    "patches": {
+      "data.py": "--- data.py\n+++ data.py\n@@ -1,9 +1,10 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Data loading and training-derived categorical feature encoding.\"\"\"\n \n import csv\n+import datetime\n import os\n \n import numpy as np\n@@ -14,7 +15,7 @@\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"weekday\"]\n@@ -38,8 +39,12 @@\n     if not train:\n         raise ValueError(\"training split is empty\")\n+\n+    def weekday(date_value):\n+        date_value = int(date_value)\n+        year, month_day = divmod(date_value, 10000)\n+        month, day = divmod(month_day, 100)\n+        return datetime.date(year, month, day).weekday()\n+\n     def raw(row):\n-        return [row[1], row[2]]\n+        return [row[1], row[2], weekday(row[0])]\n \n     vocabs = [dict() for _ in FIELDS]\n*** End patch"
+    }
+  }
+]

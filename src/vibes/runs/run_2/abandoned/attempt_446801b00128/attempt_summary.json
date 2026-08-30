@@ -1,0 +1,53 @@
+{
+  "attempt_id": "446801b00128",
+  "status": "abandoned",
+  "generation": 3,
+  "mode": "draft",
+  "parent_experiment_id": 1,
+  "hypothesis_text": "Augment the additive-plus-interaction model with a leakage-safe sequential user-history feature: maintain each user\u2019s exponentially decayed counts of prior long_view-positive and long_view-negative impressions, compute these counts using only events earlier than each impression, and add separate learned coefficients for the two counts while leaving the pointwise long_view loss, split, checkpoint proxy, and within-user ranking evaluation unchanged. Test whether recent behavioral state improves GAUC and nDCG@5 beyond static user-video affinity.",
+  "active_sub_agents": [
+    "feature_engineer",
+    "model_designer",
+    "trainer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": "initial_patch:feature_engineer",
+  "failure_reason": "stage=initial_patch:feature_engineer; agent_or_guardrail_failure: RuntimeError: feature_engineer failed to provide an applicable patch after three responses: ValueError: invalid hunk line: '@@\\n'",
+  "failure_reports": [
+    {
+      "kind": "contract_fulfillment",
+      "message": "feature_engineer patch response was invalid: ValueError: invalid hunk line: '@@\\n'",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 112, in apply_unified_diff\n    raise ValueError(f\"invalid hunk line: {line[:100]!r}\")\nValueError: invalid hunk line: '@@\\n'\n",
+      "responsible_agents": [
+        "feature_engineer"
+      ],
+      "attempt": 1,
+      "return_code": null
+    },
+    {
+      "kind": "contract_fulfillment",
+      "message": "feature_engineer patch response was invalid: ValueError: invalid hunk line: '@@\\n'",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 112, in apply_unified_diff\n    raise ValueError(f\"invalid hunk line: {line[:100]!r}\")\nValueError: invalid hunk line: '@@\\n'\n",
+      "responsible_agents": [
+        "feature_engineer"
+      ],
+      "attempt": 2,
+      "return_code": null
+    },
+    {
+      "kind": "contract_fulfillment",
+      "message": "feature_engineer patch response was invalid: ValueError: invalid hunk line: '@@\\n'",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 112, in apply_unified_diff\n    raise ValueError(f\"invalid hunk line: {line[:100]!r}\")\nValueError: invalid hunk line: '@@\\n'\n",
+      "responsible_agents": [
+        "feature_engineer"
+      ],
+      "attempt": 3,
+      "return_code": null
+    }
+  ],
+  "elapsed_seconds": 86.14736479299972,
+  "available_log_files": [],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 112, in apply_unified_diff\n    raise ValueError(f\"invalid hunk line: {line[:100]!r}\")\nValueError: invalid hunk line: '@@\\n'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 233, in _run_hypothesis\n    request_and_apply_patch(agent, phase=failure_stage)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 215, in request_and_apply_patch\n    raise RuntimeError(\nRuntimeError: feature_engineer failed to provide an applicable patch after three responses: ValueError: invalid hunk line: '@@\\n'\n"
+}

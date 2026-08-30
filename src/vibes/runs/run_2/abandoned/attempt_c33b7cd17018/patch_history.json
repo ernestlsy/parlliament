@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "initial_patch:feature_engineer",
+    "agent": "feature_engineer",
+    "patch_attempt": 1,
+    "patches": {
+      "data.py": "--- data.py\n+++ data.py\n@@ -7,6 +7,7 @@\n \n \n LABEL = \"long_view\"\n+LIKE_LABEL = \"is_like\"\n SPLITS = {\n     \"train\": (20220408, 20220421),\n     \"valid\": (20220422, 20220428),\n@@ -23,7 +24,8 @@\n                 rows.append((\n                     int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n-                    1 if row[LABEL] != \"0\" else 0,\n+                    1 if row[LABEL] != \"0\" else 0,\n+                    1 if row[LIKE_LABEL] != \"0\" else 0,\n                 ))\n@@ -54,6 +56,7 @@\n         features = np.empty((len(rows), len(FIELDS)), dtype=np.int32)\n         labels = np.empty(len(rows), dtype=np.float32)\n+        is_likes = np.empty(len(rows), dtype=np.float32)\n         users = np.empty(len(rows), dtype=\"U32\")\n         for row_index, row in enumerate(rows):\n             for field_index, value in enumerate(raw(row)):\n@@ -63,8 +66,9 @@\n                 )\n             labels[row_index] = row[3]\n+            is_likes[row_index] = row[4]\n             users[row_index] = row[1]\n-        encoded[name] = (features, labels, users)\n+        encoded[name] = (features, labels, is_likes, users)\n     return encoded, int(sum(dimensions))\n"
+    }
+  },
+  {
+    "phase": "initial_patch:feature_engineer",
+    "agent": "feature_engineer",
+    "patch_attempt": 2,
+    "patches": {
+      "data.py": "--- data.py\n+++ data.py\n@@ -7,6 +7,7 @@\n \n \n LABEL = \"long_view\"\n+LIKE_LABEL = \"is_like\"\n SPLITS = {\n     \"train\": (20220408, 20220421),\n     \"valid\": (20220422, 20220428),\n@@ -24,7 +25,8 @@\n                 rows.append((\n                     int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n-                    1 if row[LABEL] != \"0\" else 0,\n+                    1 if row[LABEL] != \"0\" else 0,\n+                    1 if row[LIKE_LABEL] != \"0\" else 0,\n                 ))\n@@ -55,11 +57,13 @@\n     for name, rows in splits.items():\n         features = np.empty((len(rows), len(FIELDS)), dtype=np.int32)\n         labels = np.empty(len(rows), dtype=np.float32)\n+        like_labels = np.empty(len(rows), dtype=np.float32)\n         users = np.empty(len(rows), dtype=\"U32\")\n         for row_index, row in enumerate(rows):\n             for field_index, value in enumerate(raw(row)):\n                 features[row_index, field_index] = (\n                     vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n                 )\n             labels[row_index] = row[3]\n+            like_labels[row_index] = row[4]\n             users[row_index] = row[1]\n-        encoded[name] = (features, labels, users)\n+        encoded[name] = (features, labels, like_labels, users)\n     return encoded, int(sum(dimensions))\n"
+    }
+  },
+  {
+    "phase": "initial_patch:feature_engineer",
+    "agent": "feature_engineer",
+    "patch_attempt": 3,
+    "patches": {
+      "data.py": "--- data.py\n+++ data.py\n@@ -7,6 +7,7 @@\n \n \n LABEL = \"long_view\"\n+AUX_LABEL = \"is_like\"\n SPLITS = {\n     \"train\": (20220408, 20220421),\n     \"valid\": (20220422, 20220428),\n@@ -23,7 +24,8 @@\n                 rows.append((\n                     int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n                     1 if row[LABEL] != \"0\" else 0,\n+                    1 if row[AUX_LABEL] != \"0\" else 0,\n                 ))\n@@ -54,12 +56,14 @@\n     for name, rows in splits.items():\n         features = np.empty((len(rows), len(FIELDS)), dtype=np.int32)\n         labels = np.empty(len(rows), dtype=np.float32)\n+        auxiliary_labels = np.empty(len(rows), dtype=np.float32)\n         users = np.empty(len(rows), dtype=\"U32\")\n         for row_index, row in enumerate(rows):\n             for field_index, value in enumerate(raw(row)):\n                 features[row_index, field_index] = (\n                     vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n                 )\n             labels[row_index] = row[3]\n+            auxiliary_labels[row_index] = row[4]\n             users[row_index] = row[1]\n-        encoded[name] = (features, labels, users)\n+        encoded[name] = (features, labels, auxiliary_labels, users)\n     return encoded, int(sum(dimensions))\n"
+    }
+  }
+]

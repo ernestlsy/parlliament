@@ -1,0 +1,9 @@
+{
+  "seed": 0,
+  "learning_rate": 0.01,
+  "l2": 0.000001,
+  "batch_size": 8192,
+  "max_epochs": 10,
+  "patience": 3,
+  "split": "valid"
+}

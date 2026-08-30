@@ -1,0 +1,46 @@
+{
+  "data_output": {
+    "description": "The fixed training command must write predictions_valid.npz containing exactly two arrays: row_ids and scores. row_ids must be int64 values identifying validation rows in canonical validation order, equal to np.arange(number_of_validation_rows). scores must be a finite one-dimensional float array of identical length, containing only the shared model's long_view logits in that same canonical order. No labels, is_click targets, auxiliary probabilities, or other arrays may be written."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split",
+    "auxiliary_click_loss_weight"
+  ],
+  "model_input": {
+    "description": "model.py receives encoded feature rows with shape (N, 2), where column 0 is the offset user index and column 1 is the offset video index, plus the scalar encoded vocabulary dimension. It must preserve the existing additive user/video effects and 16-dimensional interaction pathway, extend them with a shared representation and an impression-level binary is_click auxiliary head, and train on total_loss = long_view_BCE + 0.2 * is_click_BCE. The public predict(features) method must return only long_view logits as a finite float vector of length N; auxiliary click predictions are training-only and must not alter the prediction file."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

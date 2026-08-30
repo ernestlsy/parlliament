@@ -1,0 +1,41 @@
+{
+  "GAUC": 0.6335308355813161,
+  "nDCG@5": 0.520177718902062,
+  "primary": 0.576854277241689,
+  "users": 22377,
+  "rows": 124909,
+  "classification": {
+    "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold",
+    "threshold": -0.7366752028465271,
+    "accuracy": 0.6475193941189186,
+    "balanced_accuracy": 0.6722916044620817,
+    "precision": 0.46095942842561877,
+    "recall": 0.7386282326484719,
+    "specificity": 0.6059549762756916,
+    "f1": 0.567657802741663,
+    "matthews_correlation": 0.3196577878701764,
+    "predicted_positive_rate": 0.5019974541466188,
+    "confusion_matrix": {
+      "true_positive": 28904,
+      "false_positive": 33800,
+      "true_negative": 51977,
+      "false_negative": 10228
+    }
+  },
+  "ranking_diagnostics": {
+    "global_AUC": 0.7339209575298342,
+    "average_precision": 0.5367443453993438,
+    "Precision@5": 0.3695818623288644,
+    "Recall@5": 0.5892257021737775,
+    "MAP@5": 0.46622177781750235,
+    "MRR@5": 0.5242734355215982,
+    "HitRate@5": 0.67229744827278
+  },
+  "data_diagnostics": {
+    "positive_rate": 0.313284070803545,
+    "score_mean": -0.7742072079406546,
+    "score_std": 0.9040122835442008,
+    "score_min": -4.406187534332275,
+    "score_max": 2.367727756500244
+  }
+}

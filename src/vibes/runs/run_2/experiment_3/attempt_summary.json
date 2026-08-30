@@ -1,0 +1,44 @@
+{
+  "attempt_id": "f584329e3e82",
+  "status": "scored",
+  "generation": 4,
+  "mode": "improve",
+  "parent_experiment_id": 1,
+  "hypothesis_text": "Extend the additive-plus-16-dimensional interaction model with a zero-initialized hashed user-video cross-feature residual: map each encoded user-video pair to one of 262144 deterministic hash buckets, add the corresponding scalar to the long_view logit, and train it with the existing pointwise BCE, Adam settings, split, checkpoint proxy, and fixed within-user ranking evaluation unchanged. Use L2 regularization on the cross-feature vector to limit collision-driven overfitting. This tests whether a compact memorization component improves the primary mean of GAUC and nDCG@5 beyond the current static interaction model.",
+  "active_sub_agents": [
+    "model_designer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [
+    {
+      "kind": "contract_fulfillment",
+      "message": "model_designer patch response was invalid: ValueError: patch context does not match reference file",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 116, in apply_unified_diff\n    raise ValueError(\"patch context does not match reference file\")\nValueError: patch context does not match reference file\n",
+      "responsible_agents": [
+        "model_designer"
+      ],
+      "attempt": 1,
+      "return_code": null
+    },
+    {
+      "kind": "contract_fulfillment",
+      "message": "model_designer patch response was invalid: ValueError: patch context does not match reference file",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 116, in apply_unified_diff\n    raise ValueError(\"patch context does not match reference file\")\nValueError: patch context does not match reference file\n",
+      "responsible_agents": [
+        "model_designer"
+      ],
+      "attempt": 2,
+      "return_code": null
+    }
+  ],
+  "elapsed_seconds": 79.36204422800074,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

@@ -1,0 +1,47 @@
+{
+  "data_output": {
+    "description": "data.py must preserve canonical split row order and return encoded train/valid/test records containing primary features [user_index, video_index], long_view labels for training, user_ids for within-user grouping, and impression-time auxiliary arrays: watch_ratio_observed, where uncensored ratios are derived only from impression-time watch duration and impression-time video duration, plus completed_view_mask identifying ratio==1.0 censoring. Unknown users/videos must retain the existing training-vocabulary mapping. train.py must write predictions_valid.npz containing exactly two arrays, row_ids and scores; row_ids must be int64 positional identifiers 0..N-1 in canonical validation row order, and scores must be the primary long_view logits in that same order. No labels or auxiliary targets may be written to the artifact."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split",
+    "auxiliary_weight",
+    "watch_huber_delta"
+  ],
+  "model_input": {
+    "description": "model.py must accept the encoded primary feature matrix and, for training steps, watch_ratio_observed and completed_view_mask aligned row-for-row with the batch. The primary head remains the additive user/item effects plus a 16-dimensional user-video dot interaction and is optimized with the existing binary cross-entropy. A shared linear auxiliary head predicts watch_ratio from the same primary representation; for completed_view_mask==0 use Huber loss against the observed ratio, and for completed_view_mask==1 use one-sided lower-bound loss max(0,1-prediction), with total loss BCE + auxiliary_weight*auxiliary_loss and auxiliary_weight=0.1 by default. The public prediction path must return only primary long_view scores. Preserve Adam updates, l2 regularization, model state checkpointing, within_user_auc validation proxy, configured split, early stopping, and finite one-dimensional predictions."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

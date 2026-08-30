@@ -1,0 +1,34 @@
+{
+  "attempt_id": "a67d9373f6cc",
+  "status": "scored",
+  "generation": 1,
+  "mode": "draft",
+  "parent_experiment_id": 0,
+  "hypothesis_text": "Replace the additive user/item ID scorer with a low-rank factorization-machine scorer: retain separate user and video bias terms, add 32-dimensional user/video embeddings, and score each impression as bias_user + bias_video + dot(user_embedding, video_embedding); keep pointwise BCE, the existing validation early stopping, and the fixed primary metric unchanged.",
+  "active_sub_agents": [
+    "model_designer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [
+    {
+      "kind": "contract_fulfillment",
+      "message": "model_designer patch response was invalid: ValueError: patch context does not match reference file",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 191, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 116, in apply_unified_diff\n    raise ValueError(\"patch context does not match reference file\")\nValueError: patch context does not match reference file\n",
+      "responsible_agents": [
+        "model_designer"
+      ],
+      "attempt": 1,
+      "return_code": null
+    }
+  ],
+  "elapsed_seconds": 80.34965874299996,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

@@ -1,0 +1,10 @@
+{
+  "text": "Extend experiment 1's additive-plus-16-dimensional user-video interaction model with an auxiliary censored watch-time objective: predict watch_ratio using a shared linear head, train with Huber loss for ratios below 1.0 and a one-sided lower-bound loss for completed views at ratio 1.0, weighted at 0.1; keep long_view as the sole scored output, preserve the split, optimizer, checkpoint proxy, and within-user ranking evaluation, and construct the auxiliary target only from impression-time watch fields. Test whether watch-depth supervision improves the fixed primary metric, GAUC, and nDCG@5 beyond static affinity while reducing the current high-recall/low-precision classification tradeoff.",
+  "parent_experiment_id": 1,
+  "scores": {
+    "interestingness": 9,
+    "novelty": 9,
+    "feasibility": 7
+  },
+  "rationale": "The current scored interaction model reaches primary 0.5885, GAUC 0.6499, and nDCG@5 0.5272, while its diagnostic classification profile has recall 0.773 but precision 0.457 and its ranking diagnostics show only MAP@5 0.474 and Precision@5 0.372. Its score spread is non-collapsed (standard deviation 1.108), so richer behavioral supervision is more promising than arbitrary rescaling. Watch depth supplies a distinct signal from the already tested static interaction and abandoned click/like auxiliary ideas; censor-aware loss avoids treating completed views as exact uncensored durations."
+}

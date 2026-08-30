@@ -1,0 +1,10 @@
+{
+  "text": "Add a low-rank user-item interaction term to the existing additive logits: represent each known user and video with 16-dimensional embeddings and score each impression as bias plus additive user/item weights plus their embedding dot product, while retaining pointwise binary cross-entropy training and the current data split. This tests whether personalized user-video affinity improves within-user ordering over the additive-only model without changing labels or evaluation.",
+  "parent_experiment_id": 0,
+  "scores": {
+    "interestingness": 8,
+    "novelty": 7,
+    "feasibility": 8
+  },
+  "rationale": "The interaction term can distinguish videos for a user even when additive user and item effects cannot, directly targeting the official primary mean of GAUC and nDCG@5. Compare primary first, then inspect GAUC, nDCG@5, and ranking diagnostics such as Precision@5, MAP@5, MRR@5, Recall@5, and HitRate@5 to determine whether gains are concentrated at the top of the list. Classification metrics and threshold behavior diagnose whether any ranking change reflects improved class separation, while positive_rate and score spread detect collapse or instability."
+}

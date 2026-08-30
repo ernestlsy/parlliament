@@ -1,0 +1,34 @@
+{
+  "attempt_id": "38abab25b4d2",
+  "status": "scored",
+  "generation": 1,
+  "mode": "draft",
+  "parent_experiment_id": 0,
+  "hypothesis_text": "Add a low-rank user-item interaction term to the existing additive logits: represent each known user and video with 16-dimensional embeddings and score each impression as bias plus additive user/item weights plus their embedding dot product, while retaining pointwise binary cross-entropy training and the current data split. This tests whether personalized user-video affinity improves within-user ordering over the additive-only model without changing labels or evaluation.",
+  "active_sub_agents": [
+    "model_designer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [
+    {
+      "kind": "contract_fulfillment",
+      "message": "model_designer patch response was invalid: ValueError: invalid hunk line: '@@\\n'",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 199, in request_and_apply_patch\n    apply_agent_patches(sandbox, patches, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 135, in apply_agent_patches\n    apply_unified_diff(root, filename, patch)\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 112, in apply_unified_diff\n    raise ValueError(f\"invalid hunk line: {line[:100]!r}\")\nValueError: invalid hunk line: '@@\\n'\n",
+      "responsible_agents": [
+        "model_designer"
+      ],
+      "attempt": 1,
+      "return_code": null
+    }
+  ],
+  "elapsed_seconds": 85.98856916600016,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

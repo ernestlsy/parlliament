@@ -113,15 +113,44 @@ Mapping the above onto `docs/BENCHMARK.md` §7:
 2. **Bonus benchmarks** (KuaiRand-1k / 27k) — not attempted, worth nothing lost.
    Only consider after Pure clears the baseline.
 
-## Next actions, in order
+## Next actions
 
-1. Replace unified diffs with search/replace blocks (`docs/DESIGN.md`). Unblocks the 12
-   untested hypotheses.
-2. Fix seed initialisation + add a "did any parameter block actually move?" smoke check,
-   so a dead-gradient experiment fails loudly instead of silently echoing its parent.
-3. Re-run and confirm the ranking-loss hypotheses (BPR, within-user listwise softmax)
-   now survive to execution.
-4. Only then: add the Research Agent and Data Scientist Agent.
+Design is settled at the mechanism level (`docs/DESIGN.md`). What remains open is numeric
+constants — make them config keys with defaults and pick them once a round's real
+wall-clock and token cost is known, not in the abstract.
+
+Test suite is green: `python -m unittest discover -s tests` → 23 tests, OK. That is the
+safety net for the patch-format refactor.
+
+### Phase 0 — plumbing, before any island scaffolding
+
+1. **`journal.py:57` → running best.** Smallest change, and it is what truncated run_2 to
+   3 of 50. An island run explores by design, so the current raw-score rule would fire
+   constantly. See `docs/DESIGN.md` "Four conflicts" #1.
+2. **Seed init + parameter-movement smoke check.** Otherwise a dead-gradient experiment
+   silently reports its parent's score — which would poison the trait ledger, since a
+   trait that changes nothing reads as neutral rather than broken.
+3. **Patch format → search/replace blocks.** The big one: 100% of run_2's abandonments.
+   Unblocks the 12 hypotheses never tested, including every ranking-loss idea the island
+   design is built around. Do it third, with 1 and 2 already green.
+
+**Phase 0 verification.** One run confirming a ranking-loss hypothesis actually executes
+end to end, and that the FM baseline is reproducible at validation 0.6016. Nobody has
+checked the latter yet, and it is both task requirement 1 and the anchor island's entire
+job — better to find out now than during the first island run.
+
+### Phase 1 — island layer, in dependency order
+
+1. Journal schema: `island`, `traits`, trait validation record.
+2. Declarative island config (name, invariant, seed scaffold, prompt fragment, literature).
+3. Master: keep/kill, extinction with grace period.
+4. Absorber: spawn trigger, slot inheritance.
+5. Research Agent with per-island RAG namespace.
+6. Data Scientist agent (EDA stage).
+
+Ordering matters most for Phase 0 #3: with patch application broken, an island run
+produces a well-structured architecture that never completes an experiment, and the
+wall-clock is spent discovering that.
 
 ## Settled
 

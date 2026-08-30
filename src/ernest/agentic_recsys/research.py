@@ -490,9 +490,10 @@ class ResearchEngine:
             values.update(item["evidence_id"] for item in report.get("candidates", []))
         scored = [item for item in (archive or []) if item.get("status") == "scored"]
         if scored:
+            for item in scored:
+                values.add(f"experiment:{item['experiment_id']}:metrics")
             latest = scored[-1]
             experiment_id = latest["experiment_id"]
-            values.add(f"experiment:{experiment_id}:metrics")
             segments = latest.get("metrics", {}).get("segment_diagnostics", {}).get("segments", {})
             for dimension, entries in segments.items():
                 for item in entries:

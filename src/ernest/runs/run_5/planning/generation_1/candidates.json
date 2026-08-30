@@ -1,0 +1,315 @@
+[
+  {
+    "text": "Add impression-time request-context categorical features tab, hour, and weekday to the neutral user/item additive scaffold while retaining pointwise BCE.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 5,
+      "feasibility": 9
+    },
+    "rationale": "Measured screening found request_context lifted primary by 0.002213, with positive movement on all four internal temporal-holdout days. Warm-user/item GAUC was 0.6312 and nDCG@5 was 0.5076, indicating useful within-user discrimination but only moderate top-five concentration. Downside risk: the modest and variable lift may not generalize, and sparse context categories can overfit.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only the impression-time request_context feature group (tab, hour, weekday); leave model, loss, sampler, optimizer, and stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected +0.0015 to +0.0040 from context-dependent within-user ordering.",
+      "nDCG@5": "Expected +0.0005 to +0.0025, potentially smaller than the GAUC gain."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ]
+  },
+  {
+    "text": "Replace the additive user/item logit with a second-order factorization-machine interaction term over the same user and item IDs, retaining pointwise BCE.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The measured request-context result shows that within-user ordering contains signal beyond a constant user score; an explicit user-item interaction is a direct architectural test of that limitation without introducing new data fields. Downside risk: the interaction parameters may be poorly estimated for sparse IDs and can increase memory and training time.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace the additive ID scorer with a second-order FM scorer using only the existing user_id and video_id inputs; keep pointwise BCE and all training settings fixed.",
+    "expected_effect": {
+      "GAUC": "Expected +0.0010 to +0.0035 if personalized user-item affinity improves pair ordering.",
+      "nDCG@5": "Expected +0.0005 to +0.0025 from stronger separation among each user's candidates."
+    },
+    "expected_primary_gain": 0.0018,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with within-user Bayesian personalized ranking loss using sampled positive-negative pairs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The official objective is within-user ranking, while the seed uses pointwise BCE. The measured request-context screening demonstrates that the validation task has nontrivial within-user ordering signal, motivating an objective aligned directly to pairwise ordering. Downside risk: users with few positives or negatives yield fewer training pairs, and sampling variance may reduce nDCG@5 stability.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace BCE updates with one within-user BPR pairwise loss; construct bounded positive-negative pairs only from users having both labels, with the same ID features and optimizer budget.",
+    "expected_effect": {
+      "GAUC": "Expected +0.0020 to +0.0060 because the loss directly optimizes positive-over-negative ordering.",
+      "nDCG@5": "Expected +0.0010 to +0.0040, with gains dependent on pair sampling quality."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with a within-user listwise softmax loss over bounded impression groups.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "nDCG@5 is a top-of-list metric, and the measured request-context result shows context improves GAUC more clearly than nDCG@5; a listwise objective is a targeted test for improving top-rank concentration. Downside risk: long or highly imbalanced user groups require truncation or sampling, and approximation choices can distort the official ranking distribution.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace BCE with a bounded within-user listwise softmax loss; keep the additive user/item model, input fields, optimizer, and epoch budget unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected +0.0010 to +0.0040, possibly below pairwise training because listwise weighting emphasizes the head.",
+      "nDCG@5": "Expected +0.0020 to +0.0060 from direct pressure on high-ranked positives."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ]
+  },
+  {
+    "text": "Add request-context features but encode hour cyclically rather than as an ordinary categorical value, retaining tab and weekday as categorical inputs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Request_context is the only screened group with positive primary lift of 0.002213 and positive daily movement. Cyclic hour encoding tests whether the temporal continuity within that measured signal is being lost by categorical treatment. Downside risk: cyclic smoothness may be inappropriate for abrupt schedule changes and can dilute useful hour-specific effects.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Within the request_context addition, replace only the hour representation with sine/cosine cyclical encoding; keep tab, weekday, IDs, model, loss, and training unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected +0.0005 to +0.0025 over the neutral scaffold through smoother temporal ordering.",
+      "nDCG@5": "Expected +0.0002 to +0.0015; top-five gains may be limited if context mainly separates broad user behavior."
+    },
+    "expected_primary_gain": 0.0011,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ]
+  },
+  {
+    "text": "Use only the request-context tab feature as a one-field addition to the neutral scaffold.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The measured request_context group is positive overall, but its components have not been isolated. Tab-only screening is a low-cost attribution test that can identify whether the robust portion of the observed +0.002213 primary lift comes from surface context rather than temporal fields. Downside risk: isolating tab may discard complementary time signal and underperform the full group.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only categorical tab; exclude hour and weekday and leave every model and training setting unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected +0.0004 to +0.0020.",
+      "nDCG@5": "Expected +0.0002 to +0.0012."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ]
+  },
+  {
+    "text": "Use request-context hour and weekday without tab as a temporal-only feature addition.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The screened request_context group improved primary by 0.002213 and was positive on each day; its temporal subset can test whether recurring time patterns explain the signal. Downside risk: day-specific behavior may drift, and temporal categories can memorize the short internal holdout rather than generalize.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only categorical hour and weekday; exclude tab and keep the neutral additive model, BCE, and training configuration unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected +0.0008 to +0.0030.",
+      "nDCG@5": "Expected +0.0003 to +0.0018."
+    },
+    "expected_primary_gain": 0.0013,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer with a two-layer neural interaction model over user and item ID embeddings, without adding features.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The seed cannot represent nonlinear user-item compatibility. The measured request-context evidence shows meaningful ranking structure, providing a useful target for testing whether a more expressive scorer can capture interactions even before feature expansion. Downside risk: extra parameters may overfit users and items, complicate early stopping, and increase runtime substantially.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace the additive ID model with a two-layer MLP over concatenated user and item embeddings; keep the same IDs, BCE loss, optimizer, and data split.",
+    "expected_effect": {
+      "GAUC": "Expected +0.0010 to +0.0045 if nonlinear compatibility is present.",
+      "nDCG@5": "Expected +0.0005 to +0.0030, with a risk of no gain from increased variance."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ]
+  },
+  {
+    "text": "Replace uniform row minibatches with within-user stratified minibatches that preserve positive and negative examples when available.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The official GAUC is positive-count weighted within user, while the measured request-context signal is stronger in GAUC than nDCG@5. More balanced user-level exposure during BCE training may reduce domination by high-volume users and improve pair ordering. Downside risk: stratification can increase sampling overhead and may hurt calibration or users whose natural impression volume is informative.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Change only the minibatch sampler to enforce bounded within-user positive/negative balance; retain the additive model, BCE, optimizer, features, and number of updates.",
+    "expected_effect": {
+      "GAUC": "Expected +0.0005 to +0.0030 through more equitable within-user optimization.",
+      "nDCG@5": "Expected -0.0005 to +0.0020 because altered sampling may not improve head concentration."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ]
+  },
+  {
+    "text": "Replace Adam-style adaptive updates with SGD plus momentum for the neutral additive model.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "This isolates optimizer dynamics without changing data or representation. The positive but variable request_context lift of 0.002213 suggests modest signal where optimization stability could matter, especially for sparse ID parameters. Downside risk: SGD may converge more slowly, require sensitive learning-rate tuning, and underfit rare entities within the fixed budget.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace the current adaptive optimizer with SGD momentum; keep features, additive logits, BCE, batch size, epoch limit, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected -0.0010 to +0.0015; optimization may be less effective on sparse IDs.",
+      "nDCG@5": "Expected -0.0010 to +0.0010."
+    },
+    "expected_primary_gain": 0.0001,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ]
+  },
+  {
+    "text": "Increase L2 regularization on the neutral additive ID weights by one order of magnitude.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 9
+    },
+    "rationale": "The only measured feature signal is modest and variable across days, so regularization is a focused test for reducing sparse-ID overfit without changing the feature contract. Downside risk: stronger shrinkage can erase useful user/item distinctions and reduce both metrics, particularly for warm entities with repeated evidence.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Change only L2 weight decay from 1e-6 to 1e-5; retain the additive model, BCE, IDs, optimizer, sampling, and schedule.",
+    "expected_effect": {
+      "GAUC": "Expected -0.0010 to +0.0015, with upside only if seed fitting is noisy.",
+      "nDCG@5": "Expected -0.0010 to +0.0010."
+    },
+    "expected_primary_gain": 0.0001,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ]
+  },
+  {
+    "text": "Add request-context features with an explicit user-by-context interaction via a factorized cross layer, retaining the additive ID terms and BCE.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 6
+    },
+    "rationale": "Request_context has the strongest measured evidence: +0.002213 primary lift, positive daily lift on all four days, and warm GAUC 0.6312. The screened result suggests context is useful, while a cross layer tests whether context effects differ systematically by user rather than acting globally. Downside risk: user-context crosses can become sparse, increase memory, and overfit short-lived temporal patterns.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add one low-rank user-by-request_context cross layer to the additive scorer; add no other fields and keep BCE, optimizer, and training schedule fixed.",
+    "expected_effect": {
+      "GAUC": "Expected +0.0015 to +0.0050 by personalizing contextual ordering.",
+      "nDCG@5": "Expected +0.0010 to +0.0035 if personalized context improves top-five selection."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "features",
+      "architecture"
+    ]
+  }
+]

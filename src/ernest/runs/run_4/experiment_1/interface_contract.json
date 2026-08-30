@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "data.load returns the existing train/valid/test row splits. data.encode returns encoded[name] = (features, labels, users), where features is an int32 array of shape [n_rows, 5] containing additive fields user_id, video_id, tab, hour, and weekday; labels is float32 and used only for training/evaluation plumbing; users preserves validation user IDs in canonical validation row order. Context vocabularies and unknown buckets are fit from training rows only, with no validation-label or future-row information used. Row order is preserved exactly from the source split."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "model.Model receives the total encoded feature dimension and consumes features as an int32 [batch_size, 5] array. It computes the unchanged additive logit by summing one embedding weight per field value plus a scalar bias. The existing learning_rate, l2, batch_size, max_epochs, patience, and split settings remain unchanged. The fixed training command writes predictions_valid.npz with exactly row_ids and scores, where both are one-dimensional, equal in length to validation rows, finite, and ordered canonically."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

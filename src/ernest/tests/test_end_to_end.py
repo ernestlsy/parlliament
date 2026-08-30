@@ -70,6 +70,13 @@ class EndToEndTests(unittest.TestCase):
                     "--contract-check",
                 ],
             }
+            seed_model = (
+                Path(__file__).parents[1] / "agentic_recsys" / "seed" / "model.py"
+            ).read_text(encoding="utf-8")
+            updated_model = seed_model.replace(
+                "Fresh-start additive ID model with no interaction or baseline-derived architecture.",
+                "Fresh-start additive ID model with no interaction or inherited architecture.",
+            )
             llm = ScriptedLLMClient([
                 {"priorities": [{
                     "evidence_ids": ["screen:item_metadata"],
@@ -111,17 +118,8 @@ class EndToEndTests(unittest.TestCase):
                 ]},
                 {"winner_candidate_id": "c1", "selection_rationale": "highest confidence"},
                 {"active_agents": ["model_designer"], "reasoning": "model-only", "contract": contract},
-                {"patches": {"model.py": (
-                    "--- model.py\n+++ model.py\n@@ -1,1 +1,1 @@\n"
-                    "-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n"
-                    "+\"\"\"Fresh-start additive ID model with no interaction or inherited architecture.\"\"\"\n"
-                    "BROKEN PATCH TRAILER\n"
-                )}},
-                {"patches": {"model.py": (
-                    "--- model.py\n+++ model.py\n@@ -1,1 +1,1 @@\n"
-                    "-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n"
-                    "+\"\"\"Fresh-start additive ID model with no interaction or inherited architecture.\"\"\"\n"
-                )}},
+                {"files": {"model.py": "def broken(:\n"}},
+                {"model.py": updated_model},
             ])
             config = SystemConfig(
                 workspace=str(root / "workspace"), data_dir=str(data),
@@ -183,6 +181,11 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(journal_record["hypothesis_prediction"]["candidate_id"], "c1")
             patch_history = json.loads((experiment / "patch_history.json").read_text(encoding="utf-8"))
             self.assertEqual(len(patch_history), 2)
+            self.assertTrue(all(item["format_version"] == 2 for item in patch_history))
+            self.assertTrue(all("files" in item for item in patch_history))
+            self.assertNotIn("patches", patch_history[-1])
+            repair_payload = llm.calls[-1]["payload"]
+            self.assertIn("invalid Python in model.py at line 1", repair_payload["structured_error"]["message"])
             self.assertTrue((experiment / "llm_events.jsonl").is_file())
             self.assertTrue((experiment / "attempt_summary.json").is_file())
             self.assertFalse((experiment / "failure.log").exists())

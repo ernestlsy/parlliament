@@ -1,0 +1,48 @@
+{
+  "attempt_id": "0476e6f67dcc",
+  "status": "scored",
+  "generation": 2,
+  "mode": "improve",
+  "parent_experiment_id": 1,
+  "hypothesis_text": "Select checkpoints using the official validation primary metric instead of the GAUC-only early-stopping proxy.",
+  "active_sub_agents": [
+    "trainer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [
+    {
+      "kind": "semantic_logic",
+      "message": "training process exited 1",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 18, in _official_primary\n    from evaluator import official_primary\nModuleNotFoundError: No module named 'evaluator'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 187, in <module>\n    main()\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 162, in main\n    primary = _official_primary(predictions)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 20, in _official_primary\n    raise RuntimeError(\"the evaluator interface must provide official_primary\") from error\nRuntimeError: the evaluator interface must provide official_primary\n",
+      "responsible_agents": [
+        "trainer"
+      ],
+      "attempt": 1,
+      "return_code": 1
+    },
+    {
+      "kind": "semantic_logic",
+      "message": "training process exited 1",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 26, in _official_primary\n    evaluator = importlib.import_module(module_name)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/user/anaconda3/envs/evo/lib/python3.11/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap>\", line 1204, in _gcd_import\n  File \"<frozen importlib._bootstrap>\", line 1176, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 1140, in _find_and_load_unlocked\nModuleNotFoundError: No module named 'evaluation'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 204, in <module>\n    main()\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 179, in main\n    primary = _official_primary(predictions)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 40, in _official_primary\n    raise RuntimeError(\nRuntimeError: the evaluator interface must provide official_primary\n",
+      "responsible_agents": [
+        "trainer"
+      ],
+      "attempt": 2,
+      "return_code": 1
+    }
+  ],
+  "elapsed_seconds": 187.07498820999172,
+  "available_log_files": [
+    "attempt_1.log",
+    "attempt_2.log",
+    "attempt_3.log",
+    "contract_attempt_1.log",
+    "contract_attempt_2.log",
+    "contract_attempt_3.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

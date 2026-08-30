@@ -1,0 +1,26 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:1:metrics"
+      ],
+      "finding": "Prioritize only impression-time request-context features (tab, hour, weekday). Training-only screening shows positive primary lift of 0.00221 with positive daily lift on all four dates, although variability is material. The official validation model has GAUC 0.6692 and nDCG@5 0.5364, so advance this group to the next gated experiment rather than adding more feature groups.",
+      "recommended_action": "Continue with request_context under a strict incremental validation gate; stop feature-budget expansion if the next temporal holdout does not confirm a positive primary gain."
+    },
+    {
+      "evidence_ids": [
+        "experiment:1:segment:tab:8",
+        "experiment:1:segment:tab:3"
+      ],
+      "finding": "Treat tab 8 as the highest-priority robustness gap: GAUC is 0.3519 and nDCG@5 is 0.0263, indicating both weak within-user ordering and severe top-five failure. Tab 3 is also weak, with GAUC 0.5 and nDCG@5 0.0062. These segments warrant diagnosis, but their small-to-moderate sample sizes do not justify broad feature expansion before confirming stable incremental benefit.",
+      "recommended_action": "Run targeted error analysis for tabs 8 and 3 and assess whether request-context interactions help; do not optimize against isolated small segments without a gated overall gain."
+    }
+  ],
+  "avoid": [
+    "Reject user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, and historical_item_response; all have non-positive training-only primary lift or materially negative evidence. Cite: screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response.",
+    "Do not use current-impression outcomes or aggregate snapshots lacking impression-time availability timestamps; these are leakage risks.",
+    "Do not treat user_positive_count:zero as a feature opportunity: it is a retrospective validation-label diagnostic with GAUC 0.5 and zero top-five metrics, not a deployable ranking signal. Cite: experiment:1:segment:user_positive_count:zero."
+  ],
+  "metric_diagnosis": "The request-context result is the only screened group with a positive primary lift, and its daily sign is consistent despite moderate variance. The model's GAUC indicates useful within-user score separation, but top-five quality is weaker in several segments: for example, tab 8 has both poor GAUC and near-zero nDCG@5, while many hour segments retain GAUC above 0.6 yet have nDCG@5 around 0.36-0.39, showing that global ordering does not guarantee strong top-five placement. Warm-item coverage is strong, whereas cold-item performance is uninformative at GAUC 0.5; prioritize stable within-user ranking evidence over isolated top-five or tiny-segment results. Cite: screen:request_context, experiment:1:metrics, experiment:1:segment:tab:8, experiment:1:segment:hour:3."
+}

@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.86,
+      "rationale": "Best-supported and lowest-risk candidate: request_context is the only screened feature group with positive primary lift (+0.002213), positive movement on all four holdout days, full coverage, and low runtime/leakage risk. It is a clean, focused replication with unchanged training procedure."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 2,
+      "utility_score": 0.72,
+      "rationale": "Directly aligns training with the within-user ranking objective and offers the strongest plausible upside among focused changes. It changes only the loss, but pair construction and sampling variance create moderate runtime and validation-stability risk; evidence is indirect because the only prior result concerns request_context."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 3,
+      "utility_score": 0.64,
+      "rationale": "Targets nDCG@5 directly through a listwise objective and is experimentally focused. It ranks below BPR because bounded impression groups, truncation, and distributional approximation introduce high runtime and implementation risk with no direct loss evidence."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 4,
+      "utility_score": 0.59,
+      "rationale": "Uses the strongest measured feature evidence and tests a meaningful user-specific context hypothesis. However, adding a cross layer on top of new context features combines feature and architecture changes, duplicates c01, increases scope and runtime, and raises sparse-cross overfitting risk."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 5,
+      "utility_score": 0.54,
+      "rationale": "A focused architecture test of user-item affinity with moderate runtime risk and no leakage. The hypothesis is plausible, but the supporting request_context evidence does not specifically establish that explicit ID interactions are the missing mechanism, and sparse-ID estimation may limit gains."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 6,
+      "utility_score": 0.5,
+      "rationale": "A low-cost attribution experiment using temporal fields from the only positive screened group. It is less duplicative than c01 but has weaker expected gain, unisolated component evidence, and meaningful risk of memorizing short-horizon temporal patterns."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 7,
+      "utility_score": 0.44,
+      "rationale": "Low runtime and clean scope, but it is a second-order refinement of c01 rather than a primary opportunity. The measured evidence supports request_context generally, not cyclic hour encoding, and smoothness may erase useful hour-specific effects."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 8,
+      "utility_score": 0.4,
+      "rationale": "Useful low-cost attribution test for the positive request_context result, with minimal runtime risk. It has low expected gain because it discards potentially complementary temporal fields and has no tab-specific evidence."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 9,
+      "utility_score": 0.34,
+      "rationale": "Tests a plausible mismatch between row sampling and user-weighted GAUC while keeping the model fixed. Evidence is weak and indirect, runtime is moderate, and the expected nDCG effect is uncertain or negative."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 10,
+      "utility_score": 0.27,
+      "rationale": "Nonlinear user-item modeling is plausible but substantially broader and higher-risk than c02. It increases runtime and overfitting risk without direct evidence that nonlinear ID compatibility is needed, making validation overfitting more likely."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 11,
+      "utility_score": 0.16,
+      "rationale": "Isolates optimizer effects and is operationally feasible, but the expected gain is near zero or negative. SGD may require tuning that the fixed-budget ablation forbids and has no supporting evidence beyond a modest feature lift."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 12,
+      "utility_score": 0.1,
+      "rationale": "Very low runtime and clean isolation, but the expected effect is near zero or negative and the evidence for sparse-ID overfit is absent. A tenfold regularization increase could erase useful signal, making it a poor use of the scarce experiment."
+    }
+  ]
+}

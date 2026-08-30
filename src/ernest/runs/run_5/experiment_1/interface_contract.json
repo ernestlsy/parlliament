@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "data.py load/encode must preserve the existing split definitions and row order, add request_context categorical fields tab, hour, and weekday using training-only vocabularies with explicit unknown buckets, and return encoded feature matrices, labels for training-only optimization, and user IDs for the existing training proxy. Validation encoding must retain canonical input row order. No ground-truth labels may be written to predictions_valid.npz."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "model.py receives the encoded feature matrix as an integer index matrix with one column per categorical field, including user_id, video_id, tab, hour, and weekday. The unchanged additive model sums the corresponding weights and trains with the existing pointwise BCE/Adam procedure. train.py must write predictions_valid.npz with exactly two arrays: row_ids, an int64 sequence matching canonical validation row order, and scores, a finite one-dimensional prediction array of identical length."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

@@ -19,7 +19,7 @@ The implementation keeps the specification's responsibilities separate:
 | Feature Engineer / Model Designer / Trainer | role-specific prompts in `agents.py`, restricted to `data.py`, `model.py`, and `train.py`/`config.json` |
 | Experimentor | `agentic_recsys/experimentor.py`: contract probe, bounded subprocess, error classification |
 | Journal | `agentic_recsys/journal.py`: durable append-only JSONL archive and convergence checks |
-| Guardrails | `agentic_recsys/sandbox.py`: sandbox-contained paths and strict single-file unified diffs |
+| Guardrails | `agentic_recsys/sandbox.py`: sandbox-contained paths and validated full-file replacements |
 | Fixed evaluator | `agentic_recsys/evaluation.py`: official scores plus classification and ranking diagnostics |
 | Segment analyzer | `agentic_recsys/diagnostics.py`: post-score warm/cold, context, and activity slices |
 | Seed scaffold | `agentic_recsys/seed/`: neutral two-ID additive learner, represented as unscored parent 0 |
@@ -43,8 +43,9 @@ Successful descendants are atomically renamed to `runs/<run>/experiment_<id>`. F
    best scored parent as Improve context. Only the tournament winner proceeds to implementation.
    Eligible parents are recomputed from the durable journal before every initial or replacement call.
 4. The Orchestrator fixes the machine-readable contract and activates only relevant code agents.
-5. Each code agent returns unified diffs. Ernest rejects absolute/traversing paths, unmanaged files,
-   mismatched patch headers, and stale patch context.
+5. Each code agent returns the complete contents of every file assigned to its role. Ernest rejects
+   absolute/traversing paths, unmanaged or missing files, empty/no-op responses, invalid Python, and
+   invalid configuration JSON before replacing anything. Journal diffs are calculated locally.
 6. Before training, a small-slice `--contract-check` validates the connected data/model/train path.
    The full process then writes `predictions_valid.npz` containing exactly canonical `row_ids` and
    `scores`. The fixed evaluator independently reloads users and labels from the official validation
@@ -138,13 +139,14 @@ sandbox path. Each new attempt sandbox also contains:
 - `attempt_summary.json`: machine-readable outcome, stage, failure chain, elapsed time, and log index.
 - `failure.log`: human-readable abandonment reason and full exception traceback.
 - `llm_events.jsonl`: complete role-tagged LLM requests, responses, and errors for that attempt.
-- `patch_history.json`: every raw patch response, including rejected patches and repair attempts.
+- `patch_history.json`: versioned complete-file responses, including rejected replacements and
+  repair attempts; the historical filename is retained for compatibility.
 - `contract_attempt_<n>.log` and `attempt_<n>.log`: contract-probe and training stdout/stderr.
 
 The run directory contains a complete cross-attempt `llm_events.jsonl`, including Judge and
 Consultant calls that occur before an experiment sandbox exists. Invalid Orchestrator contracts and
-malformed code patches are automatically returned to the responsible agent for up to three response
-repairs before abandonment.
+invalid complete-file responses are automatically returned to the responsible agent with precise
+validation feedback for up to three response repairs before abandonment.
 
 Important options include `--max-experiments` (default 50), `--timeout` (one wall-clock budget per
 experiment), `--max-debug-attempts` (default 3), `--max-backfills` (default 2),
@@ -159,7 +161,8 @@ screens are reused when a run resumes.
 
 ## Invariants and trust boundary
 
-- Agent output is data: it can only become a patch to its role's allowlisted files.
+- Agent output is data: it can only replace the complete contents of its role's allowlisted files.
+  All owned files are required and validated together before any replacement is installed.
 - Evaluation is imported from the installed Ernest package, never copied into experiment sandboxes.
 - Subprocess arguments are arrays, not shell strings; training executes strictly one experiment at
   a time.
@@ -179,4 +182,5 @@ python -m unittest discover -s tests -v
 ```
 
 The suite covers metric parity cases, convergence boundary behavior, journal ID semantics,
-diff/path guardrails, failure classification, contract validation, and a complete mocked LLM run.
+replacement/path guardrails, failure classification, contract validation, and a complete mocked LLM
+run.

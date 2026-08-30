@@ -19,7 +19,7 @@ from agentic_recsys.llm import LLMError, OpenAICompatibleClient, ScriptedLLMClie
 from agentic_recsys.config import SystemConfig
 from agentic_recsys.overseer import Overseer
 from agentic_recsys.research import temporal_partition
-from agentic_recsys.sandbox import GuardrailViolation, apply_unified_diff, guarded_path
+from agentic_recsys.sandbox import GuardrailViolation, apply_agent_replacements, guarded_path
 from agentic_recsys.schemas import (
     FailureKind, Hypothesis, HypothesisScores, InterfaceContract, JournalRecord, Mode,
     hypothesis_from_dict,
@@ -148,32 +148,79 @@ class SandboxTests(unittest.TestCase):
             with self.assertRaises(GuardrailViolation):
                 guarded_path(Path(directory), "../outside.py")
 
-    def test_applies_scoped_unified_diff(self):
+    def test_applies_scoped_complete_file_replacement(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "model.py").write_text("one\ntwo\n", encoding="utf-8")
-            apply_unified_diff(
-                root,
-                "model.py",
-                "--- model.py\n+++ model.py\n@@ -1,2 +1,2 @@\n one\n-two\n+three\n",
+            (root / "model.py").write_text("value = 1\n", encoding="utf-8")
+            apply_agent_replacements(
+                root, {"model.py": "value = 2\n"}, ("model.py",)
             )
-            self.assertEqual((root / "model.py").read_text(encoding="utf-8"), "one\nthree\n")
+            self.assertEqual((root / "model.py").read_text(encoding="utf-8"), "value = 2\n")
 
-    def test_patch_cannot_target_evaluator(self):
+    def test_replacement_cannot_target_evaluator(self):
         with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "model.py").write_text("value = 1\n", encoding="utf-8")
             with self.assertRaises(GuardrailViolation):
-                apply_unified_diff(Path(directory), "evaluation.py", "")
+                apply_agent_replacements(
+                    root,
+                    {"model.py": "value = 2\n", "evaluation.py": "score = 1\n"},
+                    ("model.py",),
+                )
 
-    def test_tolerates_llm_trailing_hunk_marker(self):
+    def test_replacement_requires_every_owned_file(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "model.py").write_text("old\n", encoding="utf-8")
-            apply_unified_diff(
-                root,
-                "model.py",
-                "--- model.py\n+++ model.py\n@@ -1,1 +1,1 @@\n-old\n+new\n@@\n",
+            (root / "train.py").write_text("value = 1\n", encoding="utf-8")
+            (root / "config.json").write_text('{"seed": 0}\n', encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "missing complete files"):
+                apply_agent_replacements(
+                    root, {"train.py": "value = 2\n"}, ("train.py", "config.json")
+                )
+
+    def test_invalid_multi_file_replacement_is_not_partially_applied(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original_train = "value = 1\n"
+            original_config = '{"seed": 0}\n'
+            (root / "train.py").write_text(original_train, encoding="utf-8")
+            (root / "config.json").write_text(original_config, encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "invalid JSON"):
+                apply_agent_replacements(
+                    root,
+                    {"train.py": "value = 2\n", "config.json": "{broken"},
+                    ("train.py", "config.json"),
+                )
+            self.assertEqual((root / "train.py").read_text(encoding="utf-8"), original_train)
+            self.assertEqual(
+                (root / "config.json").read_text(encoding="utf-8"), original_config
             )
-            self.assertEqual((root / "model.py").read_text(encoding="utf-8"), "new\n")
+
+    def test_rejects_invalid_python_with_precise_location(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "model.py").write_text("value = 1\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, r"model\.py at line 1"):
+                apply_agent_replacements(
+                    root, {"model.py": "def broken(:\n"}, ("model.py",)
+                )
+
+    def test_rejects_complete_file_no_op(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            content = "value = 1\n"
+            (root / "model.py").write_text(content, encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "no changes"):
+                apply_agent_replacements(root, {"model.py": content}, ("model.py",))
+
+    def test_rejects_empty_and_non_string_complete_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "model.py").write_text("value = 1\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "cannot be empty"):
+                apply_agent_replacements(root, {"model.py": "  "}, ("model.py",))
+            with self.assertRaisesRegex(ValueError, "must be a string"):
+                apply_agent_replacements(root, {"model.py": 3}, ("model.py",))
 
 
 class FailureClassificationTests(unittest.TestCase):

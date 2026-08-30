@@ -75,6 +75,36 @@ def make_dataset(root: Path) -> Path:
 
 
 class ResearchEngineIntegrationTests(unittest.TestCase):
+    def test_evidence_ids_include_all_experiment_metrics_but_only_latest_segments(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            engine = ResearchEngine(root, root / "run", ScreeningConfig())
+            archive = [
+                {
+                    "status": "scored",
+                    "experiment_id": 1,
+                    "metrics": {
+                        "segment_diagnostics": {
+                            "segments": {"tab": [{"value": "old"}]}
+                        }
+                    },
+                },
+                {
+                    "status": "scored",
+                    "experiment_id": 2,
+                    "metrics": {
+                        "segment_diagnostics": {
+                            "segments": {"tab": [{"value": "latest"}]}
+                        }
+                    },
+                },
+            ]
+            evidence = set(engine.evidence_ids(archive))
+            self.assertIn("experiment:1:metrics", evidence)
+            self.assertIn("experiment:2:metrics", evidence)
+            self.assertIn("experiment:2:segment:tab:latest", evidence)
+            self.assertNotIn("experiment:1:segment:tab:old", evidence)
+
     def test_historical_development_features_exclude_current_label(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

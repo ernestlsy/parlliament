@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.78,
+      "rationale": "Best balance of ranking-aligned upside, moderate runtime, clean single-component ablation, and relatively strong evidence from the weak top-five and multi-positive user segments. It directly addresses the objective without adding feature or architecture scope; pair-sampling imbalance and calibration risk remain manageable."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 2,
+      "utility_score": 0.72,
+      "rationale": "Strong architectural rationale because the additive model cannot represent user-item-context compatibility, and context has positive evidence. It offers meaningful upside with a clean ablation, but sparse interactions, memory/runtime cost, and only moderate confidence make it slightly riskier than BPR."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 3,
+      "utility_score": 0.65,
+      "rationale": "Most directly targets nDCG@5 and could address the large top-five weakness, but variable-size within-user grouping creates high runtime and implementation risk. It overlaps substantially with c01 as another loss-level ranking intervention, so it is less attractive for one scarce experiment."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 4,
+      "utility_score": 0.58,
+      "rationale": "Potentially high upside from genuine user-item compatibility and evidence that the current additive scaffold is limited. However, it is a large architectural change with high runtime, tuning, warm-item bias, and cold-item risk, while its evidence is indirect."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 5,
+      "utility_score": 0.45,
+      "rationale": "Low-risk, narrowly scoped ablation supported by consistently weak hour slices and likely to improve robustness if temporal weights are noisy. Expected aggregate gain is small and the segment evidence does not establish that hour is harmful globally."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 6,
+      "utility_score": 0.43,
+      "rationale": "Addresses the most severe tab failures with minimal runtime cost, but tab has positive aggregate screening evidence and the worst slices are sparse. The likely outcome is neutral or a small regression, making removal less compelling than ranking or interaction changes."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 7,
+      "utility_score": 0.34,
+      "rationale": "A plausible refinement of the weak hour signal, but finer buckets increase sparsity and logging/timezone failure risk. Evidence supports questioning coarse hour, not specifically adding hour-minute resolution, and confidence is low."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 8,
+      "utility_score": 0.29,
+      "rationale": "Day-to-day variation suggests possible drift signal, but categorical impression dates are prone to temporal memorization and future-date distribution failure. The expected gain is small, confidence is weak, and validation overfitting risk is material despite the stated low leakage risk."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 9,
+      "utility_score": 0.25,
+      "rationale": "Device/layout dimensions are available and leakage-safe, but there is no direct evidence they improve ranking, and sparse operational categories may generalize poorly. Moderate runtime and vocabulary risk are not justified by the modest expected gain."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 10,
+      "utility_score": 0.21,
+      "rationale": "Clean and feasible, but visible_status may be nearly constant or reflect serving policy rather than preference. Evidence is generic request-context screening rather than field-specific, so both upside and robustness are weak."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 11,
+      "utility_score": 0.19,
+      "rationale": "Very cheap to test, but weekday has no compelling evidence of harm and may capture recurring behavior. Its expected effect is negligible, confidence is low, and it duplicates the broader question of removing temporal context without targeting the strongest observed failure."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 12,
+      "utility_score": 0.12,
+      "rationale": "Broad, poorly documented one-hot expansion has weak field-level evidence, high runtime and memory risk, and substantial overfitting potential. The scope is excessive for one scarce experiment and the candidate overlaps with more focused context and interaction proposals."
+    }
+  ]
+}

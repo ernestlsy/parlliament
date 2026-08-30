@@ -1,0 +1,59 @@
+{
+  "attempt_id": "c805e24d38ff",
+  "status": "scored",
+  "generation": 1,
+  "mode": "draft",
+  "parent_experiment_id": 0,
+  "hypothesis_text": "Add impression-time request-context categorical features tab, hour, and weekday to the neutral user/item additive scaffold while retaining pointwise BCE.",
+  "active_sub_agents": [
+    "feature_engineer",
+    "trainer",
+    "model_designer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [
+    {
+      "kind": "contract_fulfillment",
+      "message": "trainer complete-file response was invalid: ValueError: agent returned complete files with no changes",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 277, in request_and_apply_replacements\n    apply_agent_replacements(sandbox, replacements, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 104, in apply_agent_replacements\n    raise ValueError(\"agent returned complete files with no changes\")\nValueError: agent returned complete files with no changes\n",
+      "responsible_agents": [
+        "trainer"
+      ],
+      "attempt": 1,
+      "return_code": null
+    },
+    {
+      "kind": "contract_usage",
+      "message": "contract probe exited 1",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_c805e24d38ff/train.py\", line 98, in <module>\n    main()\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_c805e24d38ff/train.py\", line 46, in main\n    splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_c805e24d38ff/data.py\", line 31, in load\n    row[\"hour\"],\n    ~~~^^^^^^^^\nKeyError: 'hour'\n",
+      "responsible_agents": [
+        "feature_engineer",
+        "model_designer",
+        "trainer"
+      ],
+      "attempt": 1,
+      "return_code": 1
+    },
+    {
+      "kind": "contract_fulfillment",
+      "message": "model_designer complete-file response was invalid: ValueError: agent returned complete files with no changes",
+      "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 277, in request_and_apply_replacements\n    apply_agent_replacements(sandbox, replacements, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 104, in apply_agent_replacements\n    raise ValueError(\"agent returned complete files with no changes\")\nValueError: agent returned complete files with no changes\n",
+      "responsible_agents": [
+        "model_designer"
+      ],
+      "attempt": 1,
+      "return_code": null
+    }
+  ],
+  "elapsed_seconds": 151.48798032700142,
+  "available_log_files": [
+    "attempt_2.log",
+    "contract_attempt_1.log",
+    "contract_attempt_2.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

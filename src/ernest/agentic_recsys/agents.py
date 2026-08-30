@@ -535,7 +535,7 @@ class Orchestrator:
                 last_error = f"Response validation failed: {type(exc).__name__}: {exc}"
         raise LLMError(f"Orchestrator returned invalid plans three times; {last_error}")
 
-    def generate_patches(
+    def generate_file_replacements(
         self,
         *,
         agent: str,
@@ -546,9 +546,10 @@ class Orchestrator:
     ) -> Dict[str, str]:
         allowed_files = AGENT_FILES[agent]
         system = (
-            f"You are the {agent}. Modify only {list(allowed_files)} and return unified diffs "
-            "against the supplied current files. Preserve all unrelated working behavior. Never "
-            "write evaluation logic. Patches must use exact file names in both --- and +++ headers. "
+            f"You are the {agent}. Modify only {list(allowed_files)} and return the complete final "
+            "UTF-8 content of every listed file, including files you did not need to alter. Preserve "
+            "all unrelated working behavior and never write evaluation logic. Do not return diffs, "
+            "patch markers, Markdown fences, explanations, or additional file names. "
             + JSON_ONLY
         )
         raw = self.llm.complete_json(
@@ -561,10 +562,25 @@ class Orchestrator:
                     name: (sandbox / name).read_text(encoding="utf-8") for name in allowed_files
                 },
                 "structured_error": None if failure is None else asdict(failure),
-                "response_schema": {"patches": {name: "unified diff string" for name in allowed_files}},
+                "response_schema": {
+                    "files": {name: f"complete final content of {name}" for name in allowed_files}
+                },
+                "accepted_response_shapes": [
+                    {"files": {name: f"complete final content of {name}" for name in allowed_files}},
+                    {name: f"complete final content of {name}" for name in allowed_files},
+                ],
             },
         )
-        patches = raw.get("patches")
-        if not isinstance(patches, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in patches.items()):
-            raise LLMError(f"{agent} must return a string-to-string patches object")
-        return patches
+        files = raw.get("files")
+        if files is None and set(raw) == set(allowed_files):
+            # Some JSON-mode models flatten the descriptive `files` wrapper while otherwise
+            # returning the exact requested allowlisted mapping. Both forms are unambiguous.
+            files = raw
+        if not isinstance(files, dict) or not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in files.items()
+        ):
+            raise LLMError(
+                f"{agent} must return complete files either under a 'files' key or as the direct "
+                f"top-level mapping for exactly {list(allowed_files)}; received keys={sorted(raw)}"
+            )
+        return files

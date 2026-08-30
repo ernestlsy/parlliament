@@ -69,7 +69,7 @@ Abandoned attempts are logged but excluded from the 50-count and from convergenc
 - Receives a single hypothesis + the reference experiment's code/config.
 - Determines an **interface contract** for this experiment before delegating: expected schema of `data.py`'s output, config keys touched, and `model.py`/`train.py`'s expected inputs. This travels with the sub-agent prompts.
 - Decides which sub-agent(s) are **active** for this hypothesis — e.g., a loss-function change only activates Model Designer; Feature Engineer's and Trainer's files are copied forward unchanged from the reference experiment.
-- Crafts each active sub-agent's prompt, instructing them to return a **diff against the reference file**, not a full rewrite.
+- Crafts each active sub-agent's prompt, instructing it to return the **complete final content of every file owned by that role**. Ernest validates these files before installation and computes audit diffs itself.
 - Owns the retry loop for this experiment (see §4) — classifies Experimentor failures and re-routes to the correct sub-agent(s).
 
 ### 3.2 Feature Engineer (LLM agent, writes code)
@@ -131,8 +131,10 @@ Validation failures are classified as *Contract Fulfillment Failures* (producer 
 ### 5.2 Selective Delegation
 Not every hypothesis requires all three sub-agents to regenerate code. The Orchestrator explicitly marks which sub-agents are active; inactive ones' files are copied forward unchanged from the reference experiment, reducing both token cost and regression risk.
 
-### 5.3 Diff-Based Code Edits
-Sub-agents return diffs against the reference file rather than full rewrites, making changes auditable by the Consultant and reducing the chance that an unrelated part of a working file gets silently altered.
+### 5.3 Validated Full-File Code Edits
+Sub-agents return complete files rather than authoring fragile diff metadata. Ernest requires exactly
+the role's allowlisted files, validates Python syntax and configuration JSON, installs all files as
+one rollback-protected operation, and computes parent-relative diffs locally for the journal.
 
 ### 5.4 Full-Archive Reference (not just latest generation)
 Draft mode's reference pool spans the entire experiment history, not just the immediately preceding generation, so a promising idea that lost out in an earlier generation can still be revived later.
@@ -165,8 +167,8 @@ Because experiments run strictly sequentially and are numbered 1-onwards in exec
 | Evolution Judge | Hypothesis generation (improve/draft), structured scoring, novelty filtering, diverse reference selection |
 | Consultant | Feasibility/novelty sanity check, capped revision loop (max 3 rounds), full-history awareness |
 | Journal | Full experiment + abandoned-attempt logging, lineage tracking, hypothesis scores |
-| Orchestrator | Interface contract definition, selective sub-agent activation, diff-based delegation, retry ownership, error routing |
-| Feature Engineer / Model Designer / Trainer | Patch their respective file via diff, only when active for the hypothesis |
+| Orchestrator | Interface contract definition, selective sub-agent activation, full-file delegation, retry ownership, error routing |
+| Feature Engineer / Model Designer / Trainer | Return complete content for their respective allowlisted files, only when active for the hypothesis |
 | Experimentor | Runs pipeline, hard-coded evaluation, failure classification, metric logging |
 
 ---

@@ -1,0 +1,39 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context"
+      ],
+      "finding": "Prioritize request_context (tab, hour, weekday) as the only screened group with positive aggregate primary lift (+0.00221) and full coverage. Its within-user ranking evidence is directionally useful across cold-user and warm-user/item slices, although daily variability is material and the lift is not uniformly positive.",
+      "recommended_action": "Retain request_context in the next budgeted model iteration, but require temporal stability checks and confirm gains on a fresh holdout before production rollout."
+    },
+    {
+      "evidence_ids": [
+        "screen:user_profile",
+        "screen:historical_user_author_affinity",
+        "screen:upload_recency",
+        "screen:content_duration",
+        "screen:item_metadata",
+        "screen:historical_author_response",
+        "screen:historical_item_response"
+      ],
+      "finding": "Reject the remaining screened feature groups. Each has a negative aggregate primary lift, including strongly negative results for historical author/item response and item metadata; the occasional positive daily slices do not overcome the negative overall evidence.",
+      "recommended_action": "Do not spend additional experiment budget on these groups in their current form. Revisit only with a separately justified redesign, strict temporal availability controls, and new train-only screening."
+    }
+  ],
+  "avoid": [
+    "Do not use current-impression outcome fields for ranking; they are unavailable at decision time and would constitute leakage.",
+    "Do not promote aggregate snapshot statistics without per-impression availability timestamps; historical response and item-level statistics require temporal reconstruction before reconsideration.",
+    "Do not treat user_positive_count segments as deployable feature evidence: the diagnostic explicitly uses validation labels retrospectively, and the zero-positive slice has GAUC 0.5 with zero top-five retrieval quality.",
+    "Do not infer broad robustness from high GAUC alone. The weakest tab slice has GAUC 0.3519 and nDCG@5 0.0263, while hour 3 has GAUC 0.5121 and nDCG@5 0.3860, showing that top-five ranking weaknesses can remain severe even when discrimination is near chance."
+  ],
+  "metric_diagnosis": "Experiment 2 reaches global GAUC 0.6694, nDCG@5 0.5367, and primary 0.6030, but it provides no observed primary improvement over the parent despite the predicted gain. Under the strict early-stopping budget rule, stop further experimentation now. Post-score diagnostics are validation slices rather than independent test estimates: tab 8 is the clearest operational weakness, with GAUC 0.3519, nDCG@5 0.0263, and primary 0.1891, while the large warm-item-frequency segment is essentially global (GAUC 0.6686, nDCG@5 0.5366, primary 0.6026). Focus any future work on low-performing tabs and top-five ranking quality, not on GAUC-only optimization.",
+  "evidence_ids": [
+    "experiment:2:metrics",
+    "experiment:1:metrics",
+    "experiment:2:segment:tab:8",
+    "experiment:2:segment:hour:3",
+    "experiment:2:segment:user_positive_count:zero",
+    "experiment:2:segment:item_frequency:warm_20_plus"
+  ]
+}

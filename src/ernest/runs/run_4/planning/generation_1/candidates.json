@@ -1,0 +1,343 @@
+[
+  {
+    "text": "Add impression-time request-context features tab, hour, and weekday to the neutral user/item additive model.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "This directly tests the only screened feature family with positive primary lift. The measured screening lift was +0.002213 with full coverage, and warm-user/item GAUC was 0.6312, but nDCG@5 was only 0.5076, so the expected benefit is larger for ordering than top-five concentration.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:request_context",
+      "feature:tab",
+      "feature:hourmin"
+    ],
+    "exact_ablation": "Ablate the neutral ID-only input by adding only impression-time tab, hour, and weekday fields; keep the additive architecture, BCE loss, optimizer, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately +0.002 to +0.004, supported by the measured +0.002213 primary lift and warm-user/item GAUC of 0.6312.",
+      "nDCG@5": "Increase by approximately +0.0005 to +0.0025; the gain may be smaller than GAUC because screened nDCG@5 was 0.5076."
+    },
+    "expected_primary_gain": 0.0023,
+    "confidence": 8,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "feature_engineer"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with within-user Bayesian personalized ranking while retaining the neutral user/item IDs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The official objective is within-user ranking, while the seed optimizes pointwise classification. A user-constrained pairwise loss should improve relative ordering without introducing unavailable outcomes or new feature families.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Ablate only the BCE objective and train on sampled positive-negative pairs from the same user; retain the additive ID model, data split, optimizer family, and feature set.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately +0.001 to +0.004 through better within-user pair ordering.",
+      "nDCG@5": "Increase by approximately +0.001 to +0.004 if pair sampling emphasizes hard negatives; otherwise the effect may be neutral."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with a within-user listwise softmax loss over each impression group.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "Listwise optimization is more closely aligned with nDCG@5 than BCE or unrestricted classification. It is especially motivated by the evidence that request-context features achieve solid GAUC but weaker top-five concentration.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Ablate only the pointwise BCE loss and replace it with a user-group listwise softmax objective; keep the seed's additive ID features, model capacity, and optimizer unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately +0.0005 to +0.003 because group-relative scores are optimized directly.",
+      "nDCG@5": "Increase by approximately +0.002 to +0.006, with the largest expected benefit on top-five concentration."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ]
+  },
+  {
+    "text": "Replace the additive ID model with a factorization-machine interaction model over user and item IDs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The seed has only independent user and item contributions, so it cannot represent user-item affinity beyond additive effects. A low-rank interaction term is a compact way to test this missing capacity without using rejected metadata groups.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Ablate only the additive architecture and replace it with a bounded-rank FM containing user and item ID interactions; preserve the seed's BCE training and ID-only inputs.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately +0.001 to +0.004 if personalized affinity improves within-user separation.",
+      "nDCG@5": "Increase by approximately +0.001 to +0.003, with risk of limited benefit if interactions overfit sparse users."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ]
+  },
+  {
+    "text": "Replace the additive ID model with a bounded-depth DeepFM-style model using only user and item IDs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "DeepFM can combine memorized low-rank user-item affinity with a small nonlinear component, offering more capacity than the seed while avoiding the screened negative metadata families.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Ablate only the additive architecture and replace it with a shallow DeepFM over user and item IDs; retain BCE, the same split, and the same available ID features.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately +0.001 to +0.003, assuming regularization prevents sparse-ID overfitting.",
+      "nDCG@5": "Increase by approximately +0.0005 to +0.003; the extra capacity may not translate to top-five gains."
+    },
+    "expected_primary_gain": 0.0018,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ]
+  },
+  {
+    "text": "Add a leakage-safe sequential user-history representation consisting of recent prior interaction labels before each target impression.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "Static IDs do not represent evolving user intent. A strictly prior-event history could add behavioral state while respecting ranking-time availability; the request-context result also indicates that time-varying context can provide within-user signal.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:user_id",
+      "feature:hourmin"
+    ],
+    "exact_ablation": "Ablate only the static-user representation by augmenting it with a bounded, timestamp-ordered prior-event history; construct histories separately per split using only events before each target and leave the item representation unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately +0.002 to +0.006 for users with sufficient prior events.",
+      "nDCG@5": "Increase by approximately +0.001 to +0.005, especially where recent intent creates sharper preferences."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "features",
+      "architecture"
+    ]
+  },
+  {
+    "text": "Replace shuffled mini-batch training with chronological mini-batches while retaining pointwise BCE and the seed model.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "Chronological optimization may reduce interference between changing user behavior states and better match the temporal validation regime. It changes training dynamics without adding any potentially unavailable feature.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:date",
+      "feature:hourmin"
+    ],
+    "exact_ablation": "Ablate only random training order and process training rows in chronological order; keep the feature set, architecture, BCE loss, learning rate, and epoch budget fixed.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately +0.000 to +0.002 if temporal drift is material; it could also be neutral.",
+      "nDCG@5": "Increase by approximately +0.000 to +0.002, with uncertain concentration benefit."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ]
+  },
+  {
+    "text": "Replace uniform row sampling with within-user balanced sampling for BCE training.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "The official GAUC weights users by positive count but evaluates within-user discrimination. Balancing sampled positives and negatives within users may prevent prolific users and class imbalance from dominating updates.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:user_id"
+    ],
+    "exact_ablation": "Ablate only the seed's uniform row sampling and sample equal positive and negative examples within eligible users; keep BCE, additive IDs, and all hyperparameters unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately +0.001 to +0.003 through more consistent per-user separation.",
+      "nDCG@5": "Increase by approximately +0.0005 to +0.0025; excessive balancing could reduce performance for high-volume users."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ]
+  },
+  {
+    "text": "Add only request-context features to a factorization-machine architecture instead of the seed's additive ID architecture.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "This tests whether the measured request-context lift becomes more useful when it can interact with user and item IDs. The context family has full coverage and positive lift, whereas screened item and profile families should remain excluded.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:request_context",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Ablate only the seed architecture by replacing additive scoring with bounded-rank FM over user ID, item ID, and tab/hour/weekday context; keep pointwise BCE and the same training schedule.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately +0.002 to +0.005 by modeling context-dependent user-item ordering.",
+      "nDCG@5": "Increase by approximately +0.001 to +0.004 if context interactions sharpen the top five."
+    },
+    "expected_primary_gain": 0.0028,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features"
+    ]
+  },
+  {
+    "text": "Use a pairwise hard-negative sampler instead of uniform within-user negative sampling for BPR training.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "Hard negatives directly target confusing within-user orderings and may address the gap between good GAUC and weaker nDCG@5. Sampling remains bounded and user-local, avoiding all-pairs computation.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Ablate only uniform negative selection in a BPR training implementation and replace it with bounded hard-negative mining from each user's sampled candidate set; retain the same ID model and pairwise loss.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately +0.001 to +0.004 if hard negatives are informative rather than noisy.",
+      "nDCG@5": "Increase by approximately +0.002 to +0.006 because difficult competitors are emphasized near the ranking boundary."
+    },
+    "expected_primary_gain": 0.0028,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "training"
+    ]
+  },
+  {
+    "text": "Replace the seed optimizer with SGD plus momentum while keeping BCE, additive IDs, and the same batch schedule.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 9
+    },
+    "rationale": "The seed uses Adam-style adaptive updates on sparse ID weights. A momentum SGD ablation tests whether adaptive updates are harming stable relative ordering, with minimal implementation and runtime cost.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Ablate only the optimizer: replace Adam-style updates with momentum SGD and tune only its learning rate through the existing validation procedure; keep features, architecture, loss, and sampling unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by approximately -0.001 to +0.002; improvement depends on sparse-ID optimization stability.",
+      "nDCG@5": "Change by approximately -0.001 to +0.002, with no strong reason to expect a large top-five effect."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ]
+  },
+  {
+    "text": "Replace user/item ID inputs with request-context inputs only, using tab, hour, and weekday in the additive model.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "This isolates how much of the measured context signal is globally reusable versus dependent on ID memorization. The screening evidence shows full-coverage request context with positive primary lift, while its cold-user and warm-user GAUC values are both above 0.63.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:request_context",
+      "feature:tab",
+      "feature:hourmin"
+    ],
+    "exact_ablation": "Ablate only the ID feature family: remove user_id and video_id and use tab/hour/weekday as the sole inputs to the same additive BCE model.",
+    "expected_effect": {
+      "GAUC": "Likely decrease by approximately -0.005 to -0.02 versus a model retaining IDs, despite context-only screening GAUC around 0.63.",
+      "nDCG@5": "Likely decrease by approximately -0.002 to -0.015; context may provide broad ordering but insufficient personalization for top-five ranking."
+    },
+    "expected_primary_gain": -0.008,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ]
+  }
+]

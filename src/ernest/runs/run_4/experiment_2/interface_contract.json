@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "The fixed training command must emit predictions_valid.npz at the requested output path with exactly two arrays: row_ids and scores. row_ids must equal int64 validation positions in canonical validation row order, and scores must be a finite one-dimensional array of identical length. Ground-truth labels must not be loaded or written by the model component; they are owned exclusively by the fixed evaluator."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "Model.__init__(dimension, learning_rate, l2) and Model.step(features, labels) must remain compatible with the existing trainer. features is an integer array shaped (batch_size, 5), with the encoded user ID at column 0 and user/item/tab/hour/weekday fields represented through offset IDs. labels is a float array containing binary outcomes. Implement BPR-only within-user pairwise optimization by forming positive-negative pairs among rows sharing the same encoded user ID; do not use pointwise BCE, add features, alter sampling budget, or access validation ground truth. Model.predict(features) must retain its existing one-dimensional score interface and deterministic validation-row alignment."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

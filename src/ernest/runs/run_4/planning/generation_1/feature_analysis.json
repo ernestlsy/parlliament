@@ -1,0 +1,22 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "feature:request_context",
+        "feature:tab",
+        "feature:hourmin"
+      ],
+      "finding": "Request-context features are the only screened group with positive overall primary lift (+0.00221) and positive daily lift on three of four holdout dates. They also show the strongest within-user ranking evidence, with GAUC 0.654 for cold users and 0.631 for warm users and full coverage. However, nDCG@5 remains materially below GAUC, indicating limited top-five concentration.",
+      "recommended_action": "Prioritize for a budgeted experiment, using temporal validation and segment monitoring. Treat the expected gain as modest and optimize or diagnose top-five ranking separately rather than relying on GAUC alone."
+    }
+  ],
+  "avoid": [
+    "Reject user-profile features because overall primary lift is negative and warm-user/item GAUC is below request-context performance; cite screen:user_profile and feature:user_profile.",
+    "Reject historical user-author affinity because primary lift is negative across all four dates despite acceptable GAUC; cite screen:historical_user_author_affinity and feature:historical_user_author_affinity.",
+    "Reject upload recency, content duration, and item metadata because their overall primary lifts are negative; cite screen:upload_recency, screen:content_duration, screen:item_metadata, feature:upload_recency, feature:content_duration, and feature:item_metadata.",
+    "Reject historical author response and historical item response because they produce severe, consistent negative primary lift and sub-0.5 warm-segment GAUC; cite screen:historical_author_response, screen:historical_item_response, feature:historical_author_response, and feature:historical_item_response.",
+    "Do not use current-impression outcome fields or aggregate snapshots without per-impression availability timestamps; they are leakage-prone or unavailable at ranking time."
+  ],
+  "metric_diagnosis": "The evidence supports prioritizing stable within-user ordering from request context: GAUC is above 0.63 in both cold-user and warm-user segments. The weaker nDCG@5 values (0.492 for cold users and 0.508 for warm users) show that ranking quality does not translate as strongly to the top five, so top-five performance is the main diagnostic weakness. Cold-item results are uninformative because only 8 rows are available and GAUC is 0.5. Early stopping should reject all non-request-context groups and stop further spending if request-context gains fail to reproduce in temporal validation or do not improve nDCG@5."
+}

@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "The fixed training command must write predictions_valid.npz containing exactly two arrays: row_ids and scores. row_ids must be int64 identifiers in canonical validation row order, represented as np.arange(number_of_validation_rows), and scores must be a finite one-dimensional float64 array of identical length in that same order. No ground-truth array or additional output array may be written."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "The trainer must pass the encoded feature matrix from data.py unchanged to model.py. Model architecture, feature fields, loss, optimizer, learning rate, L2 value, batch size, seed, training split, and epoch limits remain unchanged. Only checkpoint ranking and stale-check termination may change: rank checkpoints by evaluator-supplied official_primary = (GAUC + nDCG@5) / 2, maximize it, and restore the best-primary checkpoint before emitting predictions. The evaluator interface must own validation ground-truth loading and metric computation."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "attempt_id": "5178bee1fc31",
+  "status": "scored",
+  "generation": 3,
+  "mode": "draft",
+  "parent_experiment_id": 2,
+  "hypothesis_text": "Replace pointwise BCE with within-user pairwise BPR while retaining user_id, video_id, tab, hour, and weekday categorical inputs.",
+  "active_sub_agents": [
+    "model_designer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 118.62687387500773,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

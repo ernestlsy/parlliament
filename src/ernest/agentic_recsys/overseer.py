@@ -18,7 +18,7 @@ from .knowledge import KnowledgeBase
 from .llm import AuditedLLMClient, LLMClient
 from .research import ResearchEngine, ScreeningConfig
 from .sandbox import (
-    apply_agent_patches,
+    apply_agent_replacements,
     config_diff,
     create_attempt_sandbox,
     finalize_sandbox,
@@ -230,7 +230,7 @@ class Overseer:
     ) -> JournalRecord:
         parent_dir = self._parent_dir(hypothesis.parent_experiment_id)
         attempt_id, sandbox = create_attempt_sandbox(self.config.run_dir, parent_dir)
-        patch_history: List[Dict[str, Any]] = []
+        replacement_history: List[Dict[str, Any]] = []
         failure_reports: List[Dict[str, Any]] = []
         active_agents: List[str] = []
         failure_reason: Optional[str] = None
@@ -247,55 +247,50 @@ class Overseer:
             "parent_experiment_id": hypothesis.parent_experiment_id,
         }
 
-        def request_and_apply_patch(
+        def request_and_apply_replacements(
             agent: str, *, phase: str, failure=None
         ) -> None:
             last_exception = None
             repair_failure = failure
-            for patch_attempt in range(1, 4):
+            for replacement_attempt in range(1, 4):
                 self.llm.set_context(
                     **audit_context,
                     phase=phase,
                     agent=agent,
-                    patch_attempt=patch_attempt,
+                    replacement_attempt=replacement_attempt,
                 )
                 try:
-                    patches = self.orchestrator.generate_patches(
+                    replacements = self.orchestrator.generate_file_replacements(
                         agent=agent,
                         hypothesis=hypothesis,
                         plan=plan,
                         sandbox=sandbox,
                         failure=repair_failure,
                     )
-                    patch_history.append({
+                    replacement_history.append({
+                        "format_version": 2,
                         "phase": phase,
                         "agent": agent,
-                        "patch_attempt": patch_attempt,
-                        "patches": patches,
+                        "replacement_attempt": replacement_attempt,
+                        "files": replacements,
                     })
-                    backups = {
-                        filename: (sandbox / filename).read_text(encoding="utf-8")
-                        for filename in AGENT_FILES[agent]
-                    }
-                    try:
-                        apply_agent_patches(sandbox, patches, AGENT_FILES[agent])
-                    except Exception:
-                        for filename, content in backups.items():
-                            (sandbox / filename).write_text(content, encoding="utf-8")
-                        raise
+                    apply_agent_replacements(sandbox, replacements, AGENT_FILES[agent])
                     return
                 except Exception as exc:
                     last_exception = exc
                     repair_failure = FailureReport(
                         kind=FailureKind.CONTRACT_FULFILLMENT,
-                        message=f"{agent} patch response was invalid: {type(exc).__name__}: {exc}",
+                        message=(
+                            f"{agent} complete-file response was invalid: "
+                            f"{type(exc).__name__}: {exc}"
+                        ),
                         traceback=traceback.format_exc()[-12000:],
                         responsible_agents=[agent],
-                        attempt=patch_attempt,
+                        attempt=replacement_attempt,
                     )
                     failure_reports.append(asdict(repair_failure))
             raise RuntimeError(
-                f"{agent} failed to provide an applicable patch after three responses: "
+                f"{agent} failed to provide valid complete files after three responses: "
                 f"{type(last_exception).__name__}: {last_exception}"
             ) from last_exception
 
@@ -311,8 +306,8 @@ class Overseer:
                 json.dumps(asdict(plan.contract), indent=2), encoding="utf-8"
             )
             for agent in active_agents:
-                failure_stage = f"initial_patch:{agent}"
-                request_and_apply_patch(agent, phase=failure_stage)
+                failure_stage = f"initial_replacement:{agent}"
+                request_and_apply_replacements(agent, phase=failure_stage)
 
             resource_failures = 0
             metrics = None
@@ -340,8 +335,8 @@ class Overseer:
                 for agent in failure.responsible_agents:
                     if agent not in active_agents:
                         active_agents.append(agent)
-                    failure_stage = f"debug_patch:{debug_attempt}:{agent}"
-                    request_and_apply_patch(agent, phase=failure_stage, failure=failure)
+                    failure_stage = f"debug_replacement:{debug_attempt}:{agent}"
+                    request_and_apply_replacements(agent, phase=failure_stage, failure=failure)
             if metrics is None:
                 failure_reason = failure_reason or (
                     f"{last_failure.kind.value}: {last_failure.message}\n{last_failure.traceback[-4000:]}"
@@ -406,7 +401,7 @@ class Overseer:
             },
         )
         (final_path / "patch_history.json").write_text(
-            json.dumps(patch_history, indent=2, default=str), encoding="utf-8"
+            json.dumps(replacement_history, indent=2, default=str), encoding="utf-8"
         )
         final_diffs = {}
         for names in AGENT_FILES.values():

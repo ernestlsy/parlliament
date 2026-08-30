@@ -1,0 +1,29 @@
+command: ['/home/user/anaconda3/envs/evo/bin/python', 'train.py', '--config', 'config.json', '--data-dir', '/mnt/d/tehpengagent/src/kuairand-starter-kit/KuaiRand-Pure/data', '--output', '/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/predictions_valid.npz']
+elapsed_seconds: 19.101
+return_code: 1
+--- stdout ---
+
+--- stderr ---
+Traceback (most recent call last):
+  File "/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py", line 26, in _official_primary
+    evaluator = importlib.import_module(module_name)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/anaconda3/envs/evo/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1140, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'evaluation'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py", line 204, in <module>
+    main()
+  File "/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py", line 179, in main
+    primary = _official_primary(predictions)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py", line 40, in _official_primary
+    raise RuntimeError(
+RuntimeError: the evaluator interface must provide official_primary

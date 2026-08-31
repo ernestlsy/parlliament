@@ -1,0 +1,48 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "features",
+      "evaluation"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "context-aware recommendation",
+      "feature interaction",
+      "factorization machines",
+      "temporal evaluation"
+    ],
+    "purpose": "Resolve the architecture and feature-interaction uncertainty of how to convert the screened positive request-context signal into a ranking-relevant model change without broad feature expansion.",
+    "query": "Literature on context-aware recommendation and ranking models that incorporate request context such as tab, hour, and weekday, especially feature interactions or gating with user-item representations. Compare additive ID models with factorization machines, cross networks, and lightweight context-aware architectures under temporal holdouts, including effects on within-user GAUC and nDCG@5.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "evaluation",
+      "experiment_strategy"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "implicit feedback ranking",
+      "pairwise loss",
+      "listwise loss",
+      "negative sampling",
+      "nDCG"
+    ],
+    "purpose": "Resolve the objective and training uncertainty before testing whether the current pointwise additive scaffold should use a ranking-oriented loss or sampling scheme while preserving the fixed evaluation protocol.",
+    "query": "Literature comparing pointwise logistic loss, pairwise ranking losses such as BPR or hinge loss, and listwise objectives such as LambdaRank or softmax/listwise losses for implicit-feedback recommendation with within-user ranking evaluation. Focus on trade-offs between GAUC-like per-user AUC and top-k nDCG, sampling strategies, calibration, and temporal recommendation settings.",
+    "request_index": 2,
+    "round": 1
+  }
+]

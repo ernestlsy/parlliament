@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Empirical studies comparing pointwise binary cross-entropy with pairwise ranking losses, listwise learning-to-rank objectives, sampled-softmax, and differentiable nDCG or top-k surrogates for implicit-feedback recommender systems; evaluate GAUC and especially nDCG@5 using temporally ordered logged-impression data.",
+      "Learning-to-rank objectives for improving top-five recommendation quality under implicit feedback: compare BCE, BPR and other pairwise losses, listwise softmax or ListNet/ListMLE objectives, sampled-softmax, and differentiable ranking losses, with temporal train-validation-test splits and GAUC plus nDCG@5 evaluation.",
+      "Literature on optimizing nDCG@5 in industrial or large-scale implicit-feedback recommendation, focusing on changes to the training signal rather than feature or architecture expansion; include pointwise BCE baselines, pairwise and listwise losses, sampled negative or sampled-softmax training, and differentiable top-k ranking methods evaluated on logged impressions over time.",
+      "Methodological and empirical evidence for replacing pointwise binary cross-entropy with ranking-aware objectives in implicit-feedback recommenders when overall GAUC is moderate but nDCG@5 is the bottleneck; cover BPR-style pairwise learning, listwise ranking, softmax and sampled-softmax objectives, LambdaRank or LambdaLoss variants, and differentiable approximations to nDCG under temporal logged-impression evaluation.",
+      "Top-k ranking loss functions for recommendation from implicit logged interactions: papers comparing BCE against pairwise, listwise, sampled-softmax, and differentiable sorting or ranking objectives, reporting GAUC and nDCG@5, with attention to impression-time availability, leakage-safe temporal evaluation, negative sampling, and whether objective changes improve top-five ordering without adding outcome-derived features."
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "\"context-aware recommendation\" modeling interactions among tab surface hour weekday sparse categorical contexts temporal drift factorization machines cross networks gated residuals parameter sharing GAUC nDCG@5 per-segment performance inference cost",
+      "recommendation systems request-context feature interactions for sparse context combinations and weak segments: factorization machines versus cross networks, gated residual networks, and shared-parameter architectures under temporal drift, using impression-time features only and evaluating GAUC nDCG@5 segment metrics and latency",
+      "robust context-aware recommender architectures for tab, hour, and weekday interactions with rare or unseen combinations, train-only categorical vocabularies and unknown handling, temporal drift, leakage-safe evaluation, GAUC nDCG@5 per-segment ranking and inference cost",
+      "parameter sharing and low-rank feature interaction models for context-aware recommendation with sparse categorical request contexts and severe segment imbalance, comparing factorization machines, cross layers, and nonlinear gated residuals without outcome-derived or future information",
+      "literature on efficient context interaction modeling in recommender systems: factorization machines, deep cross networks, gated residual architectures, and context-conditioned parameter sharing for robust ranking under sparse tab slices and temporal drift, evaluated by global and per-segment GAUC, nDCG@5, and inference cost using impression-time-available features"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

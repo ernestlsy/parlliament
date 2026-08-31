@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "(\"context-aware recommendation\" OR \"contextual recommendation\") AND (\"within-user ranking\" OR \"personalized ranking\" OR \"impression ranking\" OR \"learning to rank\") AND (\"factorization machine\" OR \"field-aware factorization machine\" OR FFM) AND (user-item-context OR \"user item context interaction\") AND (tab OR hour OR weekday OR \"temporal context\") AND (GAUC OR \"group AUC\" OR \"nDCG@5\") NOT (\"post-impression outcome\" OR conversion OR click-through)",
+      "(\"context-conditioned item scoring\" OR \"contextualized item representation\" OR \"context-dependent ranking\") AND recommender AND (\"user ID\" AND \"item ID\") AND (\"categorical context\" OR \"request context\" OR \"session context\") AND (\"pairwise ranking\" OR \"within-user item ordering\") AND (\"low-rank interaction\" OR bilinear OR \"factorization machine\") AND (GAUC OR nDCG) NOT (future OR \"post-click\" OR \"post-impression\")",
+      "(\"factorization machines\" OR \"field-aware factorization machines\" OR \"higher-order factorization machines\") AND recommendation AND (sparse OR categorical) AND (user_id OR \"user identifier\") AND (item_id OR \"item identifier\") AND (hour OR weekday OR tab OR \"time-aware recommendation\") AND (ranking OR \"learning to rank\") AND (\"group AUC\" OR GAUC OR \"nDCG@5\")",
+      "(\"context-aware learning to rank\" OR \"contextual learning to rank\") AND recommender AND (\"request-level context\" OR \"impression context\" OR \"display context\") AND (\"user-item interaction\" OR \"user-context interaction\" OR \"item-context interaction\") AND (\"candidate ordering\" OR \"within-user ranking\") AND (efficient OR lightweight OR \"low-compute\") NOT (\"delayed feedback\" OR \"future behavior\" OR \"post-impression\")",
+      "(\"time-aware recommender systems\" OR \"temporal context-aware recommendation\") AND (hour OR weekday OR \"time of day\") AND (\"factorization machine\" OR \"contextual matrix factorization\" OR \"context-aware matrix factorization\") AND (\"ranking optimization\" OR BPR OR \"LambdaRank\") AND (user-item OR personalized) AND (GAUC OR \"grouped AUC\" OR \"nDCG at 5\") NOT (\"next-item prediction\" OR \"future interaction\" OR \"post-exposure feedback\")"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "(\"implicit feedback\" recommender OR \"implicit-feedback recommendation\") (\"binary cross entropy\" OR BCE OR \"pointwise loss\") (BPR OR RankNet OR \"pairwise ranking\" OR \"listwise ranking\" OR LambdaRank) (\"per-user AUC\" OR GAUC OR \"group AUC\") (nDCG@5 OR \"NDCG at 5\") \"temporal split\"",
+      "(\"learning to rank\" recommender systems) (pointwise OR pairwise OR listwise) (\"cross-entropy\" OR BPR OR \"ranking loss\") (GAUC OR \"user AUC\" OR \"per-user AUC\") (\"top-k ranking\" OR nDCG@5) \"implicit feedback\" evaluation",
+      "(\"logged impressions\" OR \"impression logs\" OR \"exposure data\") recommender (\"negative sampling\" OR \"unobserved interactions\") (\"temporal holdout\" OR \"time-based split\") (BCE OR \"pairwise loss\" OR \"listwise loss\") (GAUC OR nDCG@5)",
+      "(\"candidate set\" OR \"small candidate set\" OR \"slate ranking\") recommendation (\"binary cross entropy\" OR pointwise) (BPR OR \"pairwise ranking objective\" OR \"listwise objective\") (\"AUC per user\" OR GAUC) (nDCG@5 OR \"top-5 nDCG\")",
+      "(\"counterfactual learning to rank\" OR \"exposure-aware recommendation\" OR \"unbiased learning to rank\") \"implicit feedback\" \"logged impressions\" (\"negative sampling\" OR \"non-clicked impressions\") (\"pairwise ranking\" OR \"listwise ranking\") (GAUC OR \"per-user AUC\") (nDCG@5 OR \"top-k evaluation\")"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

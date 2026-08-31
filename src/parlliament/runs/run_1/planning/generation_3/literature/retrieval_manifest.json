@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "memory_hit"
+  ],
+  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "objective.user_normalized_binary_cross_entropy",
+      "path": "30_objectives/user_normalized_binary_cross_entropy.md",
+      "sha256": "c366a83c3c5da5d8076ea1d3d8b00acc3006b64c9a45f2f8d7959e346defe485",
+      "source_characters": 9126,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.within_user_ranknet_pairwise_loss",
+      "path": "30_objectives/within_user_ranknet_pairwise_loss.md",
+      "sha256": "6216278cdf2db9cbda95e1b4c7bd3dc1c0d5f56ec944bc787e1ffce628dc8c57",
+      "source_characters": 7773,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.bce_lambdarank_ndcg5_hybrid",
+      "path": "30_objectives/bce_lambdarank_ndcg5_hybrid.md",
+      "sha256": "48f2455f2d5620a3b9548e5d66c4ef2249f048e19be4023f4d958e67901489a0",
+      "source_characters": 10086,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.mixed_group_listnet_top1_loss",
+      "path": "30_objectives/mixed_group_listnet_top1_loss.md",
+      "sha256": "35f46aa8c8e1061fe7b968980537bb4a9d2a7a01aea803ffa38bb0c69cb14c27",
+      "source_characters": 6286,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.group_complete_stratified_minibatching",
+      "path": "40_training/group_complete_stratified_minibatching.md",
+      "sha256": "ac4067495282d7b9958b561801403db5a3d02efd526f51595e93589f3edfb471",
+      "source_characters": 10073,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "evaluation.frozen_candidate_group_integrity_audit",
+      "path": "50_evaluation/frozen_candidate_group_integrity_audit.md",
+      "sha256": "1841e0eaea615303278e54285a2deb2d53d834834948d2bd21ee21f139e9483c",
+      "source_characters": 8773,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "evaluation.stratified_temporal_population_evaluation",
+      "path": "50_evaluation/stratified_temporal_population_evaluation.md",
+      "sha256": "e4df7be674e589b5c88253f7965f273f7db10aae686d8278f51698e65a7d9fed",
+      "source_characters": 7701,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.deep_cross_ranker",
+      "path": "20_architectures/deep_cross_ranker.md",
+      "sha256": "db004648e9c7b63e0f9bc0954691dbcf9fe572c134fa90b309e12eee9d590cb8",
+      "source_characters": 7681,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "objective.user_normalized_binary_cross_entropy",
+    "objective.within_user_ranknet_pairwise_loss",
+    "objective.bce_lambdarank_ndcg5_hybrid",
+    "objective.mixed_group_listnet_top1_loss",
+    "training.group_complete_stratified_minibatching",
+    "evaluation.frozen_candidate_group_integrity_audit",
+    "evaluation.stratified_temporal_population_evaluation",
+    "architecture.deep_cross_ranker"
+  ],
+  "total_fetched_characters": 40000
+}

@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "Unchanged current encode(splits) contract: it returns encoded and total dimension. encoded[\"train\"] and encoded[\"valid\"] are (features, labels, users); encoded[\"test\"] is (features, users). features is int32 shape (rows, 5), with columns in exact order user_id, video_id, tab, hour, weekday. All vocabularies are fitted on train only; unseen values use each field's train-fitted unknown index. hour is derived as floor(numeric hourmin / 100) constrained to 0..23, and weekday is calendar weekday from YYYYMMDD date with Monday=0 through Sunday=6."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives the unchanged int32 features matrix and total encoded dimension. It uses features[:,0] for user embedding lookup, features[:,1] for video embedding lookup, and features[:,2:5] exclusively for tab/hour/weekday residual-weight lookup. Labels are supplied only to step(features, labels). logits(features) and predict(features) return one score per input row in input order."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

@@ -1,0 +1,3 @@
+[console_scripts]
+parlliament = parlliament.cli:main
+parlliament-populate-knowledge = parlliament.knowledge_builder:main

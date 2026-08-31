@@ -1,0 +1,35 @@
+{
+  "winner": {
+    "text": "Add the screened request-context feature family to the additive user/video-ID scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "Training-only temporal screening found request_context (tab, hour, weekday) was the sole positively recommended feature group: +0.00221 primary lift, full coverage, and positive lift on all four screened dates. The official experiment should isolate this family without changing model or loss. Downside risks: the lift is smaller than its daily primary standard deviation (0.00580), context can be temporally nonstationary, and the result may improve broad ordering without placing positives in the top five.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Relative to seed 0, append train-fitted categorical encodings for tab, hour, and weekday as additive feature weights; retain the seed optimizer, BCE loss, ID features, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately 0.001 to 0.004 if context resolves within-user candidate differences; require a non-negative observed movement.",
+      "nDCG@5": "Increase by approximately 0.000 to 0.003, but it may be flat because the screening evidence reports primary rather than a demonstrated top-five effect."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  "selection_rationale": "c01 is the strongest scarce-experiment choice because it is the only proposal supported by completed training-only temporal evidence: the request-context family produced a +0.00221 primary lift, had full coverage, and improved on all four screened dates. It preserves the proven seed architecture and objective, has low leakage and runtime risk, and offers a reliable, clean ablation. Although the lift is modest relative to daily variation and nDCG@5 benefit is not directly established, its measured evidence, expected gain, confidence, and the Consultant's rank-1 utility assessment outweigh the higher-upside but substantially less validated interaction and loss alternatives.",
+  "counted_experiments_consumed": 0
+}

@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c06",
+      "rank": 1,
+      "utility_score": 8.4,
+      "rationale": "Best balance of bounded novelty, strong parent/context evidence, low runtime risk, and minimal scope. Preserves the stable additive ID scaffold while testing only nonlinear context effects; leakage is low and duplication with broader interaction models is limited."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 2,
+      "utility_score": 8.1,
+      "rationale": "A clean, low-cost feature ablation directly tests whether context conjunctions explain the large tab and hour weaknesses. Strong feasibility and low leakage risk outweigh sparse-conjunction overfitting concerns."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 3,
+      "utility_score": 7.7,
+      "rationale": "Directly aligns optimization with within-user GAUC and addresses user-positive-count disparities without adding features. Evidence is plausible but mixed because official weighting may already favor row-level BCE, and group weighting adds implementation risk."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 4,
+      "utility_score": 7.5,
+      "rationale": "Has the strongest architectural upside and uses measured context signal, but broad user/video/context interactions duplicate other nonlinear candidates and carry medium runtime and rare-combination overfitting risk."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 5,
+      "utility_score": 6.7,
+      "rationale": "Low-risk robustness test for unstable context performance, but the expected gain is small and evidence that masking improves ranking is weak. It may suppress genuinely useful context signal."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 6,
+      "utility_score": 6.4,
+      "rationale": "Tests nonlinear interactions, but replacing the entire scorer is broader and less interpretable than residual or cross-branch alternatives. Medium runtime, lower confidence, and substantial duplication reduce its value for one experiment."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 7,
+      "utility_score": 5.8,
+      "rationale": "The pairwise objective matches GAUC and could improve ordering, but mixed-label group availability and pair construction are not validated. Medium leakage/runtime risk and weaker top-five alignment limit priority."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 8,
+      "utility_score": 5.2,
+      "rationale": "Potentially targets nDCG@5 directly, yet it has high runtime, medium leakage risk, and depends on coherent candidate slates that are not established. The fixed hybrid loss adds scope and tuning sensitivity."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 9,
+      "utility_score": 4.8,
+      "rationale": "Listwise training is conceptually relevant to poor top-five slices, but confidence is lowest, runtime is high, and gains depend heavily on mixed candidate groups. Validation overfitting and singleton or homogeneous groups are serious risks."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 10,
+      "utility_score": 4.1,
+      "rationale": "Very feasible and isolated, but the parent already uses tiny L2 and there is no strong evidence of underfitting. Expected upside is small with meaningful memorization and top-five instability risk."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 11,
+      "utility_score": 2.8,
+      "rationale": "A clean low-cost ablation, but it has negative expected gain and only weak evidence that weekday is harmful. The measured context group was positive overall, so removal is unlikely to be the best scarce experiment."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 12,
+      "utility_score": 2.4,
+      "rationale": "Hour is part of the only positively screened feature group, making removal poorly supported. Its expected gain is negative and the weak hour slices do not establish that hour causes the problem rather than reflecting difficult traffic."
+    }
+  ]
+}

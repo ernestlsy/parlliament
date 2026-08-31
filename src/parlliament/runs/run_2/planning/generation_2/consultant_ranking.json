@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.79,
+      "rationale": "Best scarce-run tradeoff: directly tests the largest structural limitation of additive user/item biases\u2014absence of personalized user-video relative preferences\u2014while retaining the screened context residuals. It is a clean, low-runtime architectural ablation with broad applicability and low leakage risk. Evidence is indirect rather than an observed interaction lift, so confidence is moderate, but it is less validation-slice-specific and less capacity-heavy than the other interaction models."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 2,
+      "utility_score": 0.76,
+      "rationale": "A narrowly scoped, cheap interaction that preserves the successful baseline and targets the only positively screened feature family. Large tab-0 volume makes this more credible than its small tab-8 slice alone. Penalized because the claimed tab-specific benefit relies partly on retrospective validation slices and because sparse video-tab pairs may mostly memorize rather than generalize."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 3,
+      "utility_score": 0.7,
+      "rationale": "Similar low-risk incremental interaction test to c02, with hour slices providing some motivation and full request-context coverage. It ranks below video-tab because hour has 24 values, creating materially more sparse video-context pairs, and the cited weak-hour diagnostics are weaker and more diffuse than the tab evidence."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 4,
+      "utility_score": 0.67,
+      "rationale": "Strong objective alignment with within-user GAUC and a clean single-axis loss ablation. It avoids cross-user pairs and leakage, but its expected nDCG@5 effect is uncertain, pair construction increases runtime and optimization sensitivity, and the cited rare-item slice is weak evidence for a global loss change."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 5,
+      "utility_score": 0.62,
+      "rationale": "A compact model that preserves linear terms while testing user-video and context interactions, avoiding the information loss in c01's replacement of ID biases. However, it simultaneously enables every pairwise field interaction, making attribution broad, sparse-pair overfitting more likely, and runtime/tuning risk higher for one experiment."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 6,
+      "utility_score": 0.57,
+      "rationale": "Very clean and inexpensive alignment of pointwise training mass with the within-user evaluation unit. It has low leakage and implementation risk, but only indirect evidence, no direct top-k optimization, and a small projected gain; it is a sensible conservative fallback rather than the highest-upside scarce run."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 7,
+      "utility_score": 0.52,
+      "rationale": "Tests meaningful nonlinear user-item-context effects using permitted fields, but it is a broad replacement rather than a minimal ablation. The MLP confounds embeddings, nonlinear architecture, and capacity; with only one scored reference, its moderate runtime and overfitting risks outweigh its plausible upside."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 8,
+      "utility_score": 0.48,
+      "rationale": "The metric gap gives this a reasonable top-rank hypothesis, but detached nDCG swap gains derived from current scores add substantial implementation and optimization complexity. Its motivation leans heavily on retrospective validation slices, creating validation-overfitting risk, and it overlaps substantially with c05 while being less interpretable and less robust."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 9,
+      "utility_score": 0.42,
+      "rationale": "Potentially expressive for context-dependent preferences, but it combines embedding replacement, MLP capacity, and explicit crosses in one broad ablation. This duplicates the interaction objectives of c03 and c12 with lower feasibility, greater tuning burden, and stronger sparse-combination memorization risk."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 10,
+      "utility_score": 0.34,
+      "rationale": "Low-cost regularization control with a plausible sparse-ID rationale, but the one-order-of-magnitude setting is arbitrary and evidence does not establish overfitting in the baseline. Its projected gain is small and it is unlikely to resolve the core missing-interaction limitation."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 11,
+      "utility_score": 0.29,
+      "rationale": "A bounded protocol check, but there is no convergence evidence supporting a larger epoch cap, and unchanged patience may make the experiment operationally identical. It risks selecting a checkpoint against an incomplete GAUC proxy rather than improving the official composite ranking objective."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 12,
+      "utility_score": 0.25,
+      "rationale": "Clean and cheap but weakest hypothesis: no learning-curve, instability, or nonconvergence evidence supports the proposed rate. It has low novelty, low expected gain, and may simply undertrain under the fixed schedule, making it poor use of the sole experiment."
+    }
+  ]
+}

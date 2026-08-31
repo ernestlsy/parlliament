@@ -1,0 +1,84 @@
+{
+  "active_agents": [
+    "feature_engineer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "load returns chronological train, valid, and test rows in source CSV iteration order. encode returns (encoded, dimension), where encoded['train'] and encoded['valid'] are (features, labels, users), encoded['test'] is (features, users), features is a 2-D int32 matrix with six columns ordered [user_id, video_id, tab, hour, weekday, user_id\u00d7tab], labels is float32 for non-test splits, and users preserves raw user_id strings. Every feature index is nonnegative and strictly less than dimension. The first five blocks preserve current train-fitted vocabulary and unknown-bucket behavior. The sixth block is a separate train-fitted vocabulary over ordered pairs formed exactly from raw user_id and raw tab; it has its own unknown bucket and contiguous final offset. Validation and test order is never reordered."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model receives the six-column encoded categorical matrix and total dimension. Its existing logits computation must remain bias plus the sum of one scalar weight per row feature index, making the sixth column one additive cross residual in addition to the five retained main effects. Training uses only train labels; validation labels may be used only by trainer validation proxy/checkpoint selection, and test labels are never loaded by training."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Append exactly one train-fitted categorical user_id \u00d7 tab cross feature to the experiment-1 additive feature matrix in data.py.",
+      "required_changes": [
+        "In data.py, retain the existing five main-effect categorical features sourced from raw log columns user_id, video_id, tab and canonical derived features hour=floor(numeric hourmin/100) constrained to 0..23 and weekday=calendar weekday from raw date.",
+        "Add one sixth categorical feature whose value for every row is the ordered pair (row[\"user_id\"], row[\"tab\"]), using the existing internal row positions row[1] and row[3] after loading. Do not read any additional file or source column.",
+        "Fit a dedicated vocabulary for this ordered user_id-tab pair using training rows only, alongside the existing training-fitted vocabularies. Allocate one dedicated unknown bucket for pairs absent from the training-pair vocabulary.",
+        "Encode the pair feature for train, valid, and test with its own contiguous offset after the five existing feature blocks. Known pair values must map to their training vocabulary index plus this offset; unseen valid/test pairs must map to that pair block's unknown index plus this offset.",
+        "Return the encoded feature matrices with shape (number_of_rows, 6), preserve the current tuple structures and ordering: train/valid remain (features, labels, users), test remains (features, users), and return dimension equal to the sum of all six categorical block dimensions.",
+        "Ensure the added feature is only an input ID for the existing additive model: it must not use long_view or any validation/test labels while constructing its vocabulary or encoded values."
+      ],
+      "preserve": [
+        "Preserve loading dates, chronological train/valid/test split boundaries, source row order, labels, and max_rows_per_split behavior.",
+        "Preserve all five existing raw/main-effect inputs and their train-only vocabularies, unknown buckets, offsets, dtypes, and encoding semantics.",
+        "Preserve canonical hour and weekday derivations exactly as currently implemented from hourmin and date.",
+        "Do not introduce forbidden, excluded, quarantined, profile, video metadata, historical, target-derived, or validation-fitted inputs.",
+        "Do not modify model.py, train.py, or config.json."
+      ],
+      "coordination_notes": [
+        "The model is already generic additive scoring: each row's logit is bias plus the sum of weights at all encoded feature indices. The appended sixth index therefore supplies exactly one additive user_id \u00d7 tab residual without a model.py change.",
+        "The trainer consumes encode(splits) unchanged and passes dimension directly to Model; it must receive 6-column int32 matrices with indices in [0, dimension).",
+        "Trainer-owned output behavior remains unchanged: the fixed training command must emit predictions_valid.npz and predictions_test.npz containing exactly row_ids and scores in validation and test source-row order, respectively."
+      ]
+    }
+  },
+  "reasoning": "The requested ablation changes only the feature representation. The existing model already assigns one independent additive weight to every categorical index, so a training-vocabulary user_id \u00d7 tab categorical block implements the requested additive residual while retaining all experiment-1 main effects, BCE training, optimizer settings, split, and validation-only checkpoint selection. Only data.py requires modification; config.json, model.py, and train.py must remain unchanged."
+}

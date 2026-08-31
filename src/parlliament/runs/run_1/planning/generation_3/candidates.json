@@ -1,0 +1,382 @@
+[
+  {
+    "text": "Remove the nonlinear request-context residual and retain the additive user, video, tab, hour, and weekday terms.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "Experiment 2 improved GAUC to 0.669129 and nDCG@5 to 0.537206, only 0.000233 primary above experiment 1, so a controlled rollback tests whether the residual complexity is actually useful or merely noisy.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Ablate only the one-hidden-layer nonlinear context residual; keep all five existing fields, additive weights, BCE, optimizer, schedule, and seed unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely decrease slightly, approximately -0.0005 to -0.002 versus experiment 2, if the residual captures useful nonlinear context effects.",
+      "nDCG@5": "Likely decrease or remain nearly flat, approximately -0.0005 to -0.0025; the residual may be contributing small top-five improvements."
+    },
+    "expected_primary_gain": -0.001,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Add an explicit tab-by-hour interaction branch to the additive context model, without adding any new raw feature.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "Request context is the only screened feature group with positive primary lift, while tab 8 and hour 3 are weak slices; a bounded tab-hour interaction directly targets context-dependent ranking failures.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:tab:8",
+      "experiment:2:segment:hour:3"
+    ],
+    "exact_ablation": "Add exactly one learned tab\u00d7hour interaction embedding or cross term; preserve the existing additive terms, nonlinear residual, BCE, optimizer, and training schedule.",
+    "expected_effect": {
+      "GAUC": "Likely increase by approximately +0.0005 to +0.0025 through better within-user ordering under context-specific preferences.",
+      "nDCG@5": "Likely increase by approximately +0.001 to +0.004 if the interaction corrects top-five mistakes in weak tab and hour slices; it may be flat if slice sparsity limits learning."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Replace the categorical hour encoding with two impression-time cyclical hour features, sine and cosine, while leaving all other fields unchanged.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "Hour slices are consistently weaker than the global result, including hour 3 with GAUC 0.522727 and nDCG@5 0.386124. A cyclical representation can share statistical strength between adjacent hours rather than treating all hour IDs as unrelated.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:2:segment:hour:3",
+      "experiment:2:segment:hour:4",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Replace only the categorical hour field with normalized sine(hour) and cosine(hour) inputs; retain user, video, tab, weekday, residual architecture, BCE, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase by approximately +0.0002 to +0.0015 by smoothing neighboring-hour effects, with uncertainty because the current model is categorical.",
+      "nDCG@5": "Likely increase by approximately +0.0003 to +0.0020 if smoother hour effects improve top-five ordering; a small decrease is possible from reduced hour-specific capacity."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Remove weekday from the request-context fields while retaining tab, hour, user ID, video ID, and the nonlinear residual.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 7,
+      "feasibility": 10
+    },
+    "rationale": "The aggregate request-context gain is positive, but the evidence does not isolate weekday contribution. This clean negative-control ablation tests whether the small context improvement is carried by tab and hour alone and may reduce unnecessary capacity.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Ablate only the weekday feature and its associated parameters; keep tab, hour, IDs, residual architecture, BCE, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely remain near flat or decrease slightly, approximately -0.001 to +0.0003, because weekday may provide weak additional within-user ordering.",
+      "nDCG@5": "Likely remain near flat or decrease by up to 0.0015; top-five impact is expected to be smaller than the tab/hour effect."
+    },
+    "expected_primary_gain": -0.0004,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Train with exact user-normalized BCE so each user contributes equal total training weight instead of each impression contributing equal weight.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The official GAUC is within-user and the current model reaches GAUC 0.669129 but nDCG@5 only 0.537206. Equal user weighting is a direct objective change that may reduce domination by prolific users and improve representative within-user ordering.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:user_frequency:warm_20_plus",
+      "experiment:2:segment:user_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Replace only row-mean BCE with exact per-user mean BCE followed by a mean over users; keep features, model architecture, optimizer, batch construction, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase by approximately +0.0005 to +0.0025 if prolific-user weighting currently misaligns training with within-user evaluation.",
+      "nDCG@5": "Likely flat to mildly positive, approximately -0.0005 to +0.0015; equal-user weighting may help typical users but does not explicitly target rank five."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with within-user RankNet pairwise loss using a bounded number of same-user positive-negative pairs.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 6
+    },
+    "rationale": "Experiment 2 has moderate GAUC but weak top-five slices, and the official objective is ranking-based. A pairwise objective directly optimizes positive-over-negative ordering rather than independent calibration.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:user_positive_count:two_to_four",
+      "experiment:2:segment:tab:0"
+    ],
+    "exact_ablation": "Replace only BCE with within-user RankNet loss using up to four deterministic negatives per positive and equal group weighting; preserve the current features, residual model, optimizer, and schedule.",
+    "expected_effect": {
+      "GAUC": "Likely increase by approximately +0.001 to +0.004 on users with mixed labels, but may be flat overall if many users lack usable pairs.",
+      "nDCG@5": "Likely increase by approximately +0.0005 to +0.003 if pairwise ordering moves positives above negatives; it could decline if pair sampling emphasizes non-top-ranked errors."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "training.group_complete_stratified_minibatching"
+    ]
+  },
+  {
+    "text": "Add a small nDCG@5-weighted pairwise term to BCE so swaps affecting the first five ranks receive more training pressure.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 10,
+      "novelty": 9,
+      "feasibility": 6
+    },
+    "rationale": "The current nDCG@5 is 0.537206, and tab 8 has extremely poor nDCG@5 of 0.026336 despite low GAUC. A metric-weighted term is directly targeted at the observed top-five bottleneck.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:8",
+      "experiment:2:segment:tab:0"
+    ],
+    "exact_ablation": "Add exactly one LambdaRank-style nDCG@5 swap-weighted pairwise term with fixed lambda 0.1 to the existing BCE; retain every feature, model component, optimizer, and schedule.",
+    "expected_effect": {
+      "GAUC": "Likely flat to mildly positive, approximately -0.0005 to +0.002, because the added term may improve local ordering without optimizing all GAUC pairs.",
+      "nDCG@5": "Likely increase by approximately +0.001 to +0.005 if top-five swaps are corrected; instability or a small decrease is possible from overfitting sparse slices."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid"
+    ]
+  },
+  {
+    "text": "Add a low-weight mixed-group ListNet top-one loss alongside the existing BCE.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "The official nDCG@5 is top-rank sensitive, while users with two to four positives show nDCG@5 of 0.770459 and users with one positive show 0.798493, indicating that list competition can be informative in mixed groups.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:user_positive_count:two_to_four",
+      "experiment:2:segment:user_positive_count:one"
+    ],
+    "exact_ablation": "Add exactly one ListNet top-one loss on intact mixed-label user groups with fixed BCE weight 0.1; keep the existing BCE, features, architecture, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely flat to mildly positive, approximately -0.001 to +0.002, because group-normalized listwise training may trade absolute calibration for relative ordering.",
+      "nDCG@5": "Likely increase by approximately +0.001 to +0.004 through stronger competition near the top of each group, with risk of no gain if user groups are not coherent slates."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "training.group_complete_stratified_minibatching"
+    ]
+  },
+  {
+    "text": "Use group-complete, mixed-label-stratified minibatches instead of independent row minibatches while keeping the BCE objective.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The user-positive-count diagnostics show a large zero-positive population with GAUC 0.5 and nDCG@5 0, while mixed positive-count groups have substantially higher top-five metrics. Ensuring mixed groups appear consistently in training can improve ranking signal without changing labels or features.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:2:segment:user_positive_count:zero",
+      "experiment:2:segment:user_positive_count:two_to_four",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Replace only independent row minibatch sampling with complete-group sampling using a fixed 60% mixed, 20% zero-positive, and 20% all-positive group mixture; retain BCE, model, features, optimizer, and epoch budget.",
+    "expected_effect": {
+      "GAUC": "Likely increase by approximately +0.0003 to +0.002 if current batches underrepresent mixed comparisons; it may fall if the sampling mixture distorts exposure prevalence.",
+      "nDCG@5": "Likely increase by approximately +0.0005 to +0.003 through more stable comparative gradients, with possible regression on homogeneous users."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "training.group_complete_stratified_minibatching"
+    ]
+  },
+  {
+    "text": "Add a two-layer low-rank cross branch over the existing user, video, and request-context representation, parallel to the current residual model.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "The request-context screen lifted primary by 0.002213, but the nonlinear residual recovered only 0.000233 over its parent, suggesting that the missing signal may be structured field interactions rather than more generic nonlinear capacity.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:metrics",
+      "experiment:2:segment:hour:3"
+    ],
+    "exact_ablation": "Add exactly one two-layer low-rank cross branch with rank 32 over the existing five-field embedding representation; preserve the current additive terms, residual head, BCE, optimizer, and schedule.",
+    "expected_effect": {
+      "GAUC": "Likely increase by approximately +0.0005 to +0.003 if bounded user-context and item-context interactions matter; overfitting could produce a small decline.",
+      "nDCG@5": "Likely increase by approximately +0.001 to +0.004 if interactions repair context-specific top-five errors, especially in weak hours; variance across seeds is a risk."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Apply stronger L2 regularization only to the nonlinear context residual parameters while leaving additive ID parameters at the current regularization.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The residual experiment produced only a 0.000233 primary gain and reduced validation GAUC relative to the parent\u2019s context-only result, while the weak tab and hour slices suggest sparse context combinations may be overfit.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:hour:3"
+    ],
+    "exact_ablation": "Multiply L2 regularization for context embeddings, hidden weights, and residual output weights by 10; keep ID regularization, features, BCE, optimizer, learning rate, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase by approximately +0.0002 to +0.0015 by reducing residual overfit, though excessive shrinkage could make it flat or slightly negative.",
+      "nDCG@5": "Likely increase by approximately +0.0003 to +0.002 if noisy context corrections are suppressed; the effect may be negligible on aggregate top-five ranking."
+    },
+    "expected_primary_gain": 0.0007,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Use a gated context residual whose learned scalar gate is initialized near zero, instead of adding the residual at full strength from initialization.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 7
+    },
+    "rationale": "The residual\u2019s observed gain over experiment 1 was only 0.000233 versus a predicted 0.0015, indicating that unconstrained residual capacity may be noisy. A gate allows the model to retain the reliable additive context signal while selectively using nonlinear corrections.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the direct residual addition with a learned scalar gate applied to the residual, initialized at 0.1; preserve residual inputs, additive terms, BCE, optimizer, and schedule.",
+    "expected_effect": {
+      "GAUC": "Likely increase by approximately +0.0002 to +0.0015 through safer residual use, with a flat result if the gate remains near zero.",
+      "nDCG@5": "Likely increase by approximately +0.0003 to +0.002 if it prevents noisy context corrections from disrupting top-five order; a small loss is possible if useful residuals are suppressed."
+    },
+    "expected_primary_gain": 0.0007,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "task.experiment_protocol"
+    ]
+  }
+]

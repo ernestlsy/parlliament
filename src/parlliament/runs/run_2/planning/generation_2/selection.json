@@ -1,0 +1,37 @@
+{
+  "winner": {
+    "text": "Replace additive ID weights with a low-rank user-video dot-product scorer while retaining additive tab, hour, and weekday residuals.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 4
+    },
+    "rationale": "The current additive scorer has usable within-user discrimination (GAUC 0.66891), but its global nDCG@5 is lower (0.53696); a personalized user-video affinity can alter relative item order within each user rather than only calibrating global effects.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Relative to experiment 1, replace the separate additive user_id and video_id scalar weights with equal-width train-fitted user and video embeddings scored by one normalized dot product; keep the tab/hour/weekday additive terms, BCE loss, optimizer schedule, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.002 to 0.008 because a dot product can represent user-specific video preferences that additive ID biases cannot.",
+      "nDCG@5": "Increase by 0.001 to 0.006 if the learned affinity promotes relevant videos into each user's top five; it may be smaller than the GAUC movement."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture",
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "efficiency.dot_product_linear_residual_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  "selection_rationale": "Select c01. It is the consultant's top-ranked option (utility 0.79) and directly addresses the baseline's principal structural limitation: additive user and video biases cannot alter relative video ordering according to personalized user-video affinity. It retains the only positively screened context fields and their additive residuals, making the ablation focused and interpretable. Its expected primary gain is among the highest (0.004), with moderate confidence, low leakage risk, and low runtime risk. This offers a more broadly applicable and reliable improvement test than validation-slice-targeted sparse interactions, while avoiding the higher tuning, attribution, and overfitting risks of MLP, cross-network, and factorization-machine alternatives.",
+  "counted_experiments_consumed": 0
+}

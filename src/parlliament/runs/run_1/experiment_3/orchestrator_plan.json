@@ -1,0 +1,83 @@
+{
+  "active_agents": [
+    "model_designer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.py continues to return train and validation tuples of (features, labels, users) and a test tuple of (features, users), using exact schema fields and canonical source row order; encoded feature columns remain user_id, video_id, tab, hour, weekday."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "model.py receives an encoded NumPy array with shape (N, 5), columns ordered user_id, video_id, tab, hour, weekday, and labels only for training steps. The model must retain the existing one-dimensional logits/prediction interface."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "model_designer": {
+      "objective": "Apply the requested stronger L2 regularization exclusively to the nonlinear context residual parameters.",
+      "required_changes": [
+        "In model.py, retain self.l2 for additive ID weights self.weights exactly as currently implemented.",
+        "In Model.step, define the context regularization coefficient as 10.0 * self.l2 and use it only for context_embeddings, hidden_weights, and output_weights gradients.",
+        "Do not add regularization to hidden_bias, output_bias, or additive bias, since they are not part of the requested ablation.",
+        "Keep learning rate, optimizer, initialization, architecture, BCE gradients, training schedule, checkpointing, and prediction behavior unchanged."
+      ],
+      "preserve": [
+        "The additive ID parameters must continue using the unchanged self.l2 coefficient.",
+        "The nonlinear residual must continue to use request-context columns tab, hour, and weekday from the existing encoded feature matrix.",
+        "Do not modify data.py, train.py, or config.json.",
+        "Do not introduce source-column aliases or new features, and do not use forbidden or quarantined fields.",
+        "Validation-only checkpoint selection and early stopping must remain unchanged; test labels must never be accessed.",
+        "The fixed training command must continue to emit predictions_valid.npz and predictions_test.npz, each containing exactly row_ids and scores in canonical validation or test row order."
+      ],
+      "coordination_notes": [
+        "The model input contract remains an encoded NumPy array of shape (N, 5), with columns ordered exactly as FIELDS: user_id, video_id, tab, hour, weekday; encoded values include field offsets.",
+        "The data output contract remains encoded[\"train\"] = (features, labels, users), encoded[\"valid\"] = (features, labels, users), and encoded[\"test\"] = (features, users), with canonical source row order preserved.",
+        "No config key is added or changed; trainer is not activated because the requested coefficient change can be implemented directly in model.py without altering configured defaults."
+      ]
+    }
+  },
+  "reasoning": "Only model_designer is required because the exact ablation changes gradient regularization inside model.py while leaving the configured l2 value and all training behavior unchanged. The implementation must multiply regularization by 10 only for context embeddings, hidden weights, and residual output weights; additive ID weights retain the current coefficient. Data and training interfaces remain untouched."
+}

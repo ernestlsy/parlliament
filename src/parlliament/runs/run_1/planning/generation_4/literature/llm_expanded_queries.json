@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Context-aware recommender ranking architectures for categorical request-context features (tab, hour, weekday): Factorization Machines, DeepFM, and Deep & Cross Networks versus additive embeddings or shallow MLP residuals; sparse interaction generalization and top-k ranking quality measured by GAUC and nDCG@5",
+      "Feature-interaction models for context-aware recommendation ranking with sparse categorical fields such as tab, hour, and weekday: compare explicit low-order crosses in FM, DeepFM, and DCN against additive context embeddings and nonlinear residual MLPs; evaluate GAUC and nDCG@5",
+      "Recommender-system architectures for exploiting sparse request-context interactions among categorical features (tab, hour, weekday): explicit feature-cross models including Factorization Machines, DeepFM, and Deep & Cross Networks versus additive embedding baselines and shallow MLP residuals; focus on sparse-combination generalization and top-five ranking metrics GAUC and nDCG@5",
+      "Context-aware top-k recommendation with categorical request features: literature comparing factorization-based and cross-network interaction architectures (FM, DeepFM, DCN) with additive embeddings or shallow nonlinear context residuals, emphasizing overfitting and generalization for sparse tab-hour-weekday combinations using GAUC and nDCG@5",
+      "Explicit feature crosses versus generic nonlinear residuals in context-aware recommender ranking: Factorization Machines, DeepFM, and Deep & Cross Networks for tab, hour, and weekday categorical request context compared with additive embeddings; investigate sparse interaction robustness and top-k ranking quality using GAUC and nDCG@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "(\"recommendation ranking\" OR recommender systems) AND (\"logged impressions\" OR implicit feedback OR logged bandit feedback) AND (exposure bias OR selection bias) AND (\"distribution shift\" OR covariate shift) AND (context-dependent OR tab-specific OR surface-specific) AND (GAUC OR \"nDCG@5\")",
+      "(recommender OR ranking) AND (exposure modeling OR propensity scoring OR inverse propensity weighting OR doubly robust) AND (sparse positive feedback OR implicit feedback) AND (offline evaluation OR logged-data evaluation) AND (leakage-safe OR pre-impression) AND (robustness OR diagnostics)",
+      "recommendation ranking AND (cross-domain OR cross-context OR cross-surface generalization) AND (tab-specific performance OR segment-specific performance) AND (selection bias OR exposure bias) AND (distributionally robust optimization OR subgroup robustness) AND (GAUC OR nDCG)",
+      "(recommendation systems OR learning to rank) AND (low-performing segments OR cold-start users OR sparse feedback) AND (model capacity OR representation capacity) AND (exposure bias OR missing-not-at-random feedback) AND (offline fixed-protocol evaluation)",
+      "logged recommendation data AND (impression-time features OR request context OR tab OR surface) AND (post-impression leakage OR outcome leakage) AND (bias diagnosis OR shift diagnosis) AND (top-k ranking OR nDCG@5) AND (within-user ranking OR GAUC)"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

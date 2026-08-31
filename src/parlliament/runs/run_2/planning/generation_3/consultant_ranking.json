@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.71,
+      "rationale": "Best evidence-to-scope trade-off. It extends the only positively screened feature family with one bounded interaction, targets a large weak tab-0 cohort, preserves the strong additive architecture, and has low leakage and runtime risk. User-by-tab sparsity remains material, so the expected gain should be treated as modest rather than established."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 2,
+      "utility_score": 0.67,
+      "rationale": "A highly constrained, low-cost correction to checkpoint selection: it aligns early stopping with the stated primary metric rather than optimizing only GAUC. It is preferable to nDCG-only selection because it preserves the official GAUC/nDCG trade-off. Main penalty is validation-selection overfitting from choosing among many checkpoints on the same validation set."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 3,
+      "utility_score": 0.61,
+      "rationale": "Directly aligns training with the within-user GAUC component and is meaningfully distinct from feature crosses. The failed low-rank architecture does not refute a loss-only change to the winning additive model. It is penalized for medium runtime, pair-sampling implementation risk, and uncertain nDCG@5 benefit."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 4,
+      "utility_score": 0.56,
+      "rationale": "Video-by-weekday is the lowest-sparsity video-context interaction proposed and stays within the screened request-context family. It is a clean one-feature ablation with low operational risk, but evidence is indirect and the video-by-weekday cells may still be sparse under temporal shift."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 5,
+      "utility_score": 0.53,
+      "rationale": "Conservative regularization test on the best model is cheap, isolated, and defensible after the more flexible embedding model failed badly. The downside is weak direct evidence that current additive weights are overfit, and the proposed tenfold L2 change is still a hyperparameter probe with likely small effect."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 6,
+      "utility_score": 0.49,
+      "rationale": "A safe convergence check with existing early stopping protection and no feature or leakage expansion. However, it is weakly motivated, partially redundant with the existing training procedure, and can consume additional runtime without evidence that ten epochs is insufficient."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 7,
+      "utility_score": 0.46,
+      "rationale": "Video-by-tab has a plausible surface-conditional relevance rationale and targets tab heterogeneity, including the sizable tab-6 slice. It is ranked below video-by-weekday because video-by-tab cells are likely sparse and the low tab metrics are diagnostic slices, not causal evidence that this interaction will generalize."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 8,
+      "utility_score": 0.41,
+      "rationale": "A bounded train-fitted interaction using eligible request time, but the rationale rests heavily on one small hour-3 slice with only 1,284 rows. User-by-hour is also likely less stable over time than user-by-tab and has limited expected aggregate impact."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 9,
+      "utility_score": 0.37,
+      "rationale": "Low cost but dominated by c08: nDCG-only checkpoint selection misaligns with the official primary metric while retaining the same validation checkpoint-selection overfitting risk. It is effectively a narrower, less well-aligned duplicate of the official-primary selection candidate."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 10,
+      "utility_score": 0.29,
+      "rationale": "Targets the nDCG@5 weakness, but combines a new pairwise loss, rank-dependent dynamic weighting, and direct tailoring to validation diagnostics. This creates substantial validation-overfitting and implementation risk, can sacrifice GAUC, and is too complex for the single scarce experiment relative to c05."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 11,
+      "utility_score": 0.22,
+      "rationale": "Video-by-hour has the highest expected cell sparsity among feature-cross proposals and its rationale depends on weak hour slices rather than robust training evidence. The stated confidence of 10 is not supported by its own uncertainty range or the evidence, further reducing credibility."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 12,
+      "utility_score": 0.16,
+      "rationale": "Clean and cheap, but it has no evidence-specific mechanism, predicts zero primary gain, and changing learning rate under a fixed epoch budget may simply undertrain. It is the weakest use of a scarce experiment."
+    }
+  ]
+}

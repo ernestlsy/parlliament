@@ -1,0 +1,51 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "training",
+      "efficiency"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "MAP@5"
+    ],
+    "preferred_tags": [
+      "context-aware recommendation",
+      "factorization machines",
+      "feature interactions",
+      "implicit feedback",
+      "top-k ranking"
+    ],
+    "purpose": "Resolve the material architecture uncertainty of whether a small, trainable interaction mechanism among the already eligible user_id, video_id, tab, hour, and weekday features is justified after the additive scorer showed strong GAUC but heterogeneous top-five quality in tab slices. Seek evidence on interaction structures that are effective without introducing unavailable or post-impression features.",
+    "query": "Context-aware recommender ranking literature comparing additive linear categorical models with low-order feature-interaction models (factorization machines, field-aware factorization machines, or compact neural interactions), focusing on user-item-request-context interactions for implicit binary feedback and top-k ranking.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "evaluation",
+      "efficiency"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "MRR@5"
+    ],
+    "preferred_tags": [
+      "learning to rank",
+      "implicit feedback",
+      "pairwise loss",
+      "listwise loss",
+      "nDCG optimization"
+    ],
+    "purpose": "Resolve whether changing only the training objective is a defensible next experiment for the observed gap between usable within-user GAUC and weaker, context-dependent nDCG@5. The evidence should clarify expected GAUC/nDCG trade-offs, required negative sampling assumptions, and whether an objective change can be evaluated cleanly while preserving the fixed temporal holdout and official metrics.",
+    "query": "Learning-to-rank objective literature for implicit-feedback recommendation under fixed top-k evaluation, comparing pointwise binary cross-entropy with pairwise ranking losses and listwise/top-k-aware objectives; emphasize effects on per-user AUC versus nDCG@K and practical low-compute training guidance.",
+    "request_index": 2,
+    "round": 1
+  }
+]

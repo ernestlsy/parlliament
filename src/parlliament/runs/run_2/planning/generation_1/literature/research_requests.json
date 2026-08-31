@@ -1,0 +1,47 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "features",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "context-aware recommendation",
+      "factorization machines",
+      "learning to rank",
+      "temporal context"
+    ],
+    "purpose": "The current seed is additive user/item IDs, under which request-context terms shared across a user's request cannot necessarily change candidate ordering. Literature is needed to resolve the material architecture choice for the only positively screened, leakage-safe feature group: whether a minimal interaction model is justified and which interaction structure is most appropriate under scarce experiment budget.",
+    "query": "Literature on context-aware recommendation for within-user impression ranking with sparse categorical user_id, item_id, and request-context features (tab, hour, weekday), focusing on low-compute architectures such as factorization machines, field-aware interactions, or context-conditioned item scoring. Identify methods that make context affect within-user item ordering without using post-impression outcomes or future information.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "evaluation",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "pairwise ranking",
+      "listwise ranking",
+      "implicit feedback",
+      "temporal evaluation"
+    ],
+    "purpose": "The fixed objective is the mean of GAUC and nDCG@5, but the seed optimizes pointwise BCE and no measured baseline separates GAUC from nDCG@5 behavior. Literature is needed to resolve whether a ranking-aligned objective is a material next-experiment candidate, and to constrain any training construction to logged, temporally valid impressions.",
+    "query": "Literature comparing pointwise binary cross-entropy and pairwise/listwise ranking objectives for implicit-feedback recommender evaluation using per-user AUC/GAUC and nDCG@5, especially under temporal holdout and small candidate sets. Seek practical guidance on whether changing the objective alone is likely to improve top-k ranking and how to avoid invalid negative sampling when all logged impressions are evaluation candidates.",
+    "request_index": 2,
+    "round": 1
+  }
+]

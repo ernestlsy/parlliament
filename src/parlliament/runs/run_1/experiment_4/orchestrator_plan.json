@@ -1,0 +1,79 @@
+{
+  "active_agents": [
+    "model_designer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.py remains unchanged and returns encoded train as (features, labels, user_ids), encoded valid as (features, labels, user_ids), and encoded test as (features, user_ids). Each features matrix has columns in canonical order [user_id, video_id, tab, hour, weekday], where hour is floor(numeric hourmin / 100) constrained to 0..23 and weekday is the calendar weekday derived from YYYYMMDD date with Monday=0 through Sunday=6. Encodings and vocabularies are fit from training data only; canonical source row order is preserved."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "model.py Model(dimension, learning_rate, l2) consumes a two-dimensional encoded integer feature matrix with at least five columns; it uses features[:, :5] for additive ID terms and encoded columns 2, 3, and 4 for the nonlinear context residual. The residual has three existing context embeddings, a ReLU hidden layer of exactly 8 units, and the existing scalar output head. predict(features) returns one float32 score per input row in input order."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "model_designer": {
+      "objective": "Reduce only the nonlinear context residual hidden width from 32 ReLU units to 8 units in model.py.",
+      "required_changes": [
+        "In Model.__init__, change self.hidden_units = 32 to self.hidden_units = 8.",
+        "Ensure all dependent parameter shapes, initialization scales, gradient calculations, Adam moment arrays, state serialization, state loading, logits, prediction, and training behavior continue to derive from self.hidden_units without introducing any additional architecture or hyperparameter changes.",
+        "Do not modify data.py, train.py, or config.json."
+      ],
+      "preserve": [
+        "Preserve the existing five encoded model input fields in canonical order: user_id, video_id, tab, hour, weekday.",
+        "Preserve the existing embeddings for encoded columns 2, 3, and 4, the additive ID terms over features[:, :5], the ReLU residual, the output head, additive bias, BCE loss, Adam optimizer, learning_rate, l2, seed behavior, batching, validation-only checkpoint selection, and validation-only early stopping.",
+        "Do not add raw source-column aliases, forbidden or quarantined fields, validation-derived statistics, or test-label access.",
+        "Preserve model prediction as a one-dimensional float32 score array in input row order."
+      ],
+      "coordination_notes": [
+        "The unchanged data.py owns encoding from exact raw columns user_id, video_id, tab, and hourmin plus canonical derived features hour=floor(numeric hourmin / 100) constrained to 0..23 and weekday=calendar weekday from YYYYMMDD date, Monday=0 through Sunday=6; model.py must consume the resulting five-column encoded matrix without reinterpretation.",
+        "The unchanged trainer owns train.py and config.json. The fixed training command must remain compatible and must emit predictions_valid.npz and predictions_test.npz, each containing exactly row_ids and scores, with canonical validation or test source row order respectively. Test labels must never affect training or checkpoint selection."
+      ]
+    }
+  },
+  "reasoning": "Only the architecture-owned file requires modification: the hypothesis changes the residual hidden width and explicitly preserves all data, training, and configuration behavior. Activating model_designer alone avoids unnecessary edits and keeps ownership binding. The model contract remains a five-column encoded matrix in canonical order, with validation-only selection and ordered prediction artifacts enforced by the unchanged trainer."
+}

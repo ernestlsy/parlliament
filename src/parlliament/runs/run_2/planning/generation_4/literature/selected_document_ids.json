@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "objective.within_user_ranknet_pairwise_loss",
+      "objective.mixed_group_listnet_top1_loss",
+      "training.adversarial_embedding_regularization"
+    ]
+  },
+  {
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1,
+    "selected_document_ids": [
+      "experiment.proxy_then_frozen_validation_gate",
+      "experiment.paired_group_bootstrap_confirmation",
+      "experiment.predeclared_hypothesis_ladder"
+    ]
+  }
+]

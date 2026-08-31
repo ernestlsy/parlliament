@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "(\"context-aware recommendation\" OR context-aware ranking) AND (\"factorization machines\" OR \"field-aware factorization machines\" OR FFM) AND (\"implicit feedback\" OR \"binary feedback\") AND (\"top-k ranking\" OR \"learning to rank\") AND (GAUC OR \"group AUC\" OR \"nDCG@5\" OR \"MAP@5\") AND (user-item-context OR \"user item context\")",
+      "(\"additive model\" OR \"linear categorical model\" OR \"generalized linear model\") AND (\"feature interaction\" OR \"second-order interaction\" OR \"low-order interaction\") AND recommender AND (\"factorization machine\" OR DeepFM OR \"neural factorization machine\") AND \"implicit feedback\" AND (nDCG OR MAP OR \"top-k\")",
+      "(\"field-aware factorization machine\" OR FFM OR \"factorization machine\") AND recommender AND (\"user ID\" AND \"item ID\") AND (context OR \"request context\" OR temporal OR hour OR weekday) AND (\"binary click\" OR \"implicit binary feedback\") AND (\"ranking loss\" OR BPR OR \"listwise ranking\")",
+      "(\"compact neural interactions\" OR \"neural feature interaction\" OR \"product-based neural network\" OR PNN OR DeepFM OR xDeepFM) AND recommender AND categorical features AND \"implicit feedback\" AND (\"top-k recommendation\" OR \"top-k ranking\") AND (nDCG OR MAP OR GAUC)",
+      "(\"context-aware collaborative filtering\" OR \"contextual recommendation\") AND (\"user-item-context interaction\" OR \"user-item temporal interaction\") AND (\"factorization machines\" OR \"pairwise feature interactions\") AND efficiency AND (\"implicit feedback\" OR clicks) AND (\"nDCG@5\" OR \"MAP@5\" OR \"group AUC\")"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "implicit-feedback recommender learning-to-rank objectives pointwise binary cross-entropy versus pairwise BPR RankNet versus listwise LambdaRank nDCG@K optimization per-user AUC GAUC trade-off fixed temporal holdout evaluation",
+      "top-k recommendation loss functions implicit feedback sampled negatives: BCE cross-entropy pairwise ranking loss listwise differentiable nDCG surrogate, evaluate GAUC nDCG@5 MRR@5 without changing candidate set or temporal split",
+      "learning-to-rank for implicit recommendation practical comparison pointwise pairwise listwise objectives under limited compute, negative sampling assumptions and bias, per-user AUC versus nDCG@5 performance",
+      "BPR versus sampled softmax binary cross entropy versus LambdaRank LambdaLoss for implicit-feedback retrieval/ranking, top-5 metric alignment nDCG@5 MRR@5 and clean offline temporal evaluation",
+      "direct optimization of nDCG@K in recommender systems implicit interactions: listwise top-k-aware losses, pairwise surrogates, and evidence on AUC/GAUC versus ranking-quality trade-offs with fixed official metrics"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

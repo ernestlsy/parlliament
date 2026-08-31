@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c11",
+      "rank": 1,
+      "utility_score": 82,
+      "rationale": "Best balance of plausible gain, strong evidence from the residual's much smaller-than-predicted improvement, and low runtime risk. It is a bounded regularization change that directly tests likely residual overfit without adding features or substantially changing training."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 2,
+      "utility_score": 76,
+      "rationale": "Low-risk, isolated representation change with a credible inductive bias for adjacent hours and direct relevance to weak hour slices. Evidence is only diagnostic and slice-based, so expected gain and confidence remain modest."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 3,
+      "utility_score": 73,
+      "rationale": "Directly aligns training with the within-user GAUC objective and targets possible prolific-user domination. It changes the loss and has medium runtime and unverified implementation risk, but offers better objective alignment than further architecture expansion."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 4,
+      "utility_score": 70,
+      "rationale": "Targets the strongest screened feature group and weak context slices with a bounded interaction. However, the supporting slice evidence is sparse and the architecture/features change introduces medium runtime risk and some duplication with existing nonlinear capacity."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 5,
+      "utility_score": 67,
+      "rationale": "A relatively safe refinement of the residual that could preserve additive gains while suppressing noisy corrections. It overlaps substantially with c11 and has only indirect evidence, while the gate may simply remain inactive."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 6,
+      "utility_score": 61,
+      "rationale": "Excellent controlled diagnostic with very low runtime and strong isolation: it tests whether the residual's observed gain of only 0.000233 is real. Its expected primary effect is negative, so it is less attractive for a scarce experiment unless interpretability is prioritized."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 7,
+      "utility_score": 56,
+      "rationale": "Clean, cheap negative-control ablation that isolates weekday contribution, but the aggregate evidence does not suggest weekday is a major problem and the expected gain is negative or flat. Useful diagnostically but weak as the sole scarce experiment."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 8,
+      "utility_score": 52,
+      "rationale": "Addresses the mismatch between row-wise BCE and group ranking using observed user-positive-count diagnostics. Sampling changes are broader, have medium runtime and declared leakage risk, and the proposed fixed mixture could distort exposure prevalence."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 9,
+      "utility_score": 47,
+      "rationale": "The ranking objective is conceptually well aligned and could improve GAUC, but pair construction, group handling, and sampling create high runtime and medium leakage risk. Evidence is indirect, and many users may not provide usable pairs."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 10,
+      "utility_score": 43,
+      "rationale": "Directly targets nDCG@5, but the motivating tab-8 result is a small sparse slice and invites validation overfitting. LambdaRank-style implementation is high risk, with medium leakage risk and substantial interaction with the existing BCE objective."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 11,
+      "utility_score": 36,
+      "rationale": "Potentially useful structured interactions, but it is largely a higher-capacity duplicate of the existing residual hypothesis. High runtime, low confidence, and variance/overfitting risk make it poor evidence value after the residual showed only a marginal improvement."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 12,
+      "utility_score": 29,
+      "rationale": "Least attractive due to high runtime, medium leakage risk, low confidence, and weak justification from retrospective positive-count slices. Adding another listwise objective expands scope and may optimize validation-specific group behavior without reliable aggregate benefit."
+    }
+  ]
+}

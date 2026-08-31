@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "\"context-aware recommendation\" ranking tab hour weekday feature interactions user item representations temporal holdout GAUC nDCG@5 additive ID model factorization machine",
+      "\"context-aware recommender systems\" gating or cross networks user-item embeddings request context temporal evaluation within-user GAUC nDCG@5",
+      "recommendation ranking models request context feature interaction factorization machines deep cross networks lightweight architectures tab time-of-day day-of-week temporal split leakage-safe evaluation",
+      "\"context-aware ranking\" additive user item ID embeddings versus factorization machines cross networks context gating temporal holdout nDCG@5 GAUC",
+      "personalized recommendation with tab hour weekday context user-item affinity feature crosses or gating ranking confirmation within-user GAUC nDCG@5 per-impression timestamp availability"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "Compare pointwise logistic-loss models with pairwise BPR and hinge-loss models and listwise LambdaRank, softmax, or listwise-ranking objectives for implicit-feedback recommendation, using within-user temporal ranking evaluation with GAUC-like per-user AUC and nDCG@5; analyze trade-offs, negative-sampling strategies, probability calibration, and cold-user/cold-item robustness without using current-impression outcomes or features unavailable at impression time.",
+      "Survey empirical studies of pointwise, pairwise, and listwise learning-to-rank objectives for implicit-feedback recommender systems, especially logistic loss versus BPR or hinge loss versus LambdaRank and softmax/listwise losses; focus on within-user GAUC and top-k nDCG@5, user- and item-level negative sampling, temporal splits, calibration, and ranking performance in cold and warm segments under leakage-safe feature availability.",
+      "What are the trade-offs between pointwise binary-cross-entropy or logistic training, pairwise BPR and hinge-ranking losses, and listwise LambdaRank or softmax objectives for implicit-feedback recommendation when evaluation is based on per-user AUC/GAUC-like ranking and nDCG@5? Include evidence on negative-sampling design, exposure and popularity bias, probability calibration, temporal recommendation, and comparisons that exclude future or current-impression information.",
+      "Find literature comparing pointwise, pairwise, and listwise recommendation losses for temporally ordered implicit interactions, with emphasis on whether pairwise or listwise training improves top-five nDCG@5 without sacrificing within-user GAUC; examine uniform, popularity-based, hard, and in-batch negative sampling, calibration of predicted scores, and cold-user/cold-item evaluation while maintaining impression-time leakage boundaries.",
+      "Review objective-selection and experiment-design guidance for a neutral additive user/item recommender scaffold on implicit-feedback data: compare logistic pointwise loss, BPR or hinge pairwise ranking, and LambdaRank or softmax/listwise training using fixed within-user temporal evaluation, GAUC and nDCG@5; prioritize evidence on sampling schemes, calibration, ranking-versus-top-k trade-offs, warm/cold segmentation, and leakage-safe historical features."
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

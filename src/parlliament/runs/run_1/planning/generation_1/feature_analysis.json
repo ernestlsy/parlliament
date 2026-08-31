@@ -1,0 +1,30 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "feature:request_context",
+        "feature:tab",
+        "feature:hourmin"
+      ],
+      "finding": "Request-context features are the only screened group with positive overall primary lift (+0.00221), positive lift on every holdout day, full coverage, and comparatively strong within-user ranking evidence. Warm-user-and-item GAUC is 0.6312, while cold-user GAUC is 0.6536, indicating useful ranking discrimination across the main user segments.",
+      "recommended_action": "Advance request_context to a small confirmatory experiment under the same training-only temporal split; do not expand the feature set broadly before confirmation."
+    }
+  ],
+  "avoid": [
+    "screen:user_profile",
+    "screen:historical_user_author_affinity",
+    "screen:upload_recency",
+    "screen:content_duration",
+    "screen:item_metadata",
+    "screen:historical_author_response",
+    "screen:historical_item_response",
+    "feature:historical_user_author_affinity",
+    "feature:historical_author_response",
+    "feature:historical_item_response",
+    "feature:upload_recency",
+    "feature:content_duration",
+    "feature:item_metadata"
+  ],
+  "metric_diagnosis": "Evidence supports early stopping for all rejected groups: they have negative primary lift, with historical author and item response especially harmful and warm-segment GAUC below 0.5. Request_context improves stable within-user ranking, but top-five performance remains weaker than GAUC, particularly for cold users (nDCG@5 0.4921 versus GAUC 0.6536) and cold items (nDCG@5 0.25 and GAUC 0.5 on only 8 rows); therefore prioritize ranking confirmation rather than claiming top-five gains or cold-item improvement. Do not use current-impression outcomes or aggregate snapshots without per-impression availability timestamps because they risk leakage."
+}

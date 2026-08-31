@@ -1,0 +1,31 @@
+{
+  "text": "Reduce the context residual capacity from 32 hidden units to 8 hidden units.",
+  "parent_experiment_id": 2,
+  "scores": {
+    "interestingness": 7,
+    "novelty": 7,
+    "feasibility": 9
+  },
+  "rationale": "The residual gain over experiment 1 was only 0.000233 primary, and the experiment 3 regularization change slightly regressed. A smaller residual directly tests whether the useful context effect is low-dimensional and whether excess capacity harms generalization.",
+  "candidate_id": "c03",
+  "evidence_ids": [
+    "experiment:1:metrics",
+    "experiment:2:metrics",
+    "experiment:3:metrics"
+  ],
+  "exact_ablation": "Change only the nonlinear context residual hidden width from 32 ReLU units to 8; preserve its embeddings, output head, additive ID terms, BCE, optimizer, and all hyperparameters otherwise.",
+  "expected_effect": {
+    "GAUC": "Likely flat to +0.0006 as noisy residual degrees of freedom are removed; a loss of up to 0.0004 is possible if the parent uses genuinely complex context effects.",
+    "nDCG@5": "Likely +0.0001 to +0.0008 from smoother ranking, though reduced capacity could make the effect flat."
+  },
+  "expected_primary_gain": 0.0003,
+  "confidence": 6,
+  "leakage_risk": "low",
+  "runtime_risk": "low",
+  "active_components": [
+    "architecture"
+  ],
+  "literature_document_ids": [
+    "architecture.embedding_mlp_ranker"
+  ]
+}

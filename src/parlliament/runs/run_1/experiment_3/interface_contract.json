@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "data.py continues to return train and validation tuples of (features, labels, users) and a test tuple of (features, users), using exact schema fields and canonical source row order; encoded feature columns remain user_id, video_id, tab, hour, weekday."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "model.py receives an encoded NumPy array with shape (N, 5), columns ordered user_id, video_id, tab, hour, weekday, and labels only for training steps. The model must retain the existing one-dimensional logits/prediction interface."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

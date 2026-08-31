@@ -1,0 +1,52 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "efficiency",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "primary"
+    ],
+    "preferred_tags": [
+      "ranking",
+      "context-aware recommendation",
+      "sparse features",
+      "factorization machines",
+      "DeepFM"
+    ],
+    "purpose": "Resolve whether replacing the current additive model with a low-cost interaction architecture is justified for the severe tab-specific top-five ranking failures, while preserving impression-time availability and sparse categorical inputs.",
+    "query": "Factorization Machines and DeepFM-style sparse feature interaction architectures for context-aware recommendation ranking, especially user-item-context interactions among categorical fields such as tab, hour, weekday, user ID, and video ID",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "evaluation",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "MAP@5",
+      "primary"
+    ],
+    "preferred_tags": [
+      "learning to rank",
+      "implicit feedback",
+      "pairwise loss",
+      "listwise loss",
+      "top-k ranking"
+    ],
+    "purpose": "Resolve whether the observed gap between acceptable GAUC and weak nDCG@5 in several tabs warrants changing the training objective rather than adding features or architecture, without changing the fixed evaluation metric.",
+    "query": "Learning-to-rank objectives for implicit-feedback recommendation that improve top-k metrics such as nDCG@5 while maintaining within-user AUC or GAUC, including pairwise and listwise losses compared with binary cross-entropy",
+    "request_index": 2,
+    "round": 1
+  }
+]

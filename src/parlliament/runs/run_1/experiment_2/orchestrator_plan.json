@@ -1,0 +1,87 @@
+{
+  "active_agents": [
+    "model_designer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.py remains unchanged and returns encoded train/valid tuples (features, labels, user_ids) and test tuple (features, user_ids), where features is int32 shape (N,5) in canonical source row order and columns are [user_id, video_id, tab, hour, weekday]."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model receives an int32 feature matrix shaped (N,5) in canonical FIELDS order [user_id, video_id, tab, hour, weekday]. It returns a finite float score/logit vector shaped (N,). The score is additive bias plus all five parent ID terms plus one 32-unit ReLU residual computed exclusively from tab, hour, and weekday embeddings. Checkpoint state must include and restore all additive and residual parameters."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "model_designer": {
+      "objective": "Implement the requested one-hidden-layer nonlinear residual over request-context fields in model.py while preserving the parent additive ID scaffold.",
+      "required_changes": [
+        "Modify only model.py.",
+        "Keep the additive logit as bias plus the sum of self.weights[features] over all five encoded fields.",
+        "Treat features[:, 0:5] as the canonical encoded FIELDS order [user_id, video_id, tab, hour, weekday]; use only columns 2, 3, and 4 for the residual branch.",
+        "Add one residual head: learn separate embeddings for tab, hour, and weekday, concatenate the three embeddings, apply one affine layer with exactly 32 hidden units, apply ReLU, then one affine scalar output; add this scalar residual to the additive logit.",
+        "Use the existing Adam update scheme and learning_rate, l2, and step_number configuration. Compute BCE gradients from the combined additive-plus-residual logits and update additive weights, bias, context embeddings, hidden weights/bias, and output weights/bias in the same step.",
+        "Keep Model(dimension, learning_rate=0.01, l2=1e-6) compatible with train.py; derive context embedding table sizes from the encoded global feature IDs without changing data.py or train.py. Because the encoded matrix has five columns and global IDs are offset, determine each context column's valid ID range from the observed feature column values, allocate an unknown-safe table per context column, and map each column's global ID to a compact residual embedding index consistently across calls.",
+        "Make logits(features) return a finite one-dimensional numpy array of length len(features), and preserve predict(features, batch_size=...) semantics and output ordering.",
+        "Update state() and load_state() to checkpoint and restore every trainable parameter required for deterministic validation selection and final validation/test prediction."
+      ],
+      "preserve": [
+        "Do not remove, replace, or alter the additive user_id and video_id terms; all five parent additive ID terms must remain active.",
+        "Preserve BCE training, the existing Adam hyperparameters and schedule, sigmoid clipping behavior, batching compatibility, and the public Model constructor.",
+        "Do not add any fields, aliases, joins, raw-column parsing, or derived features; the residual must consume only encoded tab, hour, and weekday columns.",
+        "Do not use validation or test labels, test data statistics, or any baseline-derived feature.",
+        "Keep predictions deterministic under the existing train.py seed and preserve one-dimensional score arrays."
+      ],
+      "coordination_notes": [
+        "The shared model input contract is an int32 array shaped (N, 5), with columns exactly [user_id, video_id, tab, hour, weekday] as defined by data.py and dataset_feature_schema.",
+        "train.py will continue to pass the encoded feature matrix directly and will checkpoint using state()/load_state(); expanded checkpoint contents must therefore remain opaque to train.py and round-trip correctly.",
+        "No config.json edit is authorized because the requested change is architecture-only and all existing configuration keys and values must remain unchanged.",
+        "The fixed trainer selects checkpoints using only the validation split and emits predictions_valid.npz at the requested output path plus predictions_test.npz beside it; model.py must not introduce any test-dependent behavior."
+      ]
+    }
+  },
+  "reasoning": "Only model_designer is activated because the hypothesis changes architecture exclusively. The canonical encoded feature order supplies tab, hour, and weekday directly in columns 2\u20134, so data.py need not change. The model contract preserves the additive scaffold and adds exactly one 32-unit ReLU residual branch using only those three context fields; configuration, training schedule, validation-only selection, and prediction file behavior remain unchanged."
+}

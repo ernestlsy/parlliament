@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c05",
+      "rank": 1,
+      "utility_score": 0.74,
+      "rationale": "Best scarce-budget test: it directly aligns row-wise BCE influence with the official within-user GAUC while changing neither feature scope nor model capacity. The large user-activity spread supports the mechanism, and train-row user counts are availability-safe. Expected nDCG benefit is uncertain, but evidence and low execution risk are stronger than for interaction expansion."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 2,
+      "utility_score": 0.68,
+      "rationale": "A very low-scope correction to checkpoint selection that aligns selection with the fixed primary metric, including the known nDCG@5 weakness. It is cheap and operationally coherent, although it should be penalized because repeatedly selecting on the same validation primary can overfit that validation set."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 3,
+      "utility_score": 0.57,
+      "rationale": "A clean, low-risk regularization check is justified by the tiny and nDCG-negative observed effect of the existing sparse user-by-tab cross versus experiment 1. It has limited upside and only indirect evidence, but it is more disciplined than adding another sparse interaction after the prior cross barely generalized."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 4,
+      "utility_score": 0.51,
+      "rationale": "Tab-by-hour is a bounded, low-cardinality extension of the only positively screened family and avoids the extreme sparsity of ID crosses. Its rationale leans on retrospectively selected weak validation tabs, so the apparent segment targeting receives a validation-overfitting penalty."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 5,
+      "utility_score": 0.45,
+      "rationale": "User-by-weekday is a contained, lower-variance personalization test with low implementation risk. However, there is no direct evidence of recurring weekly preference, and the short validation horizon weakens its interpretability and expected upside."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 6,
+      "utility_score": 0.42,
+      "rationale": "The request-context screen and poor hour-16 slice provide some rationale, but user-by-hour is another high-cardinality sparse ID interaction immediately after user-by-tab produced only a 0.000439 primary lift and a slight nDCG decline. It is a partially duplicative expansion with material overfit risk despite nominally low runtime risk."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 7,
+      "utility_score": 0.35,
+      "rationale": "A learning-rate reduction is safe and cheap, and the failed complex architecture gives a weak reason to prefer stability. Still, there is no evidence of optimization instability in experiment 3, so this is a weakly motivated hyperparameter search rather than a focused hypothesis."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 8,
+      "utility_score": 0.31,
+      "rationale": "The rollback is diagnostically valuable because the user-by-tab gain was negligible, but it has essentially no expected improvement and spends the sole experiment on confirming an already observed marginal effect. It is better treated as a retention decision than the highest-value improvement attempt."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 9,
+      "utility_score": 0.26,
+      "rationale": "Video-by-tab has plausible surface-specific semantics, but it creates a very sparse high-cardinality interaction on top of item IDs. The evidence is mostly broad tab heterogeneity rather than evidence that the same user compares a video across tabs, and warm-item dominance limits generalizable upside."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 10,
+      "utility_score": 0.22,
+      "rationale": "The hybrid loss is directionally aligned with nDCG@5, but its premise depends on within-user training rows being coherent candidate groups or slates, which the archive does not establish. Swap weighting, pair construction, and the fixed coefficient add implementation and tuning risk; the segment-driven motivation also risks validation overfitting."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 11,
+      "utility_score": 0.16,
+      "rationale": "Pure RankNet removes the stable BCE signal and relies on sampled within-user positive-negative pairs representing actual ranking competition. Coherent slates are unverified, nDCG@5 is not directly optimized, and the proposal's very high confidence is unsupported by the prior architecture regression and limited loss evidence."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 12,
+      "utility_score": 0.08,
+      "rationale": "ListNet is the broadest and least validated objective change. It assumes whole-user rows form meaningful lists despite explicit archive uncertainty, can distort optimization across temporally unrelated impressions, introduces validation/tuning risk through its coefficient and grouping choices, and has the lowest feasibility for one scarce experiment."
+    }
+  ]
+}

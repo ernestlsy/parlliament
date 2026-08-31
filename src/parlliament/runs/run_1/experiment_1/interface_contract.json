@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "data.py.load and data.py.encode must return train, validation, and test feature matrices in canonical source row order. Feature columns are user_id, video_id, tab, hour, weekday, encoded with separate training-only vocabularies, field-specific explicit unknown indices, and offsets. Train and validation retain long_view labels; test exposes features and row order but no labels."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "model.py receives the encoded integer feature matrix with one row per impression and columns user_id, video_id, tab, hour, and weekday. The existing neutral additive BCE model sums the corresponding weights; no interactions or additional inputs are permitted."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

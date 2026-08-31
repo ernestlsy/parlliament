@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "implicit-feedback recommender systems learning-to-rank ablation pointwise binary cross-entropy versus BPR pairwise loss versus listwise loss nDCG@5 fixed top-k evaluation within-user ranking",
+      "top-k recommendation implicit binary interactions evidence comparing BCE, BPR, hinge/RankNet pairwise objectives, and LambdaRank or differentiable nDCG listwise objectives for nDCG@5 and GAUC",
+      "within-user candidate ranking for implicit-feedback recommendation: pointwise classification loss versus pairwise ranking and listwise ranking losses, evaluation with fixed nDCG@5 and grouped AUC",
+      "sparse categorical-feature recommender models implicit feedback ranking objectives BPR LambdaRank sampled softmax listwise cross-entropy regularization embeddings feature crosses nDCG@5",
+      "learning-to-rank for tab- or context-segmented recommendation with implicit engagement labels: objective choice and regularization for additive sparse categorical scorers, emphasizing top-five nDCG and per-user ranking"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "recommender systems rolling-origin evaluation temporal cross-validation train-only feature fitting fixed official validation protocol GAUC nDCG@5 segment-level top-k robustness",
+      "recommendation temporal holdout repeated forward-chaining backtesting distribution shift evaluation distinguish reproducible gains from validation-slice noise nDCG@5 GAUC",
+      "recommender-system experiment design multiple temporal splits ranking metric uncertainty confidence intervals paired bootstrap tests repeated improvements top-k nDCG@5",
+      "context-aware recommender systems subgroup and slice evaluation high-support segments tab hour cohort analysis ranking failures GAUC versus nDCG@5 temporal robustness",
+      "offline recommender evaluation prequential and rolling-window validation leakage-free time splits segment-aware top-k ranking diagnostics practical significance stopping criteria"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "data.py remains unchanged and returns encoded train/valid tuples (features, labels, user_ids) and test tuple (features, user_ids), where features is int32 shape (N,5) in canonical source row order and columns are [user_id, video_id, tab, hour, weekday]."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives an int32 feature matrix shaped (N,5) in canonical FIELDS order [user_id, video_id, tab, hour, weekday]. It returns a finite float score/logit vector shaped (N,). The score is additive bias plus all five parent ID terms plus one 32-unit ReLU residual computed exclusively from tab, hour, and weekday embeddings. Checkpoint state must include and restore all additive and residual parameters."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

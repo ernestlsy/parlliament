@@ -1,0 +1,43 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:2:metrics"
+      ],
+      "finding": "Prioritize request-context fields (tab, hour, weekday) as the only screened group with positive overall primary lift. Its warm-user-and-item GAUC is 0.6312 with nDCG@5 of 0.5076, and cold-user GAUC is 0.6536, indicating useful within-user ordering, although daily lift is variable and should be monitored.",
+      "recommended_action": "Fund a small follow-up focused on request-context interactions and calibration, with temporal replication and explicit per-user GAUC and nDCG@5 checks."
+    },
+    {
+      "evidence_ids": [
+        "experiment:2:segment:tab:8",
+        "experiment:2:segment:tab:0",
+        "experiment:2:segment:hour:3"
+      ],
+      "finding": "Post-score diagnostics show concentrated weaknesses. Tab 8 is poor on both within-user ranking and top-five quality (GAUC 0.352, nDCG@5 0.026). Tab 0 has a less severe GAUC weakness (0.555) but very poor nDCG@5 (0.062), demonstrating that acceptable aggregate ordering can still fail at the top of the list. Hour 3 is weaker than global on both GAUC and nDCG@5.",
+      "recommended_action": "Use these slices for targeted error analysis and robustness gates, but do not expand feature budget based on small slices alone."
+    }
+  ],
+  "avoid": [
+    "screen:user_profile",
+    "screen:historical_user_author_affinity",
+    "screen:upload_recency",
+    "screen:content_duration",
+    "screen:item_metadata",
+    "screen:historical_author_response",
+    "screen:historical_item_response"
+  ],
+  "metric_diagnosis": "The nonlinear residual experiment should trigger early stopping for feature expansion: observed primary improved only 0.000233 over its parent despite a predicted gain of 0.0015, as shown by the experiment metrics and calibration history. The global GAUC of 0.669 indicates moderate within-user ordering, while nDCG@5 of 0.537 and the weak tab slices show that top-five ranking remains the limiting problem. The user_positive_count=zero slice has GAUC 0.5 and zero top-five metrics, but it is a retrospective label-defined diagnostic rather than evidence for a deployable feature. Keep outcome-derived and timestamp-unverified aggregates excluded; no leakage-prone feature should be reconsidered without impression-time availability proof.",
+  "evidence_ids": [
+    "experiment:2:metrics",
+    "experiment:2:segment:user_positive_count:zero",
+    "screen:request_context",
+    "screen:user_profile",
+    "screen:historical_user_author_affinity",
+    "screen:upload_recency",
+    "screen:content_duration",
+    "screen:item_metadata",
+    "screen:historical_author_response",
+    "screen:historical_item_response"
+  ]
+}

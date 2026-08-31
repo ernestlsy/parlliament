@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "architecture.deep_cross_ranker",
+      "architecture.embedding_mlp_ranker",
+      "features.entity_id_embeddings",
+      "features.train_prefix_smoothed_popularity_features",
+      "features.causal_behavior_history_features"
+    ]
+  },
+  {
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1,
+    "selected_document_ids": [
+      "evaluation.random_exposure_generalization_audit",
+      "evaluation.stratified_temporal_population_evaluation",
+      "robustness.clipped_ips_within_group_rank_loss"
+    ]
+  }
+]

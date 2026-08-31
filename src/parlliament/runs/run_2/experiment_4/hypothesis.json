@@ -1,0 +1,32 @@
+{
+  "text": "Replace row-mean BCE with inverse-training-user-candidate-count weighted BCE to align training influence with within-user evaluation.",
+  "parent_experiment_id": 3,
+  "scores": {
+    "interestingness": 4,
+    "novelty": 4,
+    "feasibility": 4
+  },
+  "rationale": "The official GAUC is a within-user metric, whereas the current row-mean BCE gives prolific users more total optimization weight. The broad spread in user-activity diagnostics makes user balancing a direct, availability-safe objective test rather than a feature expansion.",
+  "candidate_id": "c05",
+  "evidence_ids": [
+    "experiment:3:metrics",
+    "experiment:3:segment:user_active_degree:full_active",
+    "experiment:3:segment:user_active_degree:middle_active"
+  ],
+  "exact_ablation": "Relative to experiment 3, replace the row-mean BCE reduction with BCE weighted by the inverse number of training rows for each user and normalized by total batch weight; retain features, model, optimizer, training rows, split, and early stopping unchanged.",
+  "expected_effect": {
+    "GAUC": "Increase by 0.001 to 0.004 if reducing prolific-user dominance better aligns the pointwise objective with within-user discrimination.",
+    "nDCG@5": "Change between -0.001 and +0.002 because equal user weighting need not directly emphasize the first five ranks."
+  },
+  "expected_primary_gain": 0.0015,
+  "confidence": 2,
+  "leakage_risk": "low",
+  "runtime_risk": "low",
+  "active_components": [
+    "loss"
+  ],
+  "literature_document_ids": [
+    "objective.user_normalized_binary_cross_entropy",
+    "evaluation.within_user_metrics"
+  ]
+}

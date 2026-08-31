@@ -1,0 +1,379 @@
+[
+  {
+    "text": "Remove the nonlinear context residual and retain only the additive user, video, tab, hour, and weekday terms.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "Experiment 2 improved only modestly over experiment 1, while experiment 3's stronger residual regularization slightly reduced primary, suggesting the residual may add variance rather than robust ranking signal. This is a clean rollback test against the strongest measured parent.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:metrics"
+    ],
+    "exact_ablation": "Replace the parent model's additive-plus-32-unit-ReLU context residual with the parent additive scorer only; keep all five fields, BCE, optimizer, learning rate, batch size, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely decrease by 0.0002 to 0.0015 because the residual may capture some context nonlinearity; it could be flat or slightly positive if residual overfitting is harmful.",
+      "nDCG@5": "Likely decrease by 0.0002 to 0.0012, with possible improvement if noisy residual scores currently perturb the top five."
+    },
+    "expected_primary_gain": -0.0005,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Add dropout to the nonlinear request-context residual while preserving its learned embeddings and additive ID terms.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The parent residual raised GAUC from 0.668912 to 0.669129 and nDCG@5 from 0.536958 to 0.537206, but stronger L2 in experiment 3 did not improve primary. Dropout tests a different variance-control mechanism without changing the feature family.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:3:metrics"
+    ],
+    "exact_ablation": "Apply dropout rate 0.10 to the hidden representation of the existing 32-unit context residual during training only; keep inference deterministic and leave features, loss, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.0001 to 0.0008 if the residual is overfitting; excessive stochasticity could reduce GAUC by up to 0.0005.",
+      "nDCG@5": "Likely increase by 0.0002 to 0.0010 through more stable top-five ordering, but small-slice volatility may remain."
+    },
+    "expected_primary_gain": 0.0004,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Reduce the context residual capacity from 32 hidden units to 8 hidden units.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "The residual gain over experiment 1 was only 0.000233 primary, and the experiment 3 regularization change slightly regressed. A smaller residual directly tests whether the useful context effect is low-dimensional and whether excess capacity harms generalization.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:3:metrics"
+    ],
+    "exact_ablation": "Change only the nonlinear context residual hidden width from 32 ReLU units to 8; preserve its embeddings, output head, additive ID terms, BCE, optimizer, and all hyperparameters otherwise.",
+    "expected_effect": {
+      "GAUC": "Likely flat to +0.0006 as noisy residual degrees of freedom are removed; a loss of up to 0.0004 is possible if the parent uses genuinely complex context effects.",
+      "nDCG@5": "Likely +0.0001 to +0.0008 from smoother ranking, though reduced capacity could make the effect flat."
+    },
+    "expected_primary_gain": 0.0003,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Add an explicit tab-by-hour categorical interaction to the existing request-context input.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The request-context group was the only screened feature group with positive temporal primary lift, while tab 8 and tab 3 have extremely weak top-five metrics. An explicit interaction may capture presentation-time effects that the current residual does not reliably learn.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:3:segment:tab:8",
+      "experiment:3:segment:tab:3",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Add one train-vocabulary categorical field representing the pair (tab,hour), with an unknown bucket; keep the original fields, residual architecture, BCE, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.0002 to 0.0010 if context effects differ by tab; sparse combinations could instead reduce GAUC by up to 0.0005.",
+      "nDCG@5": "Likely increase by 0.0004 to 0.0015, especially on weak tab slices, with top-five regression risk for rare interaction values."
+    },
+    "expected_primary_gain": 0.0006,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Replace categorical hour with a compact cyclic hour representation in the context residual.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "Hour slices are weak and irregular, including GAUC 0.5242 at hour 3 and 0.5917 at hour 8, so independent hour embeddings may not generalize across adjacent times. A cyclic representation tests whether smooth daily structure improves context ranking.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:3:segment:hour:3",
+      "experiment:3:segment:hour:8",
+      "screen:request_context",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Replace only the categorical hour input to the nonlinear residual with two training-normalized numeric features sin(2\u03c0 hour/24) and cos(2\u03c0 hour/24); retain the categorical hour additive term, all other fields, loss, optimizer, and schedule.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.0001 to 0.0008 if adjacent hours share behavior; it may decrease by 0.0005 if hour effects are discontinuous.",
+      "nDCG@5": "Likely increase by 0.0002 to 0.0010 through smoother ordering across hours, but gains may be negligible in sparse slices."
+    },
+    "expected_primary_gain": 0.0004,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "features",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Remove weekday from the request-context fields while retaining tab and hour.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "The measured request-context evidence supports the group overall but does not identify which field drives the gain. Weekday has only seven values and may introduce unstable calendar-specific corrections; this single-field ablation isolates its contribution.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Delete only the weekday feature from the input and its residual embedding; keep user ID, video ID, tab, hour, residual architecture, BCE, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely change by -0.0004 to +0.0002; weekday may provide weak signal but can also add noise.",
+      "nDCG@5": "Likely change by -0.0005 to +0.0003, with no expected material effect if weekday does not reorder candidates within users."
+    },
+    "expected_primary_gain": -0.0001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Remove tab from the request-context fields while retaining hour and weekday.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "Tab-specific slices are the weakest diagnostics, including tab 8 GAUC 0.3519 and nDCG@5 0.0263, so tab may encode a noisy exposure policy rather than stable preference. Removing it tests whether the apparent group gain is driven by the more general temporal fields.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:3:segment:tab:8",
+      "experiment:3:segment:tab:3",
+      "screen:request_context",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Delete only the tab feature from the additive and residual inputs; retain hour, weekday, IDs, residual architecture, BCE, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely decrease by 0.0003 to 0.0012 if tab contains useful within-user exposure context; it could increase by up to 0.0004 if tab overfits.",
+      "nDCG@5": "Likely decrease by 0.0005 to 0.0018 because tab may distinguish top-five exposure regimes, though weak-tab support makes the estimate noisy."
+    },
+    "expected_primary_gain": -0.0006,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Remove hour from the request-context fields while retaining tab and weekday.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "Hour-specific validation slices are consistently below aggregate primary, with particularly weak hour 3 and hour 8 results. This ablation tests whether hour is a harmful shortcut under temporal drift despite the positive aggregate request-context screen.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:3:segment:hour:3",
+      "experiment:3:segment:hour:8",
+      "screen:request_context",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Delete only the hour feature from the additive and residual inputs; retain tab, weekday, IDs, residual architecture, BCE, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely decrease by 0.0002 to 0.0010 if hour captures real availability patterns; it could be flat or improve by up to 0.0005 under temporal drift.",
+      "nDCG@5": "Likely decrease by 0.0003 to 0.0014 if hour helps top-five ordering, with a plausible small improvement if hour corrections are unstable."
+    },
+    "expected_primary_gain": -0.0004,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Train the parent model with a within-user pairwise ranking loss instead of BCE.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The official objective is within-user ordering, while the current model uses BCE. Experiment 2 has stronger GAUC than nDCG@5 in absolute terms, so a ranking-aligned loss may improve ordering, although pair construction and small candidate groups create implementation risk.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Replace BCE training with unweighted RankNet over positive-negative pairs formed only within each user; retain the exact parent features, residual architecture, optimizer, learning rate, and checkpoint rule.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.0003 to 0.0015 because the loss directly optimizes positive-negative ordering; sparse users may cause a decrease of up to 0.0008.",
+      "nDCG@5": "Likely increase by 0.0005 to 0.0020 because top-ranked positives receive direct pairwise pressure, but pair sampling can make top-five results volatile."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use a top-five-weighted within-user pairwise loss instead of BCE.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "Experiment 2 reaches nDCG@5 0.537206 while the official GAUC is 0.669129, indicating room to target top-of-list quality separately. A pairwise loss weighted toward high predicted ranks is materially different from standard BCE and tests the nDCG weakness directly.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:segment:tab:8",
+      "experiment:3:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Replace BCE with a within-user pairwise logistic loss whose pair weight is 1 for pairs involving the current predicted top five and 0.25 otherwise; keep features, architecture, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely flat to +0.0008; concentrating on top ranks could reduce broad ordering and lower GAUC by up to 0.0010.",
+      "nDCG@5": "Likely increase by 0.0007 to 0.0025 if top-five mistakes are corrected, with high variance from changing predicted pair membership."
+    },
+    "expected_primary_gain": 0.0007,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use gradient clipping during training for the parent context-residual model.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The nonlinear residual changes validation score variance and its stronger-regularization variant has a slightly worse primary, suggesting optimization instability may contribute. Gradient clipping changes training dynamics without changing the scoring function or permitted inputs.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Clip the global minibatch gradient norm to 1.0 immediately before every parameter update; keep the parent model, features, BCE, optimizer, learning rate, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.0001 to 0.0007 if occasional large updates harm generalization; clipping could reduce GAUC by up to 0.0004 if updates are already well behaved.",
+      "nDCG@5": "Likely increase by 0.0002 to 0.0009 through more stable top-five scores, though the aggregate effect may be flat."
+    },
+    "expected_primary_gain": 0.0003,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Replace the residual's separate context embeddings with a single shared embedding table for tab, hour, and weekday values.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 7
+    },
+    "rationale": "The context fields are low-cardinality, yet the parent uses three independent embedding tables and a nonlinear head. Parameter sharing may regularize sparse context combinations and improve weak tab/hour slices, but it risks erasing field-specific semantics.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:segment:tab:8",
+      "experiment:3:segment:hour:3",
+      "experiment:3:metrics"
+    ],
+    "exact_ablation": "Use one shared 8-dimensional context embedding table with field-specific value offsets for tab, hour, and weekday in the nonlinear residual; leave additive field weights, all features, BCE, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.0001 to 0.0009 if shared structure regularizes the residual; semantic interference could reduce GAUC by up to 0.0007.",
+      "nDCG@5": "Likely increase by 0.0002 to 0.0012 on sparse context values, but top-five gains are uncertain because tab and hour may require different representations."
+    },
+    "expected_primary_gain": 0.0004,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  }
+]

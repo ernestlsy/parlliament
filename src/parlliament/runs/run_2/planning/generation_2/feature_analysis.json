@@ -1,0 +1,29 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:1:metrics"
+      ],
+      "finding": "Request context is the only train-only screened family with a positive primary lift (+0.00221), full coverage, and positive lift on all four temporal holdout days. The resulting official-validation model has GAUC 0.66891 and nDCG@5 0.53696, providing usable within-user ranking evidence.",
+      "recommended_action": "Retain tab, hour, and weekday in the scorer. Under the strict early-stopping budget, do not fund a broad feature sweep; only continue if a tightly scoped, leakage-audited context interaction can be evaluated against this model with a predefined primary-metric gate."
+    },
+    {
+      "evidence_ids": [
+        "experiment:1:segment:tab:8",
+        "experiment:1:segment:tab:0",
+        "experiment:1:segment:item_frequency:rare_1_4",
+        "experiment:1:segment:hour:3"
+      ],
+      "finding": "The principal weakness is top-five ranking in specific serving contexts, not global GAUC alone. Tab 8 has GAUC 0.35185 and nDCG@5 0.02634; the large tab-0 slice has nDCG@5 0.06219 despite GAUC 0.55009. Rare items also have weak nDCG@5 (0.17174), and hour 3 has nDCG@5 0.38637 with GAUC 0.53182.",
+      "recommended_action": "Treat tab and rare-item deficits as post-score diagnostic targets, not proof that another feature family will help. Before allocating another experiment, verify candidate ranking changes improve nDCG@5 and MAP@5 within these sizable slices without degrading global GAUC; do not optimize solely for classification metrics or global AUC."
+    }
+  ],
+  "avoid": [
+    "Reject user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, and historical_item_response: all had non-positive train-only primary lift, with especially large negative lift for historical author and item response families.",
+    "Do not use current-impression outcome fields from the log sources; they are unavailable at ranking time and are forbidden leakage.",
+    "Do not use quarantined aggregate video-statistics snapshot fields because their per-impression availability timestamps are unknown.",
+    "Do not interpret the user_positive_count=zero slice as a model-ranking failure: it has no validation positives, so its zero top-five metrics are structurally uninformative for ranking."
+  ],
+  "metric_diagnosis": "Global validation evidence is encouraging for within-user discrimination (GAUC 0.66891), but top-five quality is materially weaker and heterogeneous (nDCG@5 0.53696 globally). The most actionable issue is concentrated context performance, particularly tab 8 and the high-volume tab 0, where poor nDCG@5 accompanies weak or adverse GAUC. The rare-item slice has a relatively adequate GAUC of 0.60000 but poor nDCG@5 of 0.17174, demonstrating that GAUC does not substitute for top-five evaluation. Segment results are retrospective diagnostics rather than independent test estimates."
+}

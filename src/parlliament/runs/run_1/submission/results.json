@@ -1,0 +1,34 @@
+{
+  "result": {
+    "benchmark": "KuaiRand-Pure",
+    "best_experiment_id": 2,
+    "validation_GAUC": 0.6691289473036826,
+    "baseline_GAUC": 0.6674,
+    "absolute_delta_GAUC": 0.0017289473036825598,
+    "validation_nDCG@5": 0.5372061575740308,
+    "baseline_nDCG@5": 0.5357,
+    "absolute_delta_nDCG@5": 0.0015061575740308308,
+    "validation_primary": 0.6031675524388567,
+    "baseline_primary": 0.6016,
+    "absolute_delta_primary": 0.0015675524388566453
+  },
+  "resources": {
+    "token_consumption": {
+      "input_tokens": 1003600,
+      "output_tokens": 53150,
+      "total_tokens": 1056750,
+      "llm_calls": 46,
+      "failed_llm_calls": 0,
+      "calls_with_usage": 46,
+      "complete": true,
+      "note": "Provider-reported usage covers every successful LLM call."
+    },
+    "agent_wall_clock_seconds": 1832.8855760139995,
+    "agent_wall_clock_complete": true,
+    "agent_wall_clock_note": "Cumulative timing covers the run from its first invocation.",
+    "iterations": 4,
+    "attempts": 4,
+    "manual_interventions": 0,
+    "manual_intervention_summary": "None"
+  }
+}

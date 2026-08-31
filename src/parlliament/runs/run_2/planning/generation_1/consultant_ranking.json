@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.78,
+      "rationale": "Best scarce-experiment choice: the only candidate directly supported by a completed, training-only temporal screen, with full coverage and positive lift on every screened date. It is a clean, low-runtime ablation with low leakage risk. The modest mean lift relative to daily variance and uncertain nDCG@5 transfer reduce, but do not outweigh, its evidence advantage."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 2,
+      "utility_score": 0.56,
+      "rationale": "High-value architecture test of the key missing capability in the additive seed: personalized user-item interactions. It uses only legal train-vocabulary IDs and has bounded implementation scope. Evidence is indirect and sparse/OOV overfitting is material, but its expected upside and conceptual relevance exceed other unsupported alternatives."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 3,
+      "utility_score": 0.51,
+      "rationale": "A more capacity-conservative interaction test than the embedding dot-product model, with lower overfitting risk and a tightly isolated change. It is substantially duplicative of c02 because both test low-rank user-video affinity, and the lower embedding dimension likely reduces upside; therefore it is ranked below c02."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 4,
+      "utility_score": 0.43,
+      "rationale": "Directly aligns training with the within-user GAUC component while preserving the seed model and legal inputs. It has no measured empirical support, may omit single-label users, and carries pair-construction runtime risk, but is a clearer metric-alignment test than more elaborate ranking objectives."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 5,
+      "utility_score": 0.39,
+      "rationale": "Cheap, clean objective ablation with a plausible mismatch between row-average BCE and within-user evaluation. Its likely effect is small and it does not target nDCG@5, but low runtime and limited scope make it a reasonable fallback after higher-upside interaction or pairwise tests."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 6,
+      "utility_score": 0.37,
+      "rationale": "Uses the one screened-positive feature family and is low risk, but it is an underpowered and partly duplicative decomposition of c01. The evidence supports the complete tab/hour/weekday family rather than this specific crossed feature, so it should not displace the better-supported full-family test."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 7,
+      "utility_score": 0.31,
+      "rationale": "Low-runtime robustness ablation that uses train-only frequencies and may mitigate rare-ID temporal overfit. However, there is no evidence that rare-ID overfit is the binding failure mode, expected gain is small, and the specified clipping range introduces an unvalidated regularization choice."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 8,
+      "utility_score": 0.27,
+      "rationale": "Tests nonlinear ID interactions, but is a higher-capacity and less stable version of the same core hypothesis already covered by c02 and c03. With no evidence that nonlinear interaction capacity is needed, it has poor marginal value for one scarce experiment."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 9,
+      "utility_score": 0.24,
+      "rationale": "A safe and feasible isolated context ablation, but it duplicates c01 and has weaker evidentiary grounding because the screen did not attribute gain specifically to tab. A globally additive tab effect may mainly recalibrate scores rather than improve within-user ranking."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 10,
+      "utility_score": 0.2,
+      "rationale": "Low runtime and leakage-safe, but the fixed seven-day half-life is unsupported by drift evidence and can discard useful historical signal. The stated confidence of 10 conflicts with the rationale's lack of evidence, suggesting overconfidence and raising validation-overfitting risk."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 11,
+      "utility_score": 0.18,
+      "rationale": "Very safe but low-upside isolated context test. It is duplicative of c01, while the positive evidence applies only to the joint request-context family; weekday alone is especially unlikely to change within-user ordering over a short temporal window."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 12,
+      "utility_score": 0.16,
+      "rationale": "Targets the nDCG@5 component directly, but it is the riskiest proposal: expensive group-local ranking operations, noisy sparse-group gradients, an unvalidated fixed coefficient, and potential GAUC tradeoff. It also adds considerable optimization complexity without direct evidence that training groups behave as coherent ranking slates."
+    }
+  ]
+}

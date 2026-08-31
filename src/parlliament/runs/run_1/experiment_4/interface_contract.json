@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "data.py remains unchanged and returns encoded train as (features, labels, user_ids), encoded valid as (features, labels, user_ids), and encoded test as (features, user_ids). Each features matrix has columns in canonical order [user_id, video_id, tab, hour, weekday], where hour is floor(numeric hourmin / 100) constrained to 0..23 and weekday is the calendar weekday derived from YYYYMMDD date with Monday=0 through Sunday=6. Encodings and vocabularies are fit from training data only; canonical source row order is preserved."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "model.py Model(dimension, learning_rate, l2) consumes a two-dimensional encoded integer feature matrix with at least five columns; it uses features[:, :5] for additive ID terms and encoded columns 2, 3, and 4 for the nonlinear context residual. The residual has three existing context embeddings, a ReLU hidden layer of exactly 8 units, and the existing scalar output head. predict(features) returns one float32 score per input row in input order."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

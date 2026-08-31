@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "data.encode(splits) remains unchanged and returns (encoded, dimension). encoded['train'] is (features, labels, users), encoded['valid'] is (features, labels, users), and encoded['test'] is (features, users). features is an int32 matrix in canonical source-row order; users contains the exact raw user_id values as strings. Trainer derives train_weights solely from encoded['train'][2]: for each row i, train_weights[i] = 1.0 / number of rows j for which str(train_users[j]) == str(train_users[i]). No validation or test rows participate in these counts."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model.step(features, labels, sample_weights) requires aligned feature rows, float labels, and a one-dimensional finite strictly positive sample_weights array. It normalizes both weighted BCE and data gradient by sample_weights.sum() for the passed batch. Model.predict(features) remains logits in exactly input row order. The fixed training command must emit predictions_valid.npz and predictions_test.npz, each containing exactly row_ids and scores; row_ids are canonical sequential validation or test row indices and scores align identically."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

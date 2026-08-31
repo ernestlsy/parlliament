@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "load returns chronological train, valid, and test rows in source CSV iteration order. encode returns (encoded, dimension), where encoded['train'] and encoded['valid'] are (features, labels, users), encoded['test'] is (features, users), features is a 2-D int32 matrix with six columns ordered [user_id, video_id, tab, hour, weekday, user_id\u00d7tab], labels is float32 for non-test splits, and users preserves raw user_id strings. Every feature index is nonnegative and strictly less than dimension. The first five blocks preserve current train-fitted vocabulary and unknown-bucket behavior. The sixth block is a separate train-fitted vocabulary over ordered pairs formed exactly from raw user_id and raw tab; it has its own unknown bucket and contiguous final offset. Validation and test order is never reordered."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives the six-column encoded categorical matrix and total dimension. Its existing logits computation must remain bias plus the sum of one scalar weight per row feature index, making the sixth column one additive cross residual in addition to the five retained main effects. Training uses only train labels; validation labels may be used only by trainer validation proxy/checkpoint selection, and test labels are never loaded by training."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

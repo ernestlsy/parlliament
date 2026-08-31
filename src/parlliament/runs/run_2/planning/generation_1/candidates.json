@@ -1,0 +1,382 @@
+[
+  {
+    "text": "Add the screened request-context feature family to the additive user/video-ID scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "Training-only temporal screening found request_context (tab, hour, weekday) was the sole positively recommended feature group: +0.00221 primary lift, full coverage, and positive lift on all four screened dates. The official experiment should isolate this family without changing model or loss. Downside risks: the lift is smaller than its daily primary standard deviation (0.00580), context can be temporally nonstationary, and the result may improve broad ordering without placing positives in the top five.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Relative to seed 0, append train-fitted categorical encodings for tab, hour, and weekday as additive feature weights; retain the seed optimizer, BCE loss, ID features, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately 0.001 to 0.004 if context resolves within-user candidate differences; require a non-negative observed movement.",
+      "nDCG@5": "Increase by approximately 0.000 to 0.003, but it may be flat because the screening evidence reports primary rather than a demonstrated top-five effect."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace additive user/video ID weights with a latent user-video dot-product model.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 4
+    },
+    "rationale": "The seed includes only additive user and video identities, which cannot represent personalized user-video affinity. Train-only IDs are measured available inputs, and a dot product is a direct, ranking-relevant personalization ablation. Downside risks: sparse entities can overfit, unseen user/video IDs collapse to unknown representations, and GAUC can rise while nDCG@5 declines if broad affinities misplace the few top positives.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Replace the seed additive scorer with b + b_user + b_video + dot(user_embedding_32, video_embedding_32), using train-only vocabularies and explicit unknown buckets; retain pointwise BCE and all other training settings.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.002 to 0.008 on warm user-video pairs because the score can model user-specific item preference.",
+      "nDCG@5": "Likely change between -0.001 and +0.005; top-five benefit is plausible but uncertain under temporal pair shift and OOV traffic."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace additive ID scoring with a 16-dimensional factorization-machine interaction between user and video IDs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 4
+    },
+    "rationale": "A compact factorization-machine scorer is a lower-capacity interaction alternative to additive IDs and tests whether latent pair affinity is useful without a deep model. User and video IDs are known at scoring time and present in the screened base. Downside risks: it may be too low-rank to capture heterogeneous preferences, may memorize rare entities, and cold entities receive little benefit.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Replace the seed linear additive model with a second-order factorization machine over exactly the existing user_id and video_id fields using embedding dimension 16; preserve BCE, data processing, and training schedule.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.006 if low-rank user-video interactions improve within-user pair ordering.",
+      "nDCG@5": "Increase by 0.000 to 0.004 if the learned interactions concentrate positives near rank five; otherwise remain flat."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace the additive ID scorer with an embedding-plus-MLP pointwise ranker using only user and video IDs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 3
+    },
+    "rationale": "This tests nonlinear transformation of the same legal identity inputs, rather than adding unvalidated metadata or historical aggregates. It is materially distinct from a pure dot-product model because the MLP can learn nonlinear combinations of the two embeddings. Downside risks: substantially greater capacity can overfit sparse IDs, training may be less stable than the seed, and no measured evidence establishes that nonlinear capacity is needed.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Replace the seed scorer with train-only user/video embeddings concatenated into a two-layer MLP with one scalar logit; keep the input fields, BCE target, temporal split, and evaluation artifact unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected movement is -0.001 to +0.006; a gain requires nonlinear ID interactions to generalize beyond the additive model.",
+      "nDCG@5": "Expected movement is -0.002 to +0.004; top-rank performance may regress if extra capacity amplifies noisy rare-ID effects."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "features.entity_id_embeddings"
+    ]
+  },
+  {
+    "text": "Use user-normalized pointwise BCE instead of row-averaged BCE for the unchanged additive-ID seed.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "The official GAUC is within-user and positive-count weighted, whereas the seed's row-average BCE can be dominated by prolific users. Equalizing each training user's total loss mass is a single objective ablation that may better align optimization with within-user ordering. Downside risks: the training user grouping may not correspond to a contemporaneous slate, reduced weight for active users can hurt both metrics, and this does not explicitly optimize nDCG@5.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Keep the seed model and features unchanged, but replace row-mean BCE with BCE weighted by the inverse number of training rows for each user, with counts computed only from the complete training split.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.004 if long-history users currently dominate gradients; otherwise it can be flat or slightly negative.",
+      "nDCG@5": "Expected movement is -0.002 to +0.002 because user-normalized pointwise BCE has no direct top-five emphasis."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with a within-user positive-negative logistic pairwise ranking loss.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 3
+    },
+    "rationale": "GAUC directly rewards positive-negative ordering within users, so a group-local pairwise objective is a clean objective-only test against the pointwise seed. The official task explicitly evaluates candidate variation within users. Downside risks: users without both labels provide no pairwise gradient, pair enumeration may increase runtime, and optimizing all pairwise errors can improve GAUC without improving the top five.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Keep the seed additive-ID scorer unchanged and replace BCE with a deterministic within-user logistic loss over all training positive-negative row pairs, using only training rows and no cross-user pairs.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.005 if direct pairwise supervision better aligns scores with within-user AUC.",
+      "nDCG@5": "Expected movement is -0.001 to +0.003 because uniform pair weighting does not preferentially correct top-five misorders."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add an nDCG@5-swap-weighted pairwise term to the seed BCE objective.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "The primary objective averages GAUC and nDCG@5, and no available screen demonstrates a top-five gain. A small nDCG@5-focused ranking term is therefore a targeted attempt to improve the missing metric while retaining BCE's broad supervision. Downside risks: training groups may not be coherent slates, sparse mixed-label groups can make gradients noisy, pairwise ranking operations are costly, and an excessive ranking weight can reduce GAUC.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Keep the seed model and BCE loss, and add one group-local LambdaRank-style logistic pair term weighted by detached binary nDCG@5 swap delta, with a fixed conservative coefficient of 0.1; all inputs and splits remain unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected movement is -0.001 to +0.003 because top-five-focused gradients trade some broad-pair ordering for head ranking.",
+      "nDCG@5": "Increase by 0.001 to 0.005 if training groups contain enough mixed-label comparisons affecting the first five ranks."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Apply count-aware L2 regularization to user and video ID weights in the additive seed.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The seed's shared L2 penalty treats one-observation and frequent entities equally even though train-only ID frequency is available. Stronger shrinkage for rare IDs may reduce temporal overfit while retaining the simple architecture. Downside risks: excessive shrinkage can erase rare but real preference signal, cannot solve OOV entities, and likely produces only a small effect.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Keep the seed additive architecture and BCE unchanged, but replace uniform ID-weight L2 with train-frequency-scaled L2 for user and video parameters, computed exclusively from training rows and clipped to a fixed 1x-to-10x multiplier range.",
+    "expected_effect": {
+      "GAUC": "Expected movement is -0.001 to +0.003, with benefit only if rare-ID overfitting is material.",
+      "nDCG@5": "Expected movement is -0.001 to +0.002; shrinkage may improve robustness but can suppress tail-item top-five positives."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Recency-weight the seed BCE loss using only training impression dates.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The validation period immediately follows the training period, so a modest recency weighting tests whether late-training preferences transfer better under temporal drift while using no future information. Date is an available impression-time field. Downside risks: it discards useful older observations, can worsen sparse-user/item estimates, and no measured temporal-drift screen supports a particular weighting strength.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "feature:date",
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Keep seed features and architecture unchanged, but multiply each training BCE row loss by an exponential decay based only on its distance from the final training date, using a fixed 7-day half-life and normalizing total weight.",
+    "expected_effect": {
+      "GAUC": "Expected movement is -0.002 to +0.003; it improves only if late-train ordering is more representative of validation.",
+      "nDCG@5": "Expected movement is -0.002 to +0.003; head ranking can improve under drift or regress from reduced effective sample size."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "dataset.inventory_and_splits",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Add only the tab-by-hour categorical interaction to the additive seed.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The full request-context screen is positive and stable across all four screened days. A tab-by-hour interaction is a narrower, interpretable test of whether time-of-day preference depends on the request surface, without introducing user profiles, metadata, outcomes, or histories. Downside risks: the full-group gain may come from weekday rather than this interaction, rare combinations can overfit, and the crossed feature may duplicate additive context effects if those are absent from the seed.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:tab",
+      "feature:hourmin"
+    ],
+    "exact_ablation": "Relative to seed 0, append exactly one train-fitted categorical feature formed by crossing tab with hour derived from hourmin; do not add standalone context features or alter model/loss settings.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.003 if tab-specific hourly preference changes within-user candidate ordering.",
+      "nDCG@5": "Increase by 0.000 to 0.002 if the interaction separates top candidates; otherwise likely flat."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add weekday as the sole request-context feature to the additive seed.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "Weekday is an impression-time field within the only positively screened feature family and provides a minimal causal context test. This is intentionally narrower than the full context-family candidate and can reveal whether a low-cardinality temporal effect transfers. Downside risks: the evidence supports the three-field family rather than weekday alone, day effects may be weak over the short validation span, and a globally additive weekday effect may not materially reorder items for a user.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context",
+      "profile:weekday"
+    ],
+    "exact_ablation": "Relative to seed 0, append only a train-fitted categorical weekday feature as one additive field; retain all seed model and training settings.",
+    "expected_effect": {
+      "GAUC": "Expected movement is -0.001 to +0.002 because weekday alone may provide limited within-user discrimination.",
+      "nDCG@5": "Expected movement is -0.001 to +0.001; a measurable top-five improvement is uncertain."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "dataset.inventory_and_splits"
+    ]
+  },
+  {
+    "text": "Add tab as the sole request-context feature to the additive seed.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "Tab is a fully covered, impression-time context field belonging to the only feature family with positive training-only temporal screening. This isolated ablation tests whether request surface changes the relative relevance of displayed videos. Downside risks: tab may mostly shift calibration rather than within-user order, its apparent contribution is not separately measured from hour and weekday, and behavior can shift when tab traffic mix changes.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:tab"
+    ],
+    "exact_ablation": "Relative to seed 0, append only a train-fitted categorical tab feature as one additive field; leave user/video IDs, BCE, optimizer, split handling, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected movement is -0.001 to +0.003 if tab captures candidate-specific relevance differences beyond user and video IDs.",
+      "nDCG@5": "Expected movement is -0.001 to +0.002; top-five gains are possible but unproven by the aggregate screening result."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

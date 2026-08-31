@@ -1,0 +1,18 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:1:metrics"
+      ],
+      "finding": "Prioritize request_context (tab, hour, weekday). It is the only screened group with positive primary lift (+0.00221), full coverage, nonnegative daily lifts across all four dates, and strong overall within-user ranking performance (GAUC 0.6689, nDCG@5 0.5370). The daily standard deviation exceeds the mean lift, so require confirmation rather than assuming the gain is robust.",
+      "recommended_action": "Advance request_context to the next confirmation gate and stop spending budget on additional screened feature groups unless confirmation fails."
+    }
+  ],
+  "avoid": [
+    "Reject user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, and historical_item_response based on their negative screening lifts: screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response.",
+    "Do not use user_positive_count as a feature; its zero-positive slice is a retrospective validation-label diagnostic, not ranking-time evidence: experiment:1:segment:user_positive_count:zero.",
+    "Do not use current-impression outcomes or aggregate snapshots without impression-time availability; they fail leakage or availability requirements."
+  ],
+  "metric_diagnosis": "The request-context experiment supports stable within-user ranking overall, with GAUC 0.6689 and nDCG@5 0.5370, but top-five performance is materially weaker in some slices. Tab 8 is the clearest weakness, combining GAUC 0.3519 with nDCG@5 0.0263 and primary 0.1891: experiment:1:segment:tab:8. Tab 0 illustrates a different issue: GAUC is above chance at 0.5501 while nDCG@5 is only 0.0622, indicating weak top-five retrieval despite some pairwise ranking signal: experiment:1:segment:tab:0. The zero-positive user slice has GAUC 0.5 and zero top-five metrics, but it is label-defined retrospective diagnostics and should not motivate a feature change: experiment:1:segment:user_positive_count:zero."
+}

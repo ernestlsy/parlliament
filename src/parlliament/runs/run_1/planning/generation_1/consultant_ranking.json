@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.94,
+      "rationale": "Best-supported and highest-confidence option: the complete request-context group produced positive primary lift on every holdout day, has full coverage, low leakage and runtime risk, and is a clean single-group ablation."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 2,
+      "utility_score": 0.82,
+      "rationale": "Very safe, interpretable confirmation of the positive context screen with minimal scope and low runtime risk. Its expected gain is lower than the full group, but evidence remains direct and duplication is limited."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 3,
+      "utility_score": 0.79,
+      "rationale": "A focused test of the temporally varying portion of the positive screen with low leakage and moderate expected gain. It is slightly less compelling than tab because cyclic encoding differs from the measured screen representation."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 4,
+      "utility_score": 0.68,
+      "rationale": "Combines the strongest feature evidence with a plausible objective alignment, but it changes two components, carries medium leakage and runtime risk, and makes attribution and validation interpretation weaker than c01."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 5,
+      "utility_score": 0.64,
+      "rationale": "A focused architecture change that directly enables user-video personalization and has plausible upside, but it lacks positive architecture evidence, only helps warm entities, and carries medium runtime and overfitting risk."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 6,
+      "utility_score": 0.59,
+      "rationale": "Targeted personalization of the positively screened context signal with low leakage, but confidence is low and sparse user-tab crosses may overfit. Its scope and runtime risk are higher than the simpler context tests."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 7,
+      "utility_score": 0.55,
+      "rationale": "A reasonably clean loss-only test aligned with within-user evaluation, but evidence is indirect, confidence is modest, and medium leakage risk exists around group construction. Expected gains are small and nDCG benefit is uncertain."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 8,
+      "utility_score": 0.48,
+      "rationale": "Tests user imbalance without changing the model, but sampling variance, medium runtime and leakage/protocol risk, and weak direct evidence reduce its value relative to feature and interaction tests."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 9,
+      "utility_score": 0.42,
+      "rationale": "Potentially expressive identity interaction model, but it has no supporting positive architecture evidence, high runtime risk, low confidence, and substantial overfitting risk compared with the dot-product alternative."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 10,
+      "utility_score": 0.37,
+      "rationale": "Directly targets nDCG@5, but confidence is low, runtime risk is high, leakage risk is medium, and the required candidate-group integrity is not established. It may sacrifice broad GAUC ordering."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 11,
+      "utility_score": 0.31,
+      "rationale": "Most complex interaction proposal with high runtime risk, low confidence, sparse-cross memorization concerns, and duplication with less costly architecture tests. Evidence supports identity relevance, not this specific cross mechanism."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 12,
+      "utility_score": 0.18,
+      "rationale": "Cheap and low risk, but it changes no representational capacity, has the weakest expected gain and confidence, and is likely to produce seed-sensitive noise rather than a meaningful improvement."
+    }
+  ]
+}

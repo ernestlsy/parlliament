@@ -1,0 +1,38 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:2:metrics"
+      ],
+      "finding": "Retain request_context (tab, hour, weekday) as the only screened incremental group: its training-only temporal-holdout primary lift is modest but positive (0.00221) and all four reported daily lifts are positive. This is directional evidence only, not justification for another budget-consuming model change after experiment 2 underperformed its parent by 0.02040 primary.",
+      "recommended_action": "Freeze the current request-context residuals in the baseline and stop feature-expansion experiments. Any future work should require new evidence that exceeds the failed calibration pattern rather than relying on the small screening lift."
+    },
+    {
+      "evidence_ids": [
+        "experiment:2:segment:tab:0",
+        "experiment:2:segment:tab:5",
+        "experiment:2:segment:tab:6",
+        "experiment:2:segment:hour:3"
+      ],
+      "finding": "The principal weakness is top-five ranking quality in specific request slices, not merely global within-user discrimination. Tab 0 is material in volume (13,726 rows) and weak on both GAUC (0.534) and nDCG@5 (0.061). Tab 6 illustrates why GAUC alone is insufficient: GAUC is strong (0.670) while nDCG@5 is only 0.106. Tab 5 is severely weak but smaller (291 rows), and hour 3 is also weak with 1,284 rows.",
+      "recommended_action": "Treat tab-aware top-five ranking as a diagnostic/serving issue, not a green light for a new feature experiment. If operationally feasible without retraining, inspect candidate-set composition and eligibility by tab, especially tabs 0 and 6; evaluate changes using nDCG@5/MRR@5 by tab alongside GAUC."
+    },
+    {
+      "evidence_ids": [
+        "experiment:2:segment:item_frequency:rare_1_4",
+        "experiment:2:segment:item_frequency:medium_5_19",
+        "experiment:2:segment:item_frequency:warm_20_plus"
+      ],
+      "finding": "Item-frequency performance is concentrated in warm items: warm_20_plus is essentially global primary (0.583), whereas rare_1_4 has primary 0.336 and uninformative GAUC of 0.5. Medium_5_19 has good GAUC (0.679) but weak nDCG@5 (0.244), again showing a top-five placement problem rather than reliable evidence for broad score discrimination gains.",
+      "recommended_action": "Do not add item-history aggregates or snapshot statistics to address this gap. Preserve a separate cold/rare-item monitoring slice and require temporally available candidate and feature data before considering any future cold-item remedy."
+    }
+  ],
+  "avoid": [
+    "Reject all current-impression outcome fields, including click, like, follow, long_view, play-time, and stay-time signals, because they are unavailable at ranking time and would leak the outcome.",
+    "Do not use quarantined aggregate video-statistic snapshots without per-impression availability timestamps; their temporal availability cannot be established.",
+    "Do not revive historical_author_response, historical_item_response, historical_user_author_affinity, upload_recency, content_duration, item_metadata, or user_profile as next feature bets: each had non-positive training-only screening lift.",
+    "Do not interpret user_positive_count segments as deployable targeting evidence; they use validation labels retrospectively."
+  ],
+  "metric_diagnosis": "Experiment 2 has usable global within-user ranking discrimination (GAUC 0.641), but its top-five ranking quality is materially lower (nDCG@5 0.524) and highly heterogeneous across tabs and item-frequency cohorts. The model also missed its calibration expectation: a predicted +0.004 primary gain followed an observed -0.02040 primary change versus experiment 1. Under the strict early-stopping rule, this failed calibration and the absence of a robust additional screened feature justify stopping further experiment spend. Post-score segments identify where ranking is weak, but they are diagnostics rather than independent test estimates."
+}

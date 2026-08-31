@@ -1,0 +1,37 @@
+{
+  "attempt_id": "1e57e0a6f00d",
+  "status": "scored",
+  "generation": 1,
+  "mode": "draft",
+  "parent_experiment_id": 0,
+  "hypothesis_text": "Add the complete impression-time request-context feature group to the neutral additive user/video scaffold: tab, hour, and weekday encoded with train-only vocabularies and explicit unknown handling.",
+  "active_sub_agents": [
+    "feature_engineer",
+    "trainer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [
+    {
+      "kind": "contract_fulfillment",
+      "message": "invalid prediction artifact: row_ids must be consecutive and in canonical test order",
+      "traceback": "ValueError('row_ids must be consecutive and in canonical test order')",
+      "responsible_agents": [
+        "trainer"
+      ],
+      "attempt": 1,
+      "return_code": null
+    }
+  ],
+  "elapsed_seconds": 140.4632258079946,
+  "available_log_files": [
+    "attempt_1.log",
+    "attempt_2.log",
+    "contract_attempt_1.log",
+    "contract_attempt_2.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

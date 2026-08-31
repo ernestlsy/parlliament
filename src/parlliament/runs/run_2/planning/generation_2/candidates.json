@@ -1,0 +1,389 @@
+[
+  {
+    "text": "Replace additive ID weights with a low-rank user-video dot-product scorer while retaining additive tab, hour, and weekday residuals.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 4
+    },
+    "rationale": "The current additive scorer has usable within-user discrimination (GAUC 0.66891), but its global nDCG@5 is lower (0.53696); a personalized user-video affinity can alter relative item order within each user rather than only calibrating global effects.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Relative to experiment 1, replace the separate additive user_id and video_id scalar weights with equal-width train-fitted user and video embeddings scored by one normalized dot product; keep the tab/hour/weekday additive terms, BCE loss, optimizer schedule, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.002 to 0.008 because a dot product can represent user-specific video preferences that additive ID biases cannot.",
+      "nDCG@5": "Increase by 0.001 to 0.006 if the learned affinity promotes relevant videos into each user's top five; it may be smaller than the GAUC movement."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture",
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "efficiency.dot_product_linear_residual_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a single train-fitted video-ID-by-tab interaction to the existing additive scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "Request context was the only positively screened feature family (+0.00221 internal primary lift), while official validation shows especially poor context-specific ranking for tab 0 (nDCG@5 0.06219) and tab 8 (0.02634).",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:tab:8"
+    ],
+    "exact_ablation": "Relative to experiment 1, append one train-fitted categorical feature representing the pair (video_id, tab), with an explicit unknown bucket; retain all existing features, additive scoring, BCE loss, optimizer schedule, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.004 if videos have tab-specific relevance not captured by their global ID weight.",
+      "nDCG@5": "Increase by 0.002 to 0.006 if the interaction corrects top-five ordering in the weak tab slices; rare pairs may limit the global effect."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer with an embedding-plus-MLP ranker over the same permitted ID and request-context fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 3
+    },
+    "rationale": "The current model establishes that the permitted ID plus request-context fields carry signal, but its additive form cannot model nonlinear user-item-context combinations. The evidence supports retaining context and targeting within-user top-five ordering.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Relative to experiment 1, replace the additive linear scorer with train-fitted embeddings for user_id, video_id, tab, hour, and weekday followed by one MLP scalar head; keep exactly the same fields, BCE objective, temporal split, optimizer family, batch size, and early-stopping rule.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.007 if nonlinear ID/context combinations improve within-user pair ordering.",
+      "nDCG@5": "Increase by 0.001 to 0.006 if nonlinear scores resolve top-five ties and misorders; overfitting could instead leave it flat or reduce it."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a one-layer explicit cross branch to an embedding MLP over the current permitted fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "The strongest observed weakness is heterogeneous request context, especially tab-specific top-five quality, which is a plausible setting for bounded ID-by-context interactions without adding any new feature family.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:tab:6"
+    ],
+    "exact_ablation": "Relative to experiment 1, replace the additive scorer with an embedding MLP augmented by exactly one explicit cross layer over embeddings for user_id, video_id, tab, hour, and weekday; keep the fields, BCE loss, temporal split, and early-stopping policy unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.006 if one bounded cross layer captures context-dependent item preference.",
+      "nDCG@5": "Increase by 0.002 to 0.007 if the cross layer improves candidate ordering in weak context slices; it can decline if sparse combinations are memorized."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with within-user RankNet pairwise loss using only training rows grouped by user.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 3
+    },
+    "rationale": "The official objective is within-user GAUC plus nDCG@5, whereas experiment 1 optimizes pointwise BCE. GAUC is relatively stronger than nDCG@5, so directly optimizing positive-versus-negative ordering is a high-information objective test.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Relative to experiment 1, replace BCE with a deterministic RankNet logistic pair loss over positive-negative training rows belonging to the same user, with equal user weighting and no cross-user pairs; keep features, additive model, optimizer schedule, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.002 to 0.007 because the loss directly trains within-user positive-negative score margins.",
+      "nDCG@5": "Change by -0.001 to +0.004; it improves only if the sampled pair corrections concentrate near the top five."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add an nDCG@5-weighted pairwise term to the existing BCE objective.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "Experiment 1 has global GAUC 0.66891 but nDCG@5 0.53696, and rare items show GAUC 0.60000 with nDCG@5 only 0.17174. This metric separation motivates a narrowly top-rank-focused loss change.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:rare_1_4",
+      "experiment:1:segment:tab:0"
+    ],
+    "exact_ablation": "Relative to experiment 1, change the loss from BCE alone to BCE plus a deterministic within-user positive-negative logistic term weighted by detached absolute nDCG@5 swap gain; keep the additive model, features, optimizer schedule, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to +0.004 because focusing updates near rank five may sacrifice some broad pair ordering.",
+      "nDCG@5": "Increase by 0.002 to 0.008 if positives just below rank five are promoted above top-five negatives."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use user-normalized pointwise BCE instead of row-averaged BCE.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 3,
+      "feasibility": 4
+    },
+    "rationale": "The evaluated objective is within-user, while the current minibatch BCE gives users with more rows more loss mass. The observed global GAUC demonstrates meaningful within-user ranking signal worth aligning with a user-balanced training reduction.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_frequency:warm_20_plus",
+      "experiment:1:segment:user_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Relative to experiment 1, replace row-mean BCE with BCE weighted by the inverse number of training rows for each user, with weights computed from the training split only; keep features, additive model, optimizer schedule, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.005 if equal user influence better matches the within-user GAUC target.",
+      "nDCG@5": "Change by -0.001 to +0.003 because pointwise reweighting does not directly target top-five positions."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Increase only L2 regularization of the existing additive model by one order of magnitude.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "The current model includes high-cardinality user and video ID weights and has weak rare-item top-five performance, a setting where stronger shrinkage can reduce unstable sparse-ID estimates without introducing new data or features.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:rare_1_4",
+      "experiment:1:segment:item_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Relative to experiment 1, change only l2 from 0.000001 to 0.00001; retain model, features, BCE loss, learning rate, batch size, split, seed, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to +0.003; shrinkage may improve generalization but can underfit established ID preferences.",
+      "nDCG@5": "Change by -0.001 to +0.003; reducing extreme sparse-ID scores may improve top-five stability, but the effect is uncertain."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Reduce only the learning rate of the existing additive model from 0.01 to 0.003.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 1,
+      "feasibility": 5
+    },
+    "rationale": "Experiment 1 is the sole scored reference and achieved a viable primary score of 0.60293; a lower learning rate is a clean optimization-stability control before allocating budget to a more complex model.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 1, change only learning_rate from 0.01 to 0.003; retain features, additive model, BCE loss, L2, batch size, maximum epochs, seed, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to +0.003; a smaller step can improve convergence precision but may undertrain under the fixed epoch budget.",
+      "nDCG@5": "Change by -0.001 to +0.003; any gain requires improved score ordering rather than merely lower pointwise loss."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Increase only the maximum training epoch budget for the existing additive model from 10 to 20.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 1,
+      "feasibility": 5
+    },
+    "rationale": "The current experiment uses only ten maximum epochs and stops on a GAUC proxy, while the official objective also includes nDCG@5. Extending the budget while retaining the same patience is a bounded test of whether optimization is prematurely capped.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 1, change only max_epochs from 10 to 20; retain model, fields, BCE loss, optimizer hyperparameters, seed, patience, validation proxy, and splits unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by 0.000 to +0.003 if the original run was not converged; patience may make the realized training duration unchanged.",
+      "nDCG@5": "Change by -0.001 to +0.003; later epochs can improve ordering or overfit the proxy-selected checkpoint."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a single train-fitted video-ID-by-hour interaction to the existing additive scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "Request context had full coverage and positive train-only lift, while multiple hour slices have materially weak nDCG@5, including hour 3 at 0.38637 and hour 16 at 0.35704. Item relevance may differ by time of day.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:16"
+    ],
+    "exact_ablation": "Relative to experiment 1, append one train-fitted categorical feature representing the pair (video_id, hour), with an explicit unknown bucket; retain existing fields, additive scoring, BCE loss, optimizer schedule, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.004 if time-specific item preferences correct within-user comparisons.",
+      "nDCG@5": "Increase by 0.001 to 0.005 if the interaction improves top-five ordering in weak hour slices; sparsity can make the global effect negligible."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace scalar user and video ID weights with a second-order factorization-machine interaction over all current categorical fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 3
+    },
+    "rationale": "The current additive model cannot express any pairwise interaction among user, video, tab, hour, and weekday. Request context is the only screened feature family with positive lift, making a compact interaction model more defensible than adding rejected feature families.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:0"
+    ],
+    "exact_ablation": "Relative to experiment 1, replace the additive scorer with a rank-d factorization machine over exactly user_id, video_id, tab, hour, and weekday, including its standard linear terms; keep BCE loss, optimizer schedule, temporal split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.002 to 0.008 if compact user-video and video-context interactions improve pairwise ordering.",
+      "nDCG@5": "Increase by 0.001 to 0.007 if those interactions reorder candidates near rank five; extra capacity may instead overfit sparse field pairs."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

@@ -1,0 +1,336 @@
+{
+  "manual_interventions": 0,
+  "attempts": [
+    {
+      "attempt_id": "1e57e0a6f00d",
+      "experiment_id": 1,
+      "generation": 1,
+      "status": "scored",
+      "parent_experiment_id": 0,
+      "hypothesis": "Add the complete impression-time request-context feature group to the neutral additive user/video scaffold: tab, hour, and weekday encoded with train-only vocabularies and explicit unknown handling.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 8,
+        "evidence_ids": [
+          "screen:request_context",
+          "feature:request_context",
+          "feature:tab",
+          "feature:hourmin"
+        ],
+        "exact_ablation": "Add only the request_context group consisting of tab, hour, and weekday; leave the additive architecture, BCE training, IDs, optimizer, and all other inputs unchanged.",
+        "expected_effect": {
+          "GAUC": "Likely increase, approximately +0.001 to +0.003 relative to the seed implementation; the measured screen lift was +0.00221 in primary.",
+          "nDCG@5": "Small increase or near-flat result, approximately -0.001 to +0.002; the screen supports ranking value but does not establish a top-five-specific gain."
+        },
+        "expected_primary_gain": 0.0022,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "task.leakage_policy",
+          "task.kuairand_ranking"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -1,7 +1,8 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Neutral additive data contract with impression-time request context features.\"\"\"\n \n import csv\n import os\n+from datetime import datetime\n \n import numpy as np\n \n@@ -12,25 +13,43 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n \n \n def load(data_dir, max_rows_per_split=None):\n-    rows = []\n+    result = {name: [] for name in SPLITS}\n     for filename in (\n         \"log_standard_4_08_to_4_21_pure.csv\",\n         \"log_standard_4_22_to_5_08_pure.csv\",\n     ):\n         with open(os.path.join(data_dir, filename), encoding=\"utf-8\") as handle:\n             for row in csv.DictReader(handle):\n-                rows.append((\n-                    int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n-                    1 if row[LABEL] != \"0\" else 0,\n-                ))\n-    result = {}\n-    for name, (low, high) in SPLITS.items():\n-        selected = [row for row in rows if low <= row[0] <= high]\n-        result[name] = selected if max_rows_per_split is None else selected[:max_rows_per_split]\n+                date = int(row[\"date\"])\n+                split_name = next(\n+                    (\n+                        name\n+                        for name, (low, high) in SPLITS.items()\n+                        if low <= date <= high\n+                    ),\n+                    None,\n+                )\n+                if split_name is None:\n+                    continue\n+                base = (\n+                    date,\n+                    row[\"user_id\"],\n+                    row[\"video_id\"],\n+                    row[\"hourmin\"],\n+                    row[\"tab\"],\n+                )\n+                if split_name == \"test\":\n+                    result[split_name].append(base)\n+                else:\n+                    result[split_name].append(base + (1 if row[LABEL] != \"0\" else 0,))\n+\n+    if max_rows_per_split is not None:\n+        for name in result:\n+            result[name] = result[name][:max_rows_per_split]\n     return result\n \n \n@@ -38,28 +57,42 @@\n     train = splits[\"train\"]\n     if not train:\n         raise ValueError(\"training split is empty\")\n+\n     def raw(row):\n-        return [row[1], row[2]]\n+        hour = int(float(row[3])) // 100\n+        hour = max(0, min(23, hour))\n+        weekday = datetime.strptime(str(int(row[0])), \"%Y%m%d\").weekday()\n+        return [row[1], row[2], row[4], hour, weekday]\n \n     vocabs = [dict() for _ in FIELDS]\n     for row in train:\n         for index, value in enumerate(raw(row)):\n             if value not in vocabs[index]:\n                 vocabs[index][value] = len(vocabs[index])\n+\n     unknown = [len(vocab) for vocab in vocabs]\n     dimensions = [len(vocab) + 1 for vocab in vocabs]\n     offsets = np.cumsum([0] + dimensions[:-1]).astype(np.int32)\n     encoded = {}\n+\n     for name, rows in splits.items():\n         features = np.empty((len(rows), len(FIELDS)), dtype=np.int32)\n-        labels = np.empty(len(rows), dtype=np.float32)\n         users = np.empty(len(rows), dtype=\"U32\")\n         for row_index, row in enumerate(rows):\n-            for field_index, value in enumerate(raw(row)):\n+            values = raw(row)\n+            for field_index, value in enumerate(values):\n                 features[row_index, field_index] = (\n-                    vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n+                    vocabs[field_index].get(value, unknown[field_index])\n+                    + offsets[field_index]\n                 )\n-            labels[row_index] = row[3]\n             users[row_index] = row[1]\n-        encoded[name] = (features, labels, users)\n+\n+        if name == \"test\":\n+            encoded[name] = (features, users)\n+        else:\n+            labels = np.asarray(\n+                [row[5] for row in rows], dtype=np.float32\n+            )\n+            encoded[name] = (features, labels, users)\n+\n     return encoded, int(sum(dimensions))\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -48,7 +48,7 @@\n     encoded, dimension = encode(splits)\n     train_features, train_labels, _ = encoded[\"train\"]\n     valid_features, valid_labels, valid_users = encoded[\"valid\"]\n-    test_features, test_labels, _ = encoded[\"test\"]\n+    test_features, _ = encoded[\"test\"]\n     model = Model(\n         dimension,\n         learning_rate=config[\"learning_rate\"],\n@@ -88,12 +88,12 @@\n     model.load_state(best_state)\n     np.savez(\n         args.output,\n-        row_ids=np.arange(len(valid_labels), dtype=np.int64),\n+        row_ids=np.arange(len(valid_features), dtype=np.int64),\n         scores=model.predict(valid_features),\n     )\n     np.savez(\n         Path(args.output).with_name(\"predictions_test.npz\"),\n-        row_ids=np.arange(len(test_labels), dtype=np.int64),\n+        row_ids=np.arange(len(test_features), dtype=np.int64),\n         scores=model.predict(test_features),\n     )\n \n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6689116170510226,
+        "classification": {
+          "accuracy": 0.6704560920350014,
+          "balanced_accuracy": 0.6945295994593694,
+          "confusion_matrix": {
+            "false_negative": 9431,
+            "false_positive": 31732,
+            "true_negative": 54045,
+            "true_positive": 29701
+          },
+          "f1": 0.5906826430666733,
+          "matthews_correlation": 0.36096201255412097,
+          "precision": 0.483469796363518,
+          "predicted_positive_rate": 0.4918220464498155,
+          "recall": 0.7589951957477257,
+          "specificity": 0.6300640031710132,
+          "threshold": -0.697097897529602,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.845848321914673,
+          "score_mean": -0.9800092612058329,
+          "score_min": -7.238213539123535,
+          "score_std": 1.4085754551020575
+        },
+        "nDCG@5": 0.5369580777053825,
+        "primary": 0.6029348473782026,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6772578987353086,
+          "MAP@5": 0.48565604315939687,
+          "MRR@5": 0.542483353443273,
+          "Precision@5": 0.375364585660858,
+          "Recall@5": 0.6002686181792386,
+          "average_precision": 0.5714958062082477,
+          "global_AUC": 0.7650263756079765
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [
+        {
+          "kind": "contract_fulfillment",
+          "message": "invalid prediction artifact: row_ids must be consecutive and in canonical test order",
+          "traceback": "ValueError('row_ids must be consecutive and in canonical test order')",
+          "responsible_agents": [
+            "trainer"
+          ],
+          "attempt": 1,
+          "return_code": null
+        }
+      ],
+      "recovery_action": "The Overseer classified each failure, routed it to the responsible code agent, and retried within the configured attempt and wall-clock limits.",
+      "elapsed_seconds": 140.4632258079946,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_1/experiment_1"
+    },
+    {
+      "attempt_id": "71006b4c3033",
+      "experiment_id": 2,
+      "generation": 2,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Add a one-hidden-layer nonlinear residual over the parent context fields while preserving its additive ID terms.",
+      "hypothesis_rationale": {
+        "candidate_id": "c06",
+        "confidence": 6,
+        "evidence_ids": [
+          "screen:request_context",
+          "experiment:1:metrics",
+          "experiment:1:segment:hour:3"
+        ],
+        "exact_ablation": "Keep the parent additive ID and context terms, BCE training, optimizer, and schedule unchanged; add exactly one 32-unit ReLU residual head fed only by tab, hour, and weekday embeddings.",
+        "expected_effect": {
+          "GAUC": "Likely increase by 0.0005 to 0.003 if context effects are nonlinear; it may be flat or slightly negative from fitting sparse hour-tab combinations.",
+          "nDCG@5": "Likely increase by 0.001 to 0.004, especially in low-performing hour slices such as hour 3; top-five volatility is a downside."
+        },
+        "expected_primary_gain": 0.0015,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "efficiency.dot_product_linear_residual_ranker"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "model.py": "--- model.py\n+++ model.py\n@@ -1,4 +1,4 @@\n-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n+\"\"\"Additive ID model with a nonlinear request-context residual.\"\"\"\n \n import numpy as np\n \n@@ -17,40 +17,217 @@\n         self.second_moment = np.zeros_like(self.weights)\n         self.step_number = 0\n \n+        self.context_embedding_dimension = 8\n+        self.hidden_units = 32\n+        self.context_ranges = None\n+        self.context_embeddings = None\n+        self.hidden_weights = None\n+        self.hidden_bias = None\n+        self.output_weights = None\n+        self.output_bias = None\n+        self.context_first_moment = None\n+        self.context_second_moment = None\n+        self.hidden_weights_first_moment = None\n+        self.hidden_weights_second_moment = None\n+        self.hidden_bias_first_moment = None\n+        self.hidden_bias_second_moment = None\n+        self.output_weights_first_moment = None\n+        self.output_weights_second_moment = None\n+        self.output_bias_first_moment = None\n+        self.output_bias_second_moment = None\n+\n+    def _ensure_context_parameters(self, features):\n+        features = np.asarray(features)\n+        if self.context_embeddings is not None:\n+            return\n+        if features.ndim != 2 or features.shape[1] < 5:\n+            raise ValueError(\"features must have shape (N, 5)\")\n+\n+        ranges = []\n+        for column in (2, 3, 4):\n+            values = np.asarray(features[:, column], dtype=np.int64)\n+            if values.size:\n+                lower = int(values.min())\n+                upper = int(values.max())\n+            else:\n+                lower, upper = 0, -1\n+            ranges.append((lower, upper))\n+        self.context_ranges = tuple(ranges)\n+\n+        rng = np.random\n+        self.context_embeddings = []\n+        for lower, upper in self.context_ranges:\n+            size = max(1, upper - lower + 1) + 1\n+            self.context_embeddings.append(\n+                rng.normal(0.0, 0.02, (size, self.context_embedding_dimension))\n+                .astype(np.float32)\n+            )\n+        self.hidden_weights = rng.normal(\n+            0.0, np.sqrt(2.0 / (3 * self.context_embedding_dimension)),\n+            (3 * self.context_embedding_dimension, self.hidden_units)\n+        ).astype(np.float32)\n+        self.hidden_bias = np.zeros(self.hidden_units, dtype=np.float32)\n+        self.output_weights = rng.normal(\n+            0.0, np.sqrt(2.0 / self.hidden_units), self.hidden_units\n+        ).astype(np.float32)\n+        self.output_bias = np.float32(0.0)\n+\n+        self.context_first_moment = [np.zeros_like(x) for x in self.context_embeddings]\n+        self.context_second_moment = [np.zeros_like(x) for x in self.context_embeddings]\n+        self.hidden_weights_first_moment = np.zeros_like(self.hidden_weights)\n+        self.hidden_weights_second_moment = np.zeros_like(self.hidden_weights)\n+        self.hidden_bias_first_moment = np.zeros_like(self.hidden_bias)\n+        self.hidden_bias_second_moment = np.zeros_like(self.hidden_bias)\n+        self.output_weights_first_moment = np.zeros_like(self.output_weights)\n+        self.output_weights_second_moment = np.zeros_like(self.output_weights)\n+        self.output_bias_first_moment = np.float32(0.0)\n+        self.output_bias_second_moment = np.float32(0.0)\n+\n+    def _context_indices(self, features):\n+        indices = []\n+        for position, (lower, upper) in enumerate(self.context_ranges):\n+            values = np.asarray(features[:, position + 2], dtype=np.int64)\n+            valid = (values >= lower) & (values <= upper)\n+            mapped = np.full(values.shape, len(self.context_embeddings[position]) - 1,\n+                             dtype=np.int64)\n+            mapped[valid] = values[valid] - lower\n+            indices.append(mapped)\n+        return indices\n+\n+    def _residual_forward(self, features):\n+        self._ensure_context_parameters(features)\n+        indices = self._context_indices(features)\n+        embedded = [table[index] for table, index in zip(self.context_embeddings, indices)]\n+        combined = np.concatenate(embedded, axis=1)\n+        hidden_pre = combined.dot(self.hidden_weights) + self.hidden_bias\n+        hidden = np.maximum(hidden_pre, 0.0)\n+        residual = hidden.dot(self.output_weights) + self.output_bias\n+        return residual.astype(np.float32), (indices, combined, hidden, hidden_pre)\n+\n     def logits(self, features):\n-        return self.bias + self.weights[features].sum(1)\n+        features = np.asarray(features)\n+        if features.ndim != 2 or features.shape[1] < 5:\n+            raise ValueError(\"features must have shape (N, 5)\")\n+        additive = self.bias + self.weights[features[:, :5]].sum(axis=1)\n+        residual, _ = self._residual_forward(features)\n+        return np.asarray(additive + residual, dtype=np.float32).reshape(-1)\n+\n+    def _adam_update(self, parameter, gradient, first, second, beta1, beta2, epsilon):\n+        first *= beta1\n+        first += (1.0 - beta1) * gradient\n+        second *= beta2\n+        second += (1.0 - beta2) * (gradient * gradient)\n+        first_hat = first / (1.0 - beta1 ** self.step_number)\n+        second_hat = second / (1.0 - beta2 ** self.step_number)\n+        parameter -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n \n     def step(self, features, labels):\n+        features = np.asarray(features)\n+        labels = np.asarray(labels, dtype=np.float32)\n         size = len(labels)\n-        logits = self.logits(features)\n+        if size == 0:\n+            return 0.0\n+        additive = self.bias + self.weights[features[:, :5]].sum(axis=1)\n+        residual, cache = self._residual_forward(features)\n+        logits = np.asarray(additive + residual, dtype=np.float32)\n         probabilities = sigmoid(logits)\n         gradient = ((probabilities - labels) / size).astype(np.float32)\n+\n         grad_weights = np.zeros_like(self.weights)\n-        np.add.at(grad_weights, features, gradient[:, None])\n+        np.add.at(grad_weights, features[:, :5], gradient[:, None])\n         grad_weights += self.l2 * self.weights\n+        grad_bias = np.float32(gradient.sum())\n+\n+        indices, combined, hidden, hidden_pre = cache\n+        grad_output_weights = hidden.T.dot(gradient) + self.l2 * self.output_weights\n+        grad_output_bias = np.float32(gradient.sum())\n+        hidden_gradient = gradient[:, None] * self.output_weights[None, :]\n+        hidden_gradient *= (hidden_pre > 0.0)\n+        grad_hidden_weights = combined.T.dot(hidden_gradient) + self.l2 * self.hidden_weights\n+        grad_hidden_bias = hidden_gradient.sum(axis=0)\n+        grad_combined = hidden_gradient.dot(self.hidden_weights.T)\n+        grad_context = []\n+        for position, index in enumerate(indices):\n+            grad = np.zeros_like(self.context_embeddings[position])\n+            np.add.at(grad, index, grad_combined[:, position * self.context_embedding_dimension:\n+                                                   (position + 1) * self.context_embedding_dimension])\n+            grad += self.l2 * self.context_embeddings[position]\n+            grad_context.append(grad)\n+\n         self.step_number += 1\n         beta1, beta2, epsilon = 0.9, 0.999, 1e-8\n-        self.first_moment *= beta1\n-        self.first_moment += (1 - beta1) * grad_weights\n-        self.second_moment *= beta2\n-        self.second_moment += (1 - beta2) * (grad_weights * grad_weights)\n-        first_hat = self.first_moment / (1 - beta1 ** self.step_number)\n-        second_hat = self.second_moment / (1 - beta2 ** self.step_number)\n-        self.weights -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n-        self.bias -= self.learning_rate * gradient.sum()\n-        return float(-np.mean(\n-            labels * np.log(probabilities + 1e-9)\n-            + (1 - labels) * np.log(1 - probabilities + 1e-9)\n-        ))\n+        self._adam_update(self.weights, grad_weights, self.first_moment,\n+                          self.second_moment, beta1, beta2, epsilon)\n+        self.bias -= self.learning_rate * grad_bias\n+        for position in range(3):\n+            self._adam_update(self.context_embeddings[position], grad_context[position],\n+                              self.context_first_moment[position],\n+                              self.context_second_moment[position], beta1, beta2, epsilon)\n+        self._adam_update(self.hidden_weights, grad_hidden_weights,\n+                          self.hidden_weights_first_moment, self.hidden_weights_second_moment,\n+                          beta1, beta2, epsilon)\n+        self._adam_update(self.hidden_bias, grad_hidden_bias,\n+                          self.hidden_bias_first_moment, self.hidden_bias_second_moment,\n+                          beta1, beta2, epsilon)\n+        self._adam_update(self.output_weights, grad_output_weights,\n+                          self.output_weights_first_moment, self.output_weights_second_moment,\n+                          beta1, beta2, epsilon)\n+        output_bias_gradient = np.asarray(grad_output_bias, dtype=np.float32)\n+        self.output_bias_first_moment = beta1 * self.output_bias_first_moment + (1 - beta1) * output_bias_gradient\n+        self.output_bias_second_moment = beta2 * self.output_bias_second_moment + (1 - beta2) * (output_bias_gradient ** 2)\n+        output_first_hat = self.output_bias_first_moment / (1 - beta1 ** self.step_number)\n+        output_second_hat = self.output_bias_second_moment / (1 - beta2 ** self.step_number)\n+        self.output_bias -= self.learning_rate * output_first_hat / (np.sqrt(output_second_hat) + epsilon)\n+\n+        return float(-np.mean(labels * np.log(probabilities + 1e-9)\n+                             + (1 - labels) * np.log(1 - probabilities + 1e-9)))\n \n     def predict(self, features, batch_size=200_000):\n+        if len(features) == 0:\n+            return np.empty(0, dtype=np.float32)\n         return np.concatenate([\n             self.logits(features[index:index + batch_size])\n             for index in range(0, len(features), batch_size)\n-        ])\n+        ]).astype(np.float32, copy=False)\n \n     def state(self):\n-        return self.weights.copy(), np.float32(self.bias)\n+        return {\n+            \"weights\": self.weights.copy(), \"bias\": np.float32(self.bias),\n+            \"first_moment\": self.first_moment.copy(),\n+            \"second_moment\": self.second_moment.copy(), \"step_number\": self.step_number,\n+            \"context_ranges\": self.context_ranges,\n+            \"context_embeddings\": None if self.context_embeddings is None else [x.copy() for x in self.context_embeddings],\n+            \"hidden_weights\": None if self.hidden_weights is None else self.hidden_weights.copy(),\n+            \"hidden_bias\": None if self.hidden_bias is None else self.hidden_bias.copy(),\n+            \"output_weights\": None if self.output_weights is None else self.output_weights.copy(),\n+            \"output_bias\": self.output_bias,\n+            \"context_first_moment\": None if self.context_first_moment is None else [x.copy() for x in self.context_first_moment],\n+            \"context_second_moment\": None if self.context_second_moment is None else [x.copy() for x in self.context_second_moment],\n+            \"hidden_weights_first_moment\": None if self.hidden_weights_first_moment is None else self.hidden_weights_first_moment.copy(),\n+            \"hidden_weights_second_moment\": None if self.hidden_weights_second_moment is None else self.hidden_weights_second_moment.copy(),\n+            \"hidden_bias_first_moment\": None if self.hidden_bias_first_moment is None else self.hidden_bias_first_moment.copy(),\n+            \"hidden_bias_second_moment\": None if self.hidden_bias_second_moment is None else self.hidden_bias_second_moment.copy(),\n+            \"output_weights_first_moment\": None if self.output_weights_first_moment is None else self.output_weights_first_moment.copy(),\n+            \"output_weights_second_moment\": None if self.output_weights_second_moment is None else self.output_weights_second_moment.copy(),\n+            \"output_bias_first_moment\": self.output_bias_first_moment,\n+            \"output_bias_second_moment\": self.output_bias_second_moment,\n+        }\n \n     def load_state(self, state):\n-        self.weights, self.bias = state\n+        if isinstance(state, tuple):\n+            self.weights, self.bias = state\n+            return\n+        for name in (\"weights\", \"bias\", \"first_moment\", \"second_moment\", \"step_number\",\n+                     \"context_ranges\", \"context_embeddings\", \"hidden_weights\", \"hidden_bias\",\n+                     \"output_weights\", \"output_bias\", \"context_first_moment\",\n+                     \"context_second_moment\", \"hidden_weights_first_moment\",\n+                     \"hidden_weights_second_moment\", \"hidden_bias_first_moment\",\n+                     \"hidden_bias_second_moment\", \"output_weights_first_moment\",\n+                     \"output_weights_second_moment\", \"output_bias_first_moment\",\n+                     \"output_bias_second_moment\"):\n+            value = state[name]\n+            if isinstance(value, list):\n+                value = [x.copy() for x in value]\n+            elif isinstance(value, np.ndarray):\n+                value = value.copy()\n+            setattr(self, name, value)\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6691289473036826,
+        "classification": {
+          "accuracy": 0.6652603095053199,
+          "balanced_accuracy": 0.6940747210492257,
+          "confusion_matrix": {
+            "false_negative": 8952,
+            "false_positive": 32860,
+            "true_negative": 52917,
+            "true_positive": 30180
+          },
+          "f1": 0.5907685080061073,
+          "matthews_correlation": 0.36008560881316615,
+          "precision": 0.47874365482233505,
+          "predicted_positive_rate": 0.5046874124362536,
+          "recall": 0.7712358172339773,
+          "specificity": 0.6169136248644742,
+          "threshold": -0.7151358127593994,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.8595523834228516,
+          "score_mean": -0.9731304391741167,
+          "score_min": -8.591018676757812,
+          "score_std": 1.4371531414105319
+        },
+        "nDCG@5": 0.5372061575740308,
+        "primary": 0.6031675524388567,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6767663225633463,
+          "MAP@5": 0.48604437592170785,
+          "MRR@5": 0.5425965649253006,
+          "Precision@5": 0.3755701538782242,
+          "Recall@5": 0.6002718964384527,
+          "average_precision": 0.5713418124629319,
+          "global_AUC": 0.7650044661043403
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 109.08978947599826,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_1/experiment_2"
+    },
+    {
+      "attempt_id": "3fe3b70e6a90",
+      "experiment_id": 3,
+      "generation": 3,
+      "status": "scored",
+      "parent_experiment_id": 2,
+      "hypothesis": "Apply stronger L2 regularization only to the nonlinear context residual parameters while leaving additive ID parameters at the current regularization.",
+      "hypothesis_rationale": {
+        "candidate_id": "c11",
+        "confidence": 6,
+        "evidence_ids": [
+          "experiment:1:metrics",
+          "experiment:2:metrics",
+          "experiment:2:segment:hour:3"
+        ],
+        "exact_ablation": "Multiply L2 regularization for context embeddings, hidden weights, and residual output weights by 10; keep ID regularization, features, BCE, optimizer, learning rate, and schedule unchanged.",
+        "expected_effect": {
+          "GAUC": "Likely increase by approximately +0.0002 to +0.0015 by reducing residual overfit, though excessive shrinkage could make it flat or slightly negative.",
+          "nDCG@5": "Likely increase by approximately +0.0003 to +0.002 if noisy context corrections are suppressed; the effect may be negligible on aggregate top-five ranking."
+        },
+        "expected_primary_gain": 0.0007,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "architecture.deep_cross_ranker",
+          "task.experiment_protocol"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "model.py": "--- model.py\n+++ model.py\n@@ -139,11 +139,12 @@\n         grad_bias = np.float32(gradient.sum())\n \n         indices, combined, hidden, hidden_pre = cache\n-        grad_output_weights = hidden.T.dot(gradient) + self.l2 * self.output_weights\n+        context_l2 = 10.0 * self.l2\n+        grad_output_weights = hidden.T.dot(gradient) + context_l2 * self.output_weights\n         grad_output_bias = np.float32(gradient.sum())\n         hidden_gradient = gradient[:, None] * self.output_weights[None, :]\n         hidden_gradient *= (hidden_pre > 0.0)\n-        grad_hidden_weights = combined.T.dot(hidden_gradient) + self.l2 * self.hidden_weights\n+        grad_hidden_weights = combined.T.dot(hidden_gradient) + context_l2 * self.hidden_weights\n         grad_hidden_bias = hidden_gradient.sum(axis=0)\n         grad_combined = hidden_gradient.dot(self.hidden_weights.T)\n         grad_context = []\n@@ -151,7 +152,7 @@\n             grad = np.zeros_like(self.context_embeddings[position])\n             np.add.at(grad, index, grad_combined[:, position * self.context_embedding_dimension:\n                                                    (position + 1) * self.context_embedding_dimension])\n-            grad += self.l2 * self.context_embeddings[position]\n+            grad += context_l2 * self.context_embeddings[position]\n             grad_context.append(grad)\n \n         self.step_number += 1\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6691888977921354,
+        "classification": {
+          "accuracy": 0.6604327950748144,
+          "balanced_accuracy": 0.6933668649137417,
+          "confusion_matrix": {
+            "false_negative": 8548,
+            "false_positive": 33867,
+            "true_negative": 51910,
+            "true_positive": 30584
+          },
+          "f1": 0.5905216106890127,
+          "matthews_correlation": 0.3589399371203814,
+          "precision": 0.4745310390839553,
+          "predicted_positive_rate": 0.5159836360870714,
+          "recall": 0.7815598487171624,
+          "specificity": 0.605173881110321,
+          "threshold": -0.7593494057655334,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.8563122749328613,
+          "score_mean": -0.9804462783269097,
+          "score_min": -8.308427810668945,
+          "score_std": 1.4361213210261006
+        },
+        "nDCG@5": 0.5369344217815536,
+        "primary": 0.6030616597868446,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6770344550207803,
+          "MAP@5": 0.4857732890418265,
+          "MRR@5": 0.5423090673459409,
+          "Precision@5": 0.3753824611580204,
+          "Recall@5": 0.6001040932843242,
+          "average_precision": 0.5713983427977951,
+          "global_AUC": 0.7650080268232147
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 71.2703286620017,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_1/experiment_3"
+    },
+    {
+      "attempt_id": "766ed92c4230",
+      "experiment_id": 4,
+      "generation": 4,
+      "status": "scored",
+      "parent_experiment_id": 2,
+      "hypothesis": "Reduce the context residual capacity from 32 hidden units to 8 hidden units.",
+      "hypothesis_rationale": {
+        "candidate_id": "c03",
+        "confidence": 6,
+        "evidence_ids": [
+          "experiment:1:metrics",
+          "experiment:2:metrics",
+          "experiment:3:metrics"
+        ],
+        "exact_ablation": "Change only the nonlinear context residual hidden width from 32 ReLU units to 8; preserve its embeddings, output head, additive ID terms, BCE, optimizer, and all hyperparameters otherwise.",
+        "expected_effect": {
+          "GAUC": "Likely flat to +0.0006 as noisy residual degrees of freedom are removed; a loss of up to 0.0004 is possible if the parent uses genuinely complex context effects.",
+          "nDCG@5": "Likely +0.0001 to +0.0008 from smoother ranking, though reduced capacity could make the effect flat."
+        },
+        "expected_primary_gain": 0.0003,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "architecture.embedding_mlp_ranker"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "model.py": "--- model.py\n+++ model.py\n@@ -18,7 +18,7 @@\n         self.step_number = 0\n \n         self.context_embedding_dimension = 8\n-        self.hidden_units = 32\n+        self.hidden_units = 8\n         self.context_ranges = None\n         self.context_embeddings = None\n         self.hidden_weights = None\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.669028465960081,
+        "classification": {
+          "accuracy": 0.6558534613198408,
+          "balanced_accuracy": 0.6930690004421357,
+          "confusion_matrix": {
+            "false_negative": 8111,
+            "false_positive": 34876,
+            "true_negative": 50901,
+            "true_positive": 31021
+          },
+          "f1": 0.5907130411600605,
+          "matthews_correlation": 0.3587492518925542,
+          "precision": 0.4707498065162299,
+          "predicted_positive_rate": 0.5275600637263929,
+          "recall": 0.7927271798016968,
+          "specificity": 0.5934108210825746,
+          "threshold": -0.7950108051300049,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.850306749343872,
+          "score_mean": -0.9834582562852187,
+          "score_min": -8.588367462158203,
+          "score_std": 1.4412601550793485
+        },
+        "nDCG@5": 0.5368850842556074,
+        "primary": 0.6029567751078442,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6772132099924029,
+          "MAP@5": 0.48559270927986803,
+          "MRR@5": 0.542151167121008,
+          "Precision@5": 0.3754807763924129,
+          "Recall@5": 0.6003219396209535,
+          "average_precision": 0.5713171767184532,
+          "global_AUC": 0.7650187270038917
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 67.8524810759991,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_1/experiment_4"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+command: ['/home/user/anaconda3/envs/evo/bin/python', 'train.py', '--config', 'config.json', '--data-dir', '/mnt/d/parlliament/src/kuairand-starter-kit/KuaiRand-Pure/data', '--output', '/mnt/d/parlliament/src/parlliament/runs/run_2/attempts/attempt_8380774588d0/predictions_valid.npz', '--contract-check']
+--- stdout ---
+{"contract": "ok", "feature_shape": [64, 6]}
+
+--- stderr ---

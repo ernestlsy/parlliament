@@ -1,0 +1,37 @@
+{
+  "winner": {
+    "text": "Add the complete impression-time request-context feature group to the neutral additive user/video scaffold: tab, hour, and weekday encoded with train-only vocabularies and explicit unknown handling.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "This is the highest-priority measured feature change: the training-only temporal screen found positive primary lift on every holdout day and full coverage. It can alter within-user ordering because context varies across impressions.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:request_context",
+      "feature:tab",
+      "feature:hourmin"
+    ],
+    "exact_ablation": "Add only the request_context group consisting of tab, hour, and weekday; leave the additive architecture, BCE training, IDs, optimizer, and all other inputs unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase, approximately +0.001 to +0.003 relative to the seed implementation; the measured screen lift was +0.00221 in primary.",
+      "nDCG@5": "Small increase or near-flat result, approximately -0.001 to +0.002; the screen supports ranking value but does not establish a top-five-specific gain."
+    },
+    "expected_primary_gain": 0.0022,
+    "confidence": 8,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  "selection_rationale": "Select the complete request-context feature group. It has the strongest measured evidence, with positive primary lift on every holdout day and full coverage, plus the highest expected primary gain and confidence among candidates. It is a clean single-group ablation with low leakage and runtime risk, making it a more reliable next experiment than the less-supported architecture, loss, or interaction alternatives.",
+  "counted_experiments_consumed": 0
+}

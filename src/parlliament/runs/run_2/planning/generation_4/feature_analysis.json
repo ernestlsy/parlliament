@@ -1,0 +1,22 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:3:metrics",
+        "experiment:3:segment:tab:0",
+        "experiment:3:segment:tab:6",
+        "experiment:3:segment:hour:16"
+      ],
+      "finding": "Request context is the sole train-only feature group with positive aggregate lift (+0.00221), complete coverage, and positive lift on all four temporal holdout days. The already-tested train-fitted user-by-tab cross produced only a small official-validation gain over experiment 1 (+0.000439 primary), so its incremental benefit is directionally positive but below the prior predicted gain and not sufficient to fund broader context interaction expansion. Post-score diagnostics show substantial top-five weakness in high-volume tab 0 (nDCG@5 0.0625; 13,726 rows), tab 6 (nDCG@5 0.1056; 5,170 rows), and hour 16 (nDCG@5 0.3569 despite GAUC 0.6343).",
+      "recommended_action": "Retain the existing availability-safe request-context treatment, including the train-fitted user-by-tab cross, but stop feature expansion under the strict early-stopping rule. If one low-cost follow-up is permitted, perform a time-split robustness check focused on tab 0, tab 6, and hour 16 top-five ranking; require a material, repeatable nDCG@5 improvement rather than GAUC alone before continuing."
+    }
+  ],
+  "avoid": [
+    "Reject user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, and historical_item_response: each has non-positive training-only primary lift, with especially large stable losses for historical author/item response features. [screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response]",
+    "Do not use current-impression outcome fields or aggregate snapshots without per-impression availability timestamps; these are forbidden or quarantined because they create ranking-time leakage.",
+    "Do not optimize against user_positive_count segments: the zero-positive slice has no relevant items, so its zero top-five metrics are retrospective label-availability artifacts rather than actionable within-user ranking evidence. [experiment:3:segment:user_positive_count:zero]",
+    "Do not interpret tiny tab or cold-item slices as stable evidence; for example, tab 14 has 5 rows and cold items have 17 rows. [experiment:3:segment:tab:14, experiment:3:segment:item_frequency:cold_0]"
+  ],
+  "metric_diagnosis": "Experiment 3 has credible global within-user ranking discrimination (GAUC 0.6699) and moderate top-five quality (nDCG@5 0.5368), but the aggregate masks concentrated top-five failures. The most consequential weakness is not merely low GAUC: tab 0 combines a sizable sample with extremely poor nDCG@5 (0.0625), while tab 6 also has weak nDCG@5 (0.1056). Rare items are additionally weak in both GAUC (0.4000) and nDCG@5 (0.1700), but have limited support (249 rows). Conversely, some hour slices show acceptable GAUC while weak top-five placement, such as hour 16, confirming that GAUC alone should not drive further investment. The observed gain of experiment 3 over experiment 1 is only +0.000439 primary, following a failed experiment 2 branch, which supports early stopping rather than speculative feature additions. [experiment:3:metrics, experiment:3:segment:tab:0, experiment:3:segment:tab:6, experiment:3:segment:item_frequency:rare_1_4, experiment:3:segment:hour:16, experiment:1:metrics, experiment:2:metrics]"
+}

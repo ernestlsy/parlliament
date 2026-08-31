@@ -1,0 +1,36 @@
+{
+  "winner": {
+    "text": "Add a train-fitted user-by-tab categorical cross to the additive experiment-1 scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "Tab 0 covers 13,726 validation rows and has very weak ranking in experiment 2, while request context was the sole feature family with a positive training-only temporal screen. A user-by-tab residual tests whether tab preferences vary by user without introducing new raw fields.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:tab:0",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 1, append exactly one train-fitted categorical feature for the user_id \u00d7 tab cross, scored as an additive residual; retain all existing raw features, additive main effects, BCE loss, optimizer settings, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.003 if user-specific tab preference improves within-user pair ordering.",
+      "nDCG@5": "Increase by 0.001 to 0.004 if the cross corrects top-five placement in large tab cohorts, especially tab 0."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  "selection_rationale": "Select c01. It is the Consultant's top-ranked option (utility 0.71) and offers the strongest evidence-to-scope trade-off: request context is the only feature family with a positive training-only temporal screening lift (+0.00221 primary), while tab 0 is a large weak validation cohort (13,726 rows; primary 0.2975). The single train-fitted user_id\u00d7tab additive residual directly tests stable user-specific surface preferences while preserving the previously strongest additive experiment-1 architecture. Expected primary gain is +0.002 with low leakage and runtime risk. Confidence is modest because cross-cell sparsity may limit generalization, but this is a bounded, reliable improvement attempt rather than a higher-risk loss or architecture change; the failed flexible low-rank replacement also favors retaining the additive scorer.",
+  "counted_experiments_consumed": 0
+}

@@ -1,0 +1,51 @@
+[
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "implicit-feedback",
+      "learning-to-rank",
+      "pairwise-loss",
+      "listwise-loss",
+      "nDCG",
+      "top-k",
+      "within-user-ranking"
+    ],
+    "purpose": "Resolve the material objective uncertainty: the current additive BCE scorer has adequate GAUC but weak nDCG@5 in large tabs, so determine whether a single ranking-objective ablation is justified and which loss offers credible top-five improvement without changing the fixed evaluator or using unavailable outcomes.",
+    "query": "Learning-to-rank objectives for implicit-feedback recommendation with fixed top-k evaluation: evidence comparing pointwise binary cross-entropy versus pairwise/listwise losses for nDCG@5 and within-user ranking, including practical regularization for sparse categorical models",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "experiment_strategy",
+      "bias_and_robustness",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "temporal-validation",
+      "rolling-origin",
+      "distribution-shift",
+      "segment-analysis",
+      "top-k-ranking",
+      "recommender-systems"
+    ],
+    "purpose": "Resolve the material experiment-design uncertainty for the recommended low-cost follow-up: specify a defensible train-only time-split robustness check centered on high-support tab 0, tab 6, and hour 16, while retaining the official validation protocol unchanged.",
+    "query": "Temporal robustness and experiment-design methods for recommender systems: rolling-origin or multiple temporal-holdout validation, segment-level top-k ranking analysis, and criteria for distinguishing repeatable improvements from noisy slice effects",
+    "request_index": 2,
+    "round": 1
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "objective.within_user_ranknet_pairwise_loss",
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "objective.mixed_group_listnet_top1_loss",
+      "training.group_complete_stratified_minibatching",
+      "evaluation.frozen_candidate_group_integrity_audit",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1,
+    "selected_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  }
+]

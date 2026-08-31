@@ -1,0 +1,384 @@
+[
+  {
+    "text": "Add the complete impression-time request-context feature group to the neutral additive user/video scaffold: tab, hour, and weekday encoded with train-only vocabularies and explicit unknown handling.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "This is the highest-priority measured feature change: the training-only temporal screen found positive primary lift on every holdout day and full coverage. It can alter within-user ordering because context varies across impressions.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:request_context",
+      "feature:tab",
+      "feature:hourmin"
+    ],
+    "exact_ablation": "Add only the request_context group consisting of tab, hour, and weekday; leave the additive architecture, BCE training, IDs, optimizer, and all other inputs unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase, approximately +0.001 to +0.003 relative to the seed implementation; the measured screen lift was +0.00221 in primary.",
+      "nDCG@5": "Small increase or near-flat result, approximately -0.001 to +0.002; the screen supports ranking value but does not establish a top-five-specific gain."
+    },
+    "expected_primary_gain": 0.0022,
+    "confidence": 8,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add only the tab request-context field to the neutral additive user/video scaffold, using a train-fitted categorical encoding.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "Tab is an isolated, low-cost test of whether the positive request-context screen is driven by coarse placement or surface context rather than time. It preserves a clean interpretation and avoids broad feature expansion.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:tab"
+    ],
+    "exact_ablation": "Add only tab as a categorical feature; exclude hour, weekday, and every other non-ID feature, with architecture and training unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely modest increase, approximately +0.0005 to +0.002, but below the full request-context group if temporal information is important.",
+      "nDCG@5": "Likely near-flat to slightly positive, approximately -0.001 to +0.0015; coarse context may not reliably fix the top five."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Add only impression hour and weekday, represented as cyclic time features, to the neutral additive user/video scaffold.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "This isolates the temporal portion of the only positively screened feature family. Cyclic encoding can represent adjacent-hour similarity without adding high-cardinality interactions.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:hourmin",
+      "feature:date"
+    ],
+    "exact_ablation": "Add only impression-time hour and weekday using cyclic transforms; omit tab and all other non-ID features, while retaining the seed architecture and training procedure.",
+    "expected_effect": {
+      "GAUC": "Likely positive, approximately +0.0008 to +0.0025, if user preferences vary by time of day.",
+      "nDCG@5": "Likely small positive or neutral, approximately -0.0005 to +0.0015; temporal effects may improve broad ordering more than top-five precision."
+    },
+    "expected_primary_gain": 0.0012,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace the additive ID scorer with a latent user-video interaction scorer using train-fitted user and video embeddings and a dot-product interaction, without adding metadata or context.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The seed's additive user and video effects cannot express personalized user-video affinity. A dot-product interaction is a single architecture ablation that directly creates candidate-specific variation within a user.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Replace the additive user-plus-video logit with global bias plus user/video embeddings and their dot product; retain only user_id and video_id inputs and the same pointwise training setup.",
+    "expected_effect": {
+      "GAUC": "Potential increase on warm user-video traffic, approximately +0.001 to +0.004, with no expected benefit for unseen entities.",
+      "nDCG@5": "Potential increase on warm traffic, approximately 0 to +0.003, but it may fall if sparse interactions overfit and disrupt top-ranked items."
+    },
+    "expected_primary_gain": 0.0018,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings"
+    ]
+  },
+  {
+    "text": "Replace the additive ID scorer with an embedding-plus-MLP scorer over user_id and video_id only, retaining the same labels and pointwise BCE objective.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "A nonlinear scorer can model interactions beyond additive effects while keeping the feature contract minimal. The change is materially different from a dot-product factorization and has a direct implementation path.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Replace only the additive linear scoring architecture with 32-dimensional user/video embeddings followed by a two-layer MLP; keep inputs, loss, optimizer, and split unchanged.",
+    "expected_effect": {
+      "GAUC": "Possible increase, approximately +0.001 to +0.004, if nonlinear identity interactions generalize beyond memorized biases.",
+      "nDCG@5": "Possible small increase, approximately -0.001 to +0.003; extra capacity may improve or destabilize the top five."
+    },
+    "expected_primary_gain": 0.0017,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Add a two-layer low-rank cross branch to an embedding-plus-MLP scorer using only user_id and video_id embeddings, while retaining the existing deep branch.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "Explicit bounded-order crosses offer a distinct mechanism from a plain MLP and may improve personalized interactions. The measured ID screen establishes that identity inputs are relevant enough to justify an interaction-focused architecture test.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Add only a two-layer low-rank cross branch to the user/video embedding-plus-MLP architecture; keep the feature set, pointwise BCE loss, and optimization schedule fixed.",
+    "expected_effect": {
+      "GAUC": "Potential modest increase, approximately +0.0005 to +0.003, concentrated on warm entities.",
+      "nDCG@5": "Potential increase of 0 to +0.0025, with a meaningful risk of no gain if sparse crosses memorize training identities."
+    },
+    "expected_primary_gain": 0.0012,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Replace ordinary impression-weighted BCE with exact inverse-candidate-count, user-normalized BCE on the neutral additive user/video scaffold.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The official objective is within-user ranking, while ordinary minibatch BCE can be dominated by users or groups with many impressions. User-normalized BCE is a clean loss-only ablation that may align optimization with the evaluation population.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Change only the reduction from ordinary BCE to complete-group inverse candidate-count weighting of 1 divided by group size; retain architecture, features, optimizer, and schedule.",
+    "expected_effect": {
+      "GAUC": "Likely modest increase, approximately 0 to +0.003, especially if candidate-count imbalance is substantial.",
+      "nDCG@5": "Likely neutral to slightly positive, approximately -0.001 to +0.002, because the loss remains pointwise and does not directly target rank five."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add an nDCG@5-weighted pairwise logistic term to the neutral additive user/video scorer while retaining ordinary BCE as the base loss.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 4
+    },
+    "rationale": "The measured request-context screen shows that broad ranking signal exists but does not establish top-five gains. A LambdaRank-style term directly targets positive-negative swaps affecting the first five positions, making this a distinct objective ablation.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context",
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Add only a normalized LambdaRank-style nDCG@5 swap-weighted pairwise term with fixed coefficient 0.1 to ordinary BCE; keep the seed feature set and architecture unchanged.",
+    "expected_effect": {
+      "GAUC": "Could increase slightly or remain flat, approximately -0.001 to +0.002, because top-five emphasis may sacrifice broad pair ordering.",
+      "nDCG@5": "Most plausible gain, approximately +0.001 to +0.004, provided training groups faithfully match displayed candidate groups."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.frozen_candidate_group_integrity_audit"
+    ]
+  },
+  {
+    "text": "Change the training sampler from shuffled natural-order minibatches to user-balanced minibatches, with each selected user contributing an equal number of training impressions, while leaving the model and loss unchanged.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "This tests whether optimization is distorted by prolific users without changing the scoring function. It is conceptually distinct from user-normalized BCE because the ablation changes example presentation and sampling rather than the loss formula.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id"
+    ],
+    "exact_ablation": "Replace only the natural shuffled minibatch sampler with user-balanced sampling that gives each sampled training user equal batch mass; retain all features, architecture, BCE, and evaluation data.",
+    "expected_effect": {
+      "GAUC": "Possible modest increase, approximately 0 to +0.0025, if user imbalance currently dominates updates.",
+      "nDCG@5": "Likely neutral to slightly positive, approximately -0.001 to +0.0015; sampling may increase variance and harm rare-item ordering."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Add train-only time-of-day interaction features between user identity and request context through a fixed user-by-tab cross feature, without adding any other context fields.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 7
+    },
+    "rationale": "The request-context screen is positive overall and stable by day, but the additive seed cannot express that a user's response to a tab varies by context. A single hashed user-tab cross is a targeted feature ablation rather than a broad feature expansion.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:tab",
+      "feature:user_id"
+    ],
+    "exact_ablation": "Add only one train-fitted user_id-by-tab cross feature with an explicit unknown bucket; retain the seed's separate user and video IDs, architecture, loss, and optimizer.",
+    "expected_effect": {
+      "GAUC": "Potential increase of approximately +0.0005 to +0.003 if context-specific personalization exists; sparse users may see no benefit.",
+      "nDCG@5": "Potential increase of approximately 0 to +0.002, with risk of top-five degradation from rare-cross overfitting."
+    },
+    "expected_primary_gain": 0.0012,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Replace the zero-initialized additive weights with small deterministic random initialization, keeping the neutral additive architecture, IDs, BCE loss, and optimizer unchanged.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 7,
+      "feasibility": 10
+    },
+    "rationale": "The seed initializes every feature weight to zero, which can create a symmetric starting point. A controlled initialization ablation is cheap and tests whether early optimization dynamics affect ranking without changing the model's representational capacity.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Change only weight initialization from all zeros to deterministic zero-mean Gaussian values with standard deviation 0.01; retain every feature, architecture equation, loss, and training hyperparameter.",
+    "expected_effect": {
+      "GAUC": "Likely flat to slightly positive, approximately -0.001 to +0.0015; the representational model is unchanged.",
+      "nDCG@5": "Likely flat, approximately -0.001 to +0.001; any movement may be seed-sensitive rather than systematic."
+    },
+    "expected_primary_gain": 0.0003,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Add only the request-context group to a user-normalized BCE training objective while retaining the neutral additive scorer and no other feature families.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "This combines the strongest measured feature family with a single defined objective configuration, testing whether its positive screen lift survives user-level loss normalization. It is a concrete alternative to the feature-only confirmation and may better align updates with within-user evaluation.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:request_context",
+      "feature:tab",
+      "feature:hourmin"
+    ],
+    "exact_ablation": "Replace the seed configuration with exactly one joint configuration change: add request_context and use user-normalized BCE as its training objective; do not alter architecture, sampler, or any other feature family.",
+    "expected_effect": {
+      "GAUC": "Likely positive, approximately +0.001 to +0.0035, with possible improvement over feature-only training if group imbalance is harmful.",
+      "nDCG@5": "Likely neutral to positive, approximately -0.001 to +0.0025; the pointwise normalized loss still does not explicitly optimize top-five swaps."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "features",
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "task.leakage_policy"
+    ]
+  }
+]

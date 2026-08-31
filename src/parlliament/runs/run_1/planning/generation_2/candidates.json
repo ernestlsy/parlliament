@@ -1,0 +1,374 @@
+[
+  {
+    "text": "Add a low-rank cross branch to the existing additive user/video/request-context scorer to model bounded interactions among user ID, video ID, tab, hour, and weekday.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The parent reaches GAUC 0.6689 and nDCG@5 0.5370, while request context produced a measured internal primary lift of +0.00221. A bounded cross branch may convert context signal into candidate-specific ordering rather than only additive offsets.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context",
+      "experiment:1:segment:tab:8"
+    ],
+    "exact_ablation": "Keep the parent data, BCE loss, optimizer, training schedule, and all five permitted fields unchanged; add exactly one two-layer low-rank cross branch over the existing encoded features and concatenate it with the additive logit.",
+    "expected_effect": {
+      "GAUC": "Likely increase by about 0.001 to 0.004 if user/context interactions resolve within-user ties; risk of a small decline from rare-combination overfitting.",
+      "nDCG@5": "Likely increase by about 0.001 to 0.005, especially for weak tab slices such as tab 8; it could fall slightly if cross scores reorder close top-five candidates incorrectly."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer with a compact embedding-plus-MLP scorer while retaining only user ID, video ID, tab, hour, and weekday.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 6
+    },
+    "rationale": "The measured parent is a linear additive model, so nonlinear interactions are untested. The request-context screen is positive overall, but very weak tab-8 ranking suggests that additive context effects may be insufficient.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context",
+      "experiment:1:segment:tab:0"
+    ],
+    "exact_ablation": "Keep the parent fields, BCE objective, optimizer, batch size, epochs, and early stopping unchanged; replace only the additive weighted-sum scorer with a two-hidden-layer MLP over embeddings of the same five fields.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.001 to 0.005 through nonlinear user/video/context interactions, with a possible flat result if sparse IDs dominate.",
+      "nDCG@5": "Likely increase by 0.001 to 0.004, but it may decline from unstable top-five ordering or overfitting rare field combinations."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Train the existing additive model with user-normalized BCE so each complete user group contributes equal loss mass.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The parent has strong overall metrics but large differences across user-positive-count diagnostics; a user-normalized objective directly changes optimization toward within-user comparisons without adding any feature.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:one",
+      "experiment:1:segment:user_positive_count:five_plus"
+    ],
+    "exact_ablation": "Keep the parent architecture, fields, optimizer, learning-rate schedule, and sampling unchanged; replace only row-mean BCE with complete-user-group mean BCE using inverse group-size weights.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.0005 to 0.003 because GAUC is within-user, though it may fall if the official positive-count weighting is better matched by row-weighted BCE.",
+      "nDCG@5": "Likely flat to +0.002; equalizing users may improve smaller groups but can reduce top-five quality for high-volume users."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy"
+    ]
+  },
+  {
+    "text": "Add a LambdaRank-style nDCG@5 swap-weighted pairwise term to the parent BCE objective.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "The parent nDCG@5 of 0.5370 is materially below the strongest positive-count slices, and tab 0 has GAUC 0.5501 but nDCG@5 only 0.0622, indicating pairwise signal without reliable top-five placement.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:tab:8"
+    ],
+    "exact_ablation": "Keep the parent model, fields, optimizer, and BCE term unchanged; add one group-local pairwise logistic loss weighted by detached absolute nDCG@5 swap gains, with a fixed coefficient of 0.1.",
+    "expected_effect": {
+      "GAUC": "Likely flat to +0.002 because pairwise ordering remains supervised, but it may decline slightly when top-five weighting sacrifices broader positive-negative separation.",
+      "nDCG@5": "Most likely increase by 0.002 to 0.008 if complete user groups are used; it may be flat or decrease if the logged rows do not form coherent candidate slates."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid"
+    ]
+  },
+  {
+    "text": "Use a mixed-group ListNet top-one loss, anchored by a small BCE term, for the same permitted impression fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 4
+    },
+    "rationale": "The parent ranking is weakest in several tab slices, particularly tab 8 where nDCG@5 is 0.0263. A group-local listwise objective directly emphasizes competition at the top rather than isolated row classification.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:tab:0"
+    ],
+    "exact_ablation": "Keep the parent architecture, features, optimizer, and training schedule unchanged; replace row-mean BCE with group-mean ListNet top-one loss plus a fixed 0.1 row-mean BCE anchor.",
+    "expected_effect": {
+      "GAUC": "Likely flat to +0.002, with a plausible decrease of up to 0.002 because listwise normalization can sacrifice broad pairwise separation.",
+      "nDCG@5": "Potential increase of 0.002 to 0.007 when groups contain multiple mixed-label candidates; likely no gain or a decline if groups are mostly singleton or homogeneous."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss"
+    ]
+  },
+  {
+    "text": "Add a one-hidden-layer nonlinear residual over the parent context fields while preserving its additive ID terms.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The measured request-context lift is positive but modest and unstable relative to its daily standard deviation. A small residual is a bounded capacity increase that can learn context combinations without replacing the stable ID scaffold.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Keep the parent additive ID and context terms, BCE training, optimizer, and schedule unchanged; add exactly one 32-unit ReLU residual head fed only by tab, hour, and weekday embeddings.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.0005 to 0.003 if context effects are nonlinear; it may be flat or slightly negative from fitting sparse hour-tab combinations.",
+      "nDCG@5": "Likely increase by 0.001 to 0.004, especially in low-performing hour slices such as hour 3; top-five volatility is a downside."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "efficiency.dot_product_linear_residual_ranker"
+    ]
+  },
+  {
+    "text": "Change only the context representation from independent tab/hour/weekday fields to explicit tab-by-hour conjunction tokens.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 9
+    },
+    "rationale": "The parent\u2019s overall request-context gain is positive, yet tab 8 and tab 0 have extremely low nDCG@5. Explicit tab-hour categories may capture impression-setting effects that independent additive terms cannot represent.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Keep the parent additive architecture, BCE training, optimizer, and all original fields unchanged; replace only the independent tab and hour encodings with one train-only tab\u00d7hour categorical field while retaining weekday.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.0005 to 0.003 if context-specific ordering is real, but it may decrease from sparse conjunction coverage.",
+      "nDCG@5": "Likely increase by 0.001 to 0.004 in problematic context slices; it may fall if unknown or rare conjunctions receive noisy estimates."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Remove weekday while retaining tab and hour in the parent request-context model.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 10
+    },
+    "rationale": "The complete context group lifted internal primary by +0.00221, but the parent experiment does not identify which field helps. Removing one field is a clean information test and may reduce noise from a seven-day categorical feature under temporal drift.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Keep the parent additive model, IDs, tab, hour, BCE objective, optimizer, and schedule unchanged; remove only the weekday field.",
+    "expected_effect": {
+      "GAUC": "Likely near-flat to a decrease of 0.002 because weekday may carry stable temporal preference signal; a small increase is possible if it was noisy.",
+      "nDCG@5": "Likely near-flat to a decrease of 0.002, with potential improvement if weekday causes harmful top-five shifts under date drift."
+    },
+    "expected_primary_gain": -0.0005,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Remove hour while retaining tab and weekday in the parent request-context model.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 10
+    },
+    "rationale": "Hour is included in the measured positive request-context group, but several hour slices perform poorly, including hour 3 with GAUC 0.5318 and nDCG@5 0.3864. This ablation tests whether hour generalizes or mainly adds noisy categorical offsets.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:4"
+    ],
+    "exact_ablation": "Keep the parent additive model, IDs, tab, weekday, BCE objective, optimizer, and schedule unchanged; remove only the hour field.",
+    "expected_effect": {
+      "GAUC": "Likely decrease by 0.0005 to 0.003 if hour captures genuine impression-time variation, though a small increase is possible from reduced noise.",
+      "nDCG@5": "Likely decrease by 0.0005 to 0.003 because hour may help distinguish top candidates; it could improve slightly if hour offsets destabilize rankings."
+    },
+    "expected_primary_gain": -0.001,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Add deterministic dropout-style feature masking during training for the request-context fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The request-context screen has positive mean lift but daily standard deviation larger than the mean, suggesting sensitivity to temporal variation. Context masking may prevent reliance on a single unstable field and improve robustness.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Keep the parent fields, additive model, BCE loss, optimizer, and schedule unchanged; during training only, independently mask each of tab, hour, and weekday to an explicit unknown bucket with probability 0.1.",
+    "expected_effect": {
+      "GAUC": "Likely flat to +0.002 through better generalization, with a possible decline if context is the main available ranking signal.",
+      "nDCG@5": "Likely flat to +0.002; masking may reduce brittle top-five decisions but can also remove useful context distinctions."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Replace the parent BCE objective with a temperature-scaled pairwise logistic loss over mixed-label user groups.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The official metrics are within-user ranking metrics, while the parent uses pointwise BCE. A pairwise objective may improve positive-over-negative ordering, especially where GAUC exceeds the very weak nDCG@5 in tab 0.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Keep the parent architecture, permitted fields, optimizer, batch schedule, and group construction unchanged; replace only BCE with mean within-user positive-negative logistic loss at fixed temperature 1.0, retaining all rows in degenerate groups through zero pair loss.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.001 to 0.004 because the loss directly optimizes within-user pair ordering; it may fall if pair sampling is noisy or mixed groups are sparse.",
+      "nDCG@5": "Likely flat to +0.003, with possible decline because generic pairwise optimization does not specifically weight the first five ranks."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Reduce the parent additive model\u2019s L2 regularization by one order of magnitude to test whether context and ID effects are underfit.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "The parent uses very small L2 already, but the weak ranking in tab 8 and tab 0 could reflect underfit field weights rather than missing features. This is a low-cost, isolated training ablation with a clear overfitting diagnostic.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:tab:0"
+    ],
+    "exact_ablation": "Keep the parent data, five permitted fields, additive architecture, BCE loss, optimizer, seed, batch size, and epoch schedule unchanged; change only L2 from 1e-6 to 1e-7.",
+    "expected_effect": {
+      "GAUC": "Could increase by 0.0005 to 0.002 if the parent is underfit, but may decrease by up to 0.003 from memorization and poorer temporal generalization.",
+      "nDCG@5": "Could increase by 0.0005 to 0.003 if sharper scores improve top-five separation, but is at higher risk of declining through unstable rare-context rankings."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  }
+]

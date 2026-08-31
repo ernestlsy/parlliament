@@ -1,0 +1,393 @@
+[
+  {
+    "text": "Add a train-fitted user-by-hour interaction to let the additive scorer express user-specific time-of-day preferences.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "Request context was the only positively screened feature family, while hour 16 has weak nDCG@5 despite moderate GAUC, indicating residual time-specific top-rank error. The prior user-by-tab cross produced only a small global gain, so this is a bounded test of a different context interaction rather than broad feature expansion.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:3:metrics",
+      "experiment:3:segment:hour:16"
+    ],
+    "exact_ablation": "Relative to experiment 3, append exactly one train-fitted categorical user_id \u00d7 hour interaction feature with an additive weight; retain user_id, video_id, tab, hour, weekday, user_id \u00d7 tab, BCE loss, optimizer, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.002 if personal time-of-day preference improves within-user positive-negative ordering.",
+      "nDCG@5": "Increase by 0.001 to 0.003 if hour-specific residuals promote long-view candidates into the top five, with the largest possible benefit in weak hour slices such as hour 16."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a train-fitted tab-by-hour interaction to capture request-context combinations not represented by separate additive context effects.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The positive request-context screen supports context as a family, and tab 0 and tab 6 have particularly poor top-five performance. A tab-by-hour term can model context combinations while avoiding unavailable behavioral or aggregate fields.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:tab:6"
+    ],
+    "exact_ablation": "Relative to experiment 3, append exactly one train-fitted categorical tab \u00d7 hour interaction feature with an additive weight; retain every existing feature, model parameterization, BCE loss, optimizer, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change between -0.001 and +0.002 because the interaction may refine context-dependent ordering but can be sparse in uncommon combinations.",
+      "nDCG@5": "Increase by 0.001 to 0.003 if context-combination effects specifically correct top-five errors in high-volume weak tabs."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a train-fitted video-by-tab interaction so that a video's long-view propensity can vary by request surface.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 4
+    },
+    "rationale": "The scorer's global metrics are driven almost entirely by warm items, while tab slices show major quality heterogeneity. A video-by-tab residual tests whether the same warm item is ranked differently across surfaces without using video metadata or outcome-derived aggregates.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:3:segment:item_frequency:warm_20_plus",
+      "experiment:3:segment:tab:0"
+    ],
+    "exact_ablation": "Relative to experiment 3, append exactly one train-fitted categorical video_id \u00d7 tab interaction feature with an additive weight; leave all existing features, BCE loss, optimizer settings, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.002 if surface-specific video effects resolve within-user order among items shown in different tabs.",
+      "nDCG@5": "Increase by 0.000 to 0.003 if the residual corrects surface-specific head ranking; it may be flat if most within-user candidates share a tab."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a train-fitted user-by-weekday interaction to test stable weekly user-context preference beyond main effects.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "Weekday is an eligible, complete-coverage request-context field that contributed to the sole positive feature-family screen. This interaction is lower-cardinality than user-by-hour and therefore offers a lower-variance personalization test.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:3:metrics",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 3, append exactly one train-fitted categorical user_id \u00d7 weekday interaction feature with an additive weight; retain all current features, BCE loss, optimizer, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.0015 if recurring weekly preferences improve per-user ordering.",
+      "nDCG@5": "Increase by 0.000 to 0.002 if weekly preference affects which candidates enter a user's top five; a flat result is plausible because the validation window covers only one week."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace row-mean BCE with inverse-training-user-candidate-count weighted BCE to align training influence with within-user evaluation.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 4
+    },
+    "rationale": "The official GAUC is a within-user metric, whereas the current row-mean BCE gives prolific users more total optimization weight. The broad spread in user-activity diagnostics makes user balancing a direct, availability-safe objective test rather than a feature expansion.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:3:segment:user_active_degree:full_active",
+      "experiment:3:segment:user_active_degree:middle_active"
+    ],
+    "exact_ablation": "Relative to experiment 3, replace the row-mean BCE reduction with BCE weighted by the inverse number of training rows for each user and normalized by total batch weight; retain features, model, optimizer, training rows, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.004 if reducing prolific-user dominance better aligns the pointwise objective with within-user discrimination.",
+      "nDCG@5": "Change between -0.001 and +0.002 because equal user weighting need not directly emphasize the first five ranks."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a small nDCG@5 swap-weighted pairwise ranking term to BCE, using only training-user candidate groups.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "Experiment 3 has adequate aggregate GAUC but notable nDCG@5 failures in sizable tab and hour slices, including tab 0, tab 6, and hour 16. A top-five-focused ranking term directly tests whether optimization rather than missing features limits head ranking.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:tab:6",
+      "experiment:3:segment:hour:16"
+    ],
+    "exact_ablation": "Relative to experiment 3, add one detached nDCG@5 swap-weighted within-user positive-negative logistic pair-loss term to the existing BCE objective with a fixed coefficient of 0.1; retain the model, features, optimizer, split, and checkpoint rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Change between -0.001 and +0.002 because the added loss only supervises mixed-label within-user groups and concentrates on head errors.",
+      "nDCG@5": "Increase by 0.001 to 0.005 if training-user groups represent meaningful candidate competition and top-five misorders are corrected."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace BCE with a within-user RankNet pairwise loss to optimize positive-negative order directly.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 2
+    },
+    "rationale": "The failed normalized-dot-product branch demonstrates that changing architecture is risky, while current error diagnosis is principally ranking-oriented. A pure loss replacement isolates direct GAUC alignment without adding features or architecture capacity.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:hour:16"
+    ],
+    "exact_ablation": "Relative to experiment 3, replace BCE with a uniformly sampled within-user positive-negative RankNet logistic pair loss using training rows only, with four negatives per positive and equal user weighting; retain features, additive model, optimizer, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.004 if sampled within-user pairs faithfully represent the official ordering objective.",
+      "nDCG@5": "Change between -0.002 and +0.002 because an unweighted pairwise loss does not preferentially correct rank-one through rank-five errors."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 10,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Add a ListNet top-one listwise term to BCE to test whether whole-user candidate competition improves top-five ranking.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 5,
+      "feasibility": 1
+    },
+    "rationale": "Weak nDCG@5 in large context slices can coexist with nontrivial GAUC, suggesting that a listwise training signal could be informative. This is high-risk because the available archive does not establish that all temporally grouped rows for a user form coherent contemporaneous slates.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:tab:6"
+    ],
+    "exact_ablation": "Relative to experiment 3, add exactly one within-user ListNet top-one loss term with coefficient 0.1 to the existing BCE objective, calculated only on complete mixed-label training user groups; retain all features, model parameters, optimizer, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change between -0.002 and +0.002 because listwise normalization can trade broad discrimination for relative group order.",
+      "nDCG@5": "Increase by 0.001 to 0.004 if training groups are coherent candidate lists; otherwise it may decline."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 10,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Increase L2 regularization on the additive categorical weights to reduce sparse cross-feature overfit.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "The user-by-tab cross improved primary by only 0.000439 over experiment 1, below its predicted gain, and rare items remain weak. A stronger shrinkage test is a clean way to assess whether the sparse new cross is adding variance rather than stable ranking signal.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Relative to experiment 3, change only L2 regularization from 0.000001 to 0.00001; retain features, additive architecture, BCE loss, learning rate, batching, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change between -0.001 and +0.002; modest improvement is possible if sparse categorical weights are overfit, but excessive shrinkage can reduce discrimination.",
+      "nDCG@5": "Change between -0.001 and +0.002; any gain should come from more stable ordering rather than additional top-rank supervision."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "experiment.predeclared_hypothesis_ladder"
+    ]
+  },
+  {
+    "text": "Use official-primary validation checkpoint selection instead of GAUC-only proxy checkpoint selection.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 3,
+      "feasibility": 4
+    },
+    "rationale": "The selection objective is the mean of GAUC and nDCG@5, but the current training code checkpoints on a GAUC proxy alone. Since nDCG@5 is a recognized weakness in several large slices, matching the checkpoint criterion to the fixed official objective is a direct training-only ablation.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:hour:16"
+    ],
+    "exact_ablation": "Relative to experiment 3, select and early-stop checkpoints using validation primary, computed as the fixed mean of validation GAUC and validation nDCG@5, instead of the current validation-GAUC proxy; retain all features, loss, model, optimizer, and training data unchanged.",
+    "expected_effect": {
+      "GAUC": "Change between -0.001 and +0.001 because the selected epoch may sacrifice a small amount of broad ordering.",
+      "nDCG@5": "Increase by 0.000 to 0.003 if the selected checkpoint better preserves top-five ordering than the GAUC-proxy optimum."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Reduce the Adam learning rate to improve optimization stability of sparse categorical interactions.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "Experiment 3's small gain over experiment 1 and the severe regression of the more complex experiment 2 branch argue for a low-cost stability ablation before further capacity expansion. The current additive model includes a sparse user-by-tab table whose updates may benefit from a smaller step size.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:3:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 3, change only the Adam learning rate from 0.01 to 0.005; retain features, architecture, BCE loss, L2 regularization, batch size, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change between -0.001 and +0.002; lower steps may improve convergence stability but can underfit within the fixed epoch budget.",
+      "nDCG@5": "Change between -0.001 and +0.002; any improvement would reflect a different convergence path rather than direct head-rank optimization."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "experiment.predeclared_hypothesis_ladder",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Remove the user-by-tab cross as a rollback ablation to test whether its tiny observed gain generalizes versus added sparse-feature variance.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "The cross improved primary by only 0.000439 relative to experiment 1, while the feature analyst explicitly judged that this was insufficient evidence to fund broader interaction expansion. A rollback test is materially informative because it verifies whether retaining the cross is justified under the scarce-budget protocol.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:tab:0"
+    ],
+    "exact_ablation": "Relative to experiment 3, remove exactly the train-fitted user_id \u00d7 tab categorical feature and its additive weight; retain user_id, video_id, tab, hour, weekday, BCE loss, optimizer, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change between -0.001 and +0.001 because the prior global gain from the cross was very small.",
+      "nDCG@5": "Change between -0.001 and +0.001; a decline would support retaining the cross, while an improvement would indicate that sparse interaction variance harms head ranking."
+    },
+    "expected_primary_gain": 0.0,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "experiment.predeclared_hypothesis_ladder",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

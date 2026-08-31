@@ -1,0 +1,23 @@
+{
+  "attempt_id": "766ed92c4230",
+  "status": "scored",
+  "generation": 4,
+  "mode": "improve",
+  "parent_experiment_id": 2,
+  "hypothesis_text": "Reduce the context residual capacity from 32 hidden units to 8 hidden units.",
+  "active_sub_agents": [
+    "model_designer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 67.8524810759991,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

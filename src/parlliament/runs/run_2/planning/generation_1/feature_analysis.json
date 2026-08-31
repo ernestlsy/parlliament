@@ -1,0 +1,19 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context"
+      ],
+      "finding": "Request context (tab, hour, weekday) is the only training-only screened group with positive primary lift (+0.00221) on all four temporal-holdout days and full coverage. The effect is modest relative to daily variability (daily std 0.00580), so it is a low-budget, early-stopped candidate rather than a broad rollout. Warm user-item performance is materially measurable (84,937 rows); cold-item evidence is not decision-grade (8 rows).",
+      "recommended_action": "Run one tightly scoped validation adding only request_context, with an early-stop gate requiring non-negative within-user GAUC movement and no nDCG@5 regression. Report warm-user-item GAUC and nDCG@5 separately, plus cold-user results; do not use the 8-row cold-item segment for a go/no-go decision."
+    }
+  ],
+  "avoid": [
+    "Reject user_profile: aggregate primary lift is negative and daily evidence is not consistently positive. [screen:user_profile]",
+    "Reject historical_user_author_affinity: primary lift is negative on every reported holdout day. [screen:historical_user_author_affinity]",
+    "Reject upload_recency, content_duration, and item_metadata: each has negative aggregate primary lift; content_duration also has a positive daily reversal, weakening stability. [screen:upload_recency] [screen:content_duration] [screen:item_metadata]",
+    "Reject historical_author_response and historical_item_response: both have large, consistently negative primary lifts despite low daily variation. [screen:historical_author_response] [screen:historical_item_response]",
+    "Do not use current-impression outcomes or aggregate video-statistic snapshots without per-impression availability timestamps; these are forbidden or quarantined due to leakage risk."
+  ],
+  "metric_diagnosis": "The available screening result supports only a small, sign-stable training-only primary improvement for request_context. It does not provide baseline-relative GAUC or nDCG@5 deltas, and weakest_segment_evidence is empty, so there is no demonstrated top-five gain and no post-score segment weakness to target. Preserve the distinction in the next validation: GAUC assesses within-user ranking across candidates, while nDCG@5 tests whether the improvement reaches the top five. Treat cold-item metrics as inconclusive because the segment has only 8 rows. [screen:request_context]"
+}

@@ -1,0 +1,106 @@
+{
+  "active_agents": [
+    "feature_engineer",
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "load(data_dir, max_rows_per_split) retains CSV iteration order within each date-filtered split. encode(splits) returns (encoded, dimension). encoded[\"train\"] and encoded[\"valid\"] are (features, labels, users), where features is int32 shape [N,5] in field order [user_id, video_id, tab, hour, weekday], labels is float32 shape [N], and users identifies rows for validation-only within-user AUC. encoded[\"test\"] is (features, users), with no test label loaded or exposed. Each feature is a globally offset train-fitted categorical index with an unknown bucket; dimension is the total embedding/weight-vector size."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model receives the int32 [N,5] categorical-index matrix and the total dimension. Its logits remain bias plus the sum of one additive weight per field index; no interactions, architecture changes, loss changes, or baseline-derived components are introduced."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Implement only the screened request_context feature family\u2014tab, hour, and weekday\u2014as train-fitted categorical inputs appended to the existing user_id/video_id additive-feature matrix in data.py.",
+      "required_changes": [
+        "In data.py, change FIELDS exactly to [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]. Do not add any other feature family.",
+        "Read the exact raw log column \"tab\" for every row. Retain raw \"hourmin\" and \"date\" solely to derive the requested fields.",
+        "Derive hour using the canonical recipe: integer hour = floor(numeric hourmin / 100). Validate that every derived hour is in 0..23; raise ValueError otherwise.",
+        "Derive weekday using the canonical recipe: calendar weekday from the YYYYMMDD raw \"date\", with Monday=0 through Sunday=6. Use a calendar-date conversion, not an arbitrary integer-date transformation.",
+        "Fit five independent categorical vocabularies exclusively from the training split values for user_id, video_id, tab, derived hour, and derived weekday. Allocate one distinct unknown bucket per field and apply those training-fitted mappings to valid and test.",
+        "Keep the additive sparse-index representation: encoded feature matrices must be int32 with one globally offset categorical index per field, shape (number_of_rows, 5), and the returned dimension must equal the sum of all field vocabulary sizes including unknown buckets.",
+        "Preserve canonical source-row order when filtering each split: append rows in CSV iteration order and do not sort, shuffle, group, deduplicate, or otherwise reorder valid or test rows.",
+        "Prevent test-label access: for train and valid rows, load long_view into labels exactly as 1 if row[\"long_view\"] != \"0\" else 0; for test rows, do not read row[\"long_view\"] at all. Encode train and valid as (features, labels, users), and encode test as (features, users)."
+      ],
+      "preserve": [
+        "Keep LABEL as \"long_view\", the existing date split boundaries, input log filenames, max_rows_per_split behavior, and train/valid user-id output behavior.",
+        "Use only eligible request-context inputs: raw tab, derived hour from raw hourmin, and derived weekday from raw date. Do not use time_ms, outcome fields, excluded fields, quarantined fields, metadata joins, profiles, aggregates, interactions, or target-derived encodings.",
+        "Do not modify model.py, train.py, or config.json."
+      ],
+      "coordination_notes": [
+        "The binding data-to-trainer interface after this edit is encoded[\"train\"] = (features, labels, users), encoded[\"valid\"] = (features, labels, users), encoded[\"test\"] = (features, users).",
+        "The feature column order is binding: user_id, video_id, tab, hour, weekday. Model.py must continue to score these as a simple sum of additive weights plus bias.",
+        "The trainer will use valid labels only for validation proxy/checkpoint selection and will never expect test labels."
+      ]
+    },
+    "trainer": {
+      "objective": "Adapt train.py to the revised data interface and guarantee that the fixed training command emits canonical validation and test prediction archives without ever accessing test ground truth.",
+      "required_changes": [
+        "In train.py, unpack encoded[\"test\"] as test_features, test_users (or an intentionally unused equivalent) and remove all use of test_labels.",
+        "After restoring the checkpoint selected solely by validation proxy, write the validation archive to Path(args.output).with_name(\"predictions_valid.npz\") and the test archive to Path(args.output).with_name(\"predictions_test.npz\"), regardless of the basename supplied in --output.",
+        "Each archive must contain exactly two arrays: row_ids and scores. For predictions_valid.npz, set row_ids=np.arange(len(valid_features), dtype=np.int64) and scores=model.predict(valid_features). For predictions_test.npz, set row_ids=np.arange(len(test_features), dtype=np.int64) and scores=model.predict(test_features). Do not add labels, users, metrics, or additional arrays.",
+        "Keep checkpoint comparison and early stopping based only on within_user_auc(valid_users, valid_labels, model.predict(valid_features)). Keep best-state restoration before both final prediction writes.",
+        "Update the contract-check path to use only train and valid labels and to remain compatible with the new test tuple shape. Do not require, inspect, or load any test label in either normal or contract-check execution."
+      ],
+      "preserve": [
+        "Preserve seed 0 and all existing config.json values exactly; do not edit config.json.",
+        "Preserve the existing Model construction, optimizer hyperparameters supplied from config, BCE training loss, ID features plus the newly supplied request-context columns, train split, validation proxy definition, batch shuffling, and early-stopping settings.",
+        "Do not modify data.py or model.py.",
+        "Do not calculate official metrics in train.py; fixed evaluation exclusively owns ground-truth loading and final evaluation."
+      ],
+      "coordination_notes": [
+        "Consume the feature_engineer interface exactly: train and valid are (features, labels, users), while test is (features, users).",
+        "Feature row order supplied by data.py is canonical. Sequential np.arange row_ids therefore align exactly with canonical validation and test row order.",
+        "The required fixed-command artifacts are predictions_valid.npz and predictions_test.npz in the output directory. Both must be generated from the same validation-selected checkpoint."
+      ]
+    }
+  },
+  "reasoning": "The requested ablation changes only the eligible request_context family. tab is used directly, while hour and weekday are derived exactly from hourmin and date using the schema\u2019s canonical recipes. Independent training-only categorical vocabularies preserve the seed\u2019s additive scorer while avoiding validation/test fitting. Activating feature_engineer is required for the owned data.py change. Activating trainer is required because the data interface must stop exposing test labels and because train.py must guarantee the mandated predictions_valid.npz and predictions_test.npz artifacts. model_designer is not activated because model.py already implements the required additive weighted sum and the hypothesis explicitly forbids model or loss changes. No config change is needed."
+}

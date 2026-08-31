@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c03",
+      "rank": 1,
+      "utility_score": 82.0,
+      "rationale": "Best balance of plausible gain, clean one-variable ablation, low runtime, and direct evidence that the 32-unit residual may be overcapacity. Avoids the validation-overfitting and implementation risks of interaction or loss changes."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 2,
+      "utility_score": 74.0,
+      "rationale": "Low-runtime, tightly scoped training intervention with modest upside and little duplication of the feature experiments. Evidence for optimization instability is weak, so the expected gain is limited."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 3,
+      "utility_score": 71.0,
+      "rationale": "Tests a distinct variance-control mechanism on the residual and could improve top-five stability, but it overlaps conceptually with the already-tested stronger L2 variant and carries medium runtime risk."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 4,
+      "utility_score": 66.0,
+      "rationale": "A contained representation change with reasonable inductive bias for time, but it is motivated mainly by weak slice diagnostics and has medium runtime risk plus possible mismatch with discontinuous hour effects."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 5,
+      "utility_score": 62.0,
+      "rationale": "Potentially useful context interaction, but its support comes from weak, sparse tab slices and it adds vocabulary sparsity and medium runtime risk. Higher scope than the leading architecture tests."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 6,
+      "utility_score": 59.0,
+      "rationale": "Strong objective alignment and meaningful upside, but pair construction, sparse user groups, and high runtime make the result less reliable for one scarce experiment."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 7,
+      "utility_score": 51.0,
+      "rationale": "Interesting regularization hypothesis, but low confidence, medium runtime, and field-semantic interference make the expected benefit uncertain. Evidence is largely diagnostic rather than causal."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 8,
+      "utility_score": 42.0,
+      "rationale": "Clean and cheap ablation with low leakage risk, but it has a slightly negative expected gain and only weak evidence that weekday is harmful. Useful mainly for attribution rather than improvement."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 9,
+      "utility_score": 38.0,
+      "rationale": "Low-cost isolation test, but weak hour slices do not establish that hour harms aggregate ranking; the expected effect is negative and the diagnostic evidence is susceptible to slice overinterpretation."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 10,
+      "utility_score": 34.0,
+      "rationale": "A clean rollback and strong falsification test, but experiment 2's residual gain was positive and experiment 3's result does not isolate residual value. Expected primary effect is negative."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 11,
+      "utility_score": 29.0,
+      "rationale": "The rationale overweights extremely weak tab slices with small or policy-driven samples. Removing tab risks discarding useful exposure context and has the most negative expected effect among the simple ablations."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 12,
+      "utility_score": 18.0,
+      "rationale": "Highest validation-overfitting and runtime risk: predicted-top-five pair membership creates unstable, self-referential training targets. The attractive nDCG upside is weakly evidenced and GAUC may regress."
+    }
+  ]
+}

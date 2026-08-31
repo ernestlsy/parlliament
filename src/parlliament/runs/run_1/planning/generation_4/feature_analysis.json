@@ -1,0 +1,18 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:3:metrics"
+      ],
+      "finding": "Prioritize request_context as the only screened feature group with positive overall primary lift (+0.00221) and positive lift on every internal temporal holdout day. Its cold-user and warm-user/item GAUC values remain above 0.63, supporting useful within-user ordering, although the daily standard deviation (+/-0.00580) makes the gain modest and not fully stable.",
+      "recommended_action": "Spend the next budget increment on a leakage-audited request_context ablation or interaction test, with strict temporal validation and early stopping if the primary metric is non-positive."
+    }
+  ],
+  "avoid": [
+    "Do not fund user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response; each has non-positive screened primary lift, with the historical response groups showing especially large and consistent degradation. Evidence: screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response.",
+    "Do not use current-impression outcomes or aggregate snapshots without verified per-impression availability timestamps; they are leakage risks rather than valid ranking features.",
+    "Stop the current experiment branch: experiment 3 produced an observed primary gain of -0.0001059 versus experiment 2, despite a predicted gain of +0.0007. Evidence: experiment:2:metrics, experiment:3:metrics."
+  ],
+  "metric_diagnosis": "Global GAUC is 0.6692 while nDCG@5 is 0.5369 and primary is 0.6031, so overall within-user ordering is materially stronger than top-five quality. The most serious top-five weakness is tab 8, where GAUC is only 0.3519 and nDCG@5 is 0.0263; tab 3 is similarly weak with GAUC 0.5000 and nDCG@5 0.0062. The user_positive_count=zero slice has GAUC 0.5 and zero top-five metrics, but it is a retrospective label-defined diagnostic and should not be treated as a feature or independent test estimate. Evidence: experiment:3:segment:tab:8, experiment:3:segment:tab:3, experiment:3:segment:user_positive_count:zero."
+}

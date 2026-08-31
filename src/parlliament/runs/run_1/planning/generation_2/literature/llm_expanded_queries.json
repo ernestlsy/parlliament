@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Factorization Machines and DeepFM for context-aware recommendation ranking with sparse categorical user-item-context interactions including tab, hour, weekday, user ID, and video ID; compare against additive models using GAUC, nDCG@5, and primary metrics, with emphasis on tab-specific top-five failures and impression-time feature availability",
+      "Low-cost sparse feature interaction architectures for recommendation ranking: Factorization Machines, Field-aware Factorization Machines, and DeepFM modeling tab, hour, weekday, user, and video categorical fields; evaluate GAUC, nDCG@5, and primary ranking performance without using post-impression information",
+      "DeepFM-style user-item-context interaction models for top-five recommendation ranking under impression-time constraints, using categorical request-context features such as tab, hour, weekday, user ID, and video ID; investigate whether interactions improve weak tab-specific GAUC and nDCG@5 while preserving sparse-input efficiency",
+      "Factorization Machine architectures for context-aware video recommendation with sparse categorical fields and low-cost pairwise interactions among user, item, tab, hour, and weekday; papers and empirical comparisons with additive baselines using GAUC, nDCG@5, and primary metrics, especially for tab 0 and tab 8 slices",
+      "Sparse categorical feature interaction methods for recommendation ranking, including FM, FFM, DeepFM, and shallow-plus-deep architectures, restricted to impression-time user-item-context features; assess efficiency and justification for replacing an additive model based on overall and tab-specific GAUC, nDCG@5, and primary results"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "implicit-feedback recommender learning-to-rank objectives pairwise versus binary cross-entropy improve nDCG@5 while preserving within-user GAUC",
+      "top-k recommendation ranking loss for implicit feedback nDCG@5 MAP@5 compared with pointwise binary cross-entropy and evaluated by within-user AUC or GAUC",
+      "listwise and pairwise learning-to-rank losses for implicit-feedback recommendation optimizing top-five ranking quality nDCG@5 without degrading GAUC",
+      "recommendation objective mismatch acceptable GAUC weak nDCG@5 pairwise loss listwise loss versus BCE within-user ranking evaluation",
+      "learning-to-rank loss functions for implicit feedback recommendation top-k metrics nDCG@5 and MAP@5 with stable per-user AUC GAUC"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

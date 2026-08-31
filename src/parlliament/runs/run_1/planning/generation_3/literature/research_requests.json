@@ -1,0 +1,50 @@
+[
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "evaluation"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "primary"
+    ],
+    "preferred_tags": [
+      "top-k ranking",
+      "nDCG",
+      "implicit feedback",
+      "logged recommendation"
+    ],
+    "purpose": "Resolve whether the observed nDCG@5 bottleneck and minimal gain from a nonlinear residual are more plausibly addressed by changing the ranking objective or training signal rather than expanding features or architecture.",
+    "query": "Empirical and methodological literature on training objectives and loss functions that improve top-k ranking quality, especially nDCG@5, in implicit-feedback recommendation compared with pointwise binary cross-entropy; include listwise, pairwise, sampled-softmax, and differentiable ranking approaches, with attention to temporal logged-impression evaluation.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "architectures",
+      "features",
+      "bias_and_robustness",
+      "efficiency"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "per-segment performance",
+      "inference cost"
+    ],
+    "preferred_tags": [
+      "context-aware recommendation",
+      "feature interaction",
+      "temporal drift",
+      "sparse categorical context"
+    ],
+    "purpose": "Resolve the architecture and robustness uncertainty around modeling request-context interactions, particularly for severely weak tab slices, without relying on outcome-derived or future information.",
+    "query": "Literature on context-aware recommendation models that learn interactions among request context variables such as surface/tab, hour, and weekday while remaining robust to sparse context combinations and temporal drift; compare factorization machines, cross networks, gated residuals, and parameter-sharing approaches.",
+    "request_index": 2,
+    "round": 1
+  }
+]

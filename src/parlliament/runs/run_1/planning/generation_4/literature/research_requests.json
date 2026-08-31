@@ -1,0 +1,48 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "features",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "context-aware-ranking",
+      "feature-interactions",
+      "categorical-features",
+      "sparse-recommendation"
+    ],
+    "purpose": "Resolve the architecture uncertainty left by the failed nonlinear context residual experiment: whether explicit low-order feature crosses are more appropriate than a generic MLP for exploiting request_context interactions without overfitting sparse combinations.",
+    "query": "Context-aware recommender ranking architectures for categorical request context features such as tab, hour, and weekday, comparing explicit feature-cross models including Factorization Machines, DeepFM, and Deep & Cross Networks against additive embeddings or shallow MLP residuals; focus on sparse interaction generalization and top-k ranking quality",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "bias_and_robustness",
+      "evaluation",
+      "experiment_strategy",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "exposure-bias",
+      "selection-bias",
+      "distribution-shift",
+      "logged-feedback",
+      "robust-ranking"
+    ],
+    "purpose": "Resolve whether the severe tab-specific failures, especially low-performing tabs, are primarily exposure/selection bias or model-capacity problems, and identify leakage-safe robustness or diagnostic approaches suitable for fixed logged-impression evaluation.",
+    "query": "Recommendation ranking under logged-impression and exposure bias with context-dependent performance across tabs or surfaces; methods for diagnosing and mitigating distribution shift and sparse positive feedback without using post-impression outcomes or changing a fixed offline evaluation protocol",
+    "request_index": 2,
+    "round": 1
+  }
+]

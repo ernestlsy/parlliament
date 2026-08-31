@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "memory_hit"
+  ],
+  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.deep_cross_ranker",
+      "path": "20_architectures/deep_cross_ranker.md",
+      "sha256": "db004648e9c7b63e0f9bc0954691dbcf9fe572c134fa90b309e12eee9d590cb8",
+      "source_characters": 7681,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.embedding_mlp_ranker",
+      "path": "20_architectures/embedding_mlp_ranker.md",
+      "sha256": "c81739cefc5d550399a927013519688953b21ea274c3211bcfc5316593a569be",
+      "source_characters": 8364,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "efficiency.dot_product_linear_residual_ranker",
+      "path": "70_efficiency/dot_product_linear_residual_ranker.md",
+      "sha256": "5baff9838a5bdc53334ab9d068326626fe355a046e62615c87b19939bd87bd51",
+      "source_characters": 8909,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "efficiency.quantized_embedding_table_with_hot_row_cache",
+      "path": "70_efficiency/quantized_embedding_table_with_hot_row_cache.md",
+      "sha256": "2dab207c691d9f5d5c170d00e151bd617828b4f2729c26eb8c5c8828353263ff",
+      "source_characters": 8365,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "efficiency.successive_halving_experiment_promotion",
+      "path": "70_efficiency/successive_halving_experiment_promotion.md",
+      "sha256": "2cea2a6aeaea2dcc5678507bac44a63bddd36ed4b79fd720b07313298d2d6ed3",
+      "source_characters": 10060,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.user_normalized_binary_cross_entropy",
+      "path": "30_objectives/user_normalized_binary_cross_entropy.md",
+      "sha256": "c366a83c3c5da5d8076ea1d3d8b00acc3006b64c9a45f2f8d7959e346defe485",
+      "source_characters": 9126,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.bce_lambdarank_ndcg5_hybrid",
+      "path": "30_objectives/bce_lambdarank_ndcg5_hybrid.md",
+      "sha256": "48f2455f2d5620a3b9548e5d66c4ef2249f048e19be4023f4d958e67901489a0",
+      "source_characters": 10086,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.mixed_group_listnet_top1_loss",
+      "path": "30_objectives/mixed_group_listnet_top1_loss.md",
+      "sha256": "35f46aa8c8e1061fe7b968980537bb4a9d2a7a01aea803ffa38bb0c69cb14c27",
+      "source_characters": 6286,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "architecture.deep_cross_ranker",
+    "architecture.embedding_mlp_ranker",
+    "efficiency.dot_product_linear_residual_ranker",
+    "efficiency.quantized_embedding_table_with_hot_row_cache",
+    "efficiency.successive_halving_experiment_promotion",
+    "objective.user_normalized_binary_cross_entropy",
+    "objective.bce_lambdarank_ndcg5_hybrid",
+    "objective.mixed_group_listnet_top1_loss"
+  ],
+  "total_fetched_characters": 40000
+}

@@ -1,3 +1,0 @@
-[console_scripts]
-ernest = agentic_recsys.cli:main
-ernest-populate-knowledge = agentic_recsys.knowledge_builder:main

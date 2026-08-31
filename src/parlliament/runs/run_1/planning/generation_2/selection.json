@@ -1,0 +1,35 @@
+{
+  "winner": {
+    "text": "Add a one-hidden-layer nonlinear residual over the parent context fields while preserving its additive ID terms.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The measured request-context lift is positive but modest and unstable relative to its daily standard deviation. A small residual is a bounded capacity increase that can learn context combinations without replacing the stable ID scaffold.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Keep the parent additive ID and context terms, BCE training, optimizer, and schedule unchanged; add exactly one 32-unit ReLU residual head fed only by tab, hour, and weekday embeddings.",
+    "expected_effect": {
+      "GAUC": "Likely increase by 0.0005 to 0.003 if context effects are nonlinear; it may be flat or slightly negative from fitting sparse hour-tab combinations.",
+      "nDCG@5": "Likely increase by 0.001 to 0.004, especially in low-performing hour slices such as hour 3; top-five volatility is a downside."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "efficiency.dot_product_linear_residual_ranker"
+    ]
+  },
+  "selection_rationale": "Select c06 because it is the consultant's top-ranked candidate and offers the best balance of measured request-context evidence, bounded expected gain, confidence, low runtime and leakage risk, and limited scope. It preserves the reliable additive user/video scaffold while testing nonlinear context effects directly, making it preferable to broader or higher-risk interaction and ranking-loss alternatives.",
+  "counted_experiments_consumed": 0
+}

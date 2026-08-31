@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "load(data_dir, max_rows_per_split) retains CSV iteration order within each date-filtered split. encode(splits) returns (encoded, dimension). encoded[\"train\"] and encoded[\"valid\"] are (features, labels, users), where features is int32 shape [N,5] in field order [user_id, video_id, tab, hour, weekday], labels is float32 shape [N], and users identifies rows for validation-only within-user AUC. encoded[\"test\"] is (features, users), with no test label loaded or exposed. Each feature is a globally offset train-fitted categorical index with an unknown bucket; dimension is the total embedding/weight-vector size."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives the int32 [N,5] categorical-index matrix and the total dimension. Its logits remain bias plus the sum of one additive weight per field index; no interactions, architecture changes, loss changes, or baseline-derived components are introduced."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

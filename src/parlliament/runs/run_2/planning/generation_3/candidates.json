@@ -1,0 +1,384 @@
+[
+  {
+    "text": "Add a train-fitted user-by-tab categorical cross to the additive experiment-1 scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "Tab 0 covers 13,726 validation rows and has very weak ranking in experiment 2, while request context was the sole feature family with a positive training-only temporal screen. A user-by-tab residual tests whether tab preferences vary by user without introducing new raw fields.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:tab:0",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 1, append exactly one train-fitted categorical feature for the user_id \u00d7 tab cross, scored as an additive residual; retain all existing raw features, additive main effects, BCE loss, optimizer settings, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.003 if user-specific tab preference improves within-user pair ordering.",
+      "nDCG@5": "Increase by 0.001 to 0.004 if the cross corrects top-five placement in large tab cohorts, especially tab 0."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a train-fitted video-by-tab categorical cross to the additive experiment-1 scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "The major tab-level heterogeneity suggests that a video's relevance may differ by request surface. This cross is restricted to impression-time IDs and tab, and specifically targets the observed low nDCG@5 in tab 6 despite comparatively high GAUC.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:tab:6",
+      "experiment:2:segment:tab:0"
+    ],
+    "exact_ablation": "Relative to experiment 1, append exactly one train-fitted categorical feature for the video_id \u00d7 tab cross, scored as an additive residual; retain all existing raw features, additive main effects, BCE loss, optimizer settings, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.002 through context-conditional video ordering, with sparse cross coverage limiting the expected gain.",
+      "nDCG@5": "Increase by 0.001 to 0.004 if surface-specific video effects move relevant impressions into the top five."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a train-fitted user-by-hour categorical cross to the additive experiment-1 scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "Hour 3 has low GAUC and nDCG@5, and hour is an already eligible request-time feature. A user-hour residual tests temporal preference variation while avoiding all outcome fields and snapshots.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:hour:3",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 1, append exactly one train-fitted categorical feature for the user_id \u00d7 hour cross, scored as an additive residual; keep existing features, BCE loss, optimizer settings, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.002 if users have stable time-of-day preference shifts among their candidate impressions.",
+      "nDCG@5": "Increase by 0.000 to 0.003, concentrated in weak hour cohorts; overall movement may be small because hour 3 has limited support."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a train-fitted video-by-hour categorical cross to the additive experiment-1 scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "The observed hour-level ranking variation leaves open a content availability or audience-timing effect. This is a bounded interaction among already used impression-time fields, rather than a new metadata family rejected by screening.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:hour:3",
+      "experiment:2:segment:hour:16"
+    ],
+    "exact_ablation": "Relative to experiment 1, append exactly one train-fitted categorical feature for the video_id \u00d7 hour cross, scored as an additive residual; keep existing features, BCE loss, optimizer settings, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to +0.002 because many video-hour cells may be sparsely observed.",
+      "nDCG@5": "Change by 0.000 to +0.003 if timing-specific video effects improve rank placement among same-user candidates."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with a within-user pairwise logistic ranking loss.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 3
+    },
+    "rationale": "The official objective is entirely within-user ranking, and experiment 1 already provides the strongest observed score. A pairwise loss directly trains the positive-versus-negative ordering that defines GAUC, while preserving the successful additive representation.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:6"
+    ],
+    "exact_ablation": "Relative to experiment 1, replace pointwise BCE with a within-user sampled pairwise logistic loss using only each training user's positive and negative impressions; keep the additive model, all features, optimizer hyperparameters, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.004 because optimization is aligned directly to within-user positive-negative ordering.",
+      "nDCG@5": "Change by -0.001 to +0.003 because pairwise sampling may improve broad ordering without reliably emphasizing rank five."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with a top-five-weighted within-user pairwise logistic loss.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "Experiment 2 shows a meaningful separation between GAUC and nDCG@5 in tab 6 and medium-frequency items. Weighting pairwise errors by the current predicted rank targets the metric's known top-five weakness rather than adding unsupported features.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:segment:tab:6",
+      "experiment:2:segment:item_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Relative to experiment 1, replace pointwise BCE with a within-user pairwise logistic loss whose sampled pair weight is larger when the positive item's current predicted rank is near or below five; keep the additive model, features, optimizer hyperparameters, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.002 to +0.002 because top-rank weighting can sacrifice lower-rank pair ordering.",
+      "nDCG@5": "Increase by 0.001 to 0.005 if weighted updates promote relevant items around the top-five cutoff."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Select additive-model checkpoints by validation nDCG@5 rather than the GAUC proxy.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The current trainer stops on a within-user AUC proxy although official selection averages GAUC and nDCG@5. This isolated checkpoint-selection ablation tests whether the successful additive model has a later checkpoint with better top-five ordering.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:6"
+    ],
+    "exact_ablation": "Relative to experiment 1, change only the early-stopping checkpoint criterion from the within-user AUC proxy to validation nDCG@5; retain model, features, BCE loss, optimizer, epoch limit, patience, and split unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to +0.001 because the selected checkpoint may trade broad pair ordering for top-rank quality.",
+      "nDCG@5": "Increase by 0.000 to 0.003 if nDCG@5 peaks at a different epoch than GAUC."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Select additive-model checkpoints by the official validation primary metric.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The official primary averages GAUC and nDCG@5, but experiment 1 used only a GAUC proxy for early stopping. Aligning the checkpoint rule with the actual selection objective is a narrow training ablation and avoids unsupported feature expansion.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 1, change only the early-stopping checkpoint criterion from the within-user AUC proxy to validation primary equal to the mean of GAUC and nDCG@5; retain model, features, BCE loss, optimizer, epoch limit, patience, and split unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to +0.002 because primary-based selection may choose a different trade-off checkpoint.",
+      "nDCG@5": "Change by -0.001 to +0.003 because the criterion explicitly values top-five ranking alongside GAUC."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Increase L2 regularization for the additive experiment-1 model.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "The low-rank replacement degraded primary by 0.02040, indicating that added flexibility was not robust. Stronger shrinkage is a single conservative ablation of the winning additive model that may reduce temporal overfit in sparse IDs and context cells.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Relative to experiment 1, increase only the additive model's L2 coefficient from 0.000001 to 0.00001; retain model structure, features, BCE loss, learning rate, batch size, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to +0.002 as shrinkage may improve temporal generalization but can underfit informative IDs.",
+      "nDCG@5": "Change by -0.001 to +0.002, with potential benefit from less extreme sparse-cell scores."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Decrease the additive model learning rate while preserving all other experiment-1 settings.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "The successful model's score variance is substantial, whereas the failed embedding model had lower score dispersion and worse ranking. A smaller optimization step is a clean stability test without changing representation or using new data.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 1, decrease only the Adam learning rate from 0.01 to 0.005; retain additive model structure, features, BCE loss, L2, batch size, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.002 to +0.002 because slower updates may either stabilize ID estimates or undertrain within the fixed epoch budget.",
+      "nDCG@5": "Change by -0.002 to +0.002 for the same optimization-stability trade-off."
+    },
+    "expected_primary_gain": 0.0,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Increase the additive model maximum training epochs while retaining its current early-stopping rule.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "Experiment 1 is the current best scored configuration, so an optimization-horizon test is lower-risk than reviving rejected feature groups or the failed embedding architecture. Early stopping remains the protection against continued overfitting.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 1, increase only max_epochs from 10 to 20; retain additive model structure, features, BCE loss, optimizer settings, patience, checkpoint criterion, and split unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to +0.002 if additional passes improve convergence before the existing patience rule stops training.",
+      "nDCG@5": "Change by -0.001 to +0.002; a later checkpoint could slightly improve or overfit top-five order."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a train-fitted video-by-weekday categorical cross to the additive experiment-1 scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "Weekday is part of the only positively screened request-context family. A video-weekday residual tests a low-cardinality context-conditioned item effect, with lower sparsity risk than video-hour while avoiding metadata, history-response, and outcome features.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Relative to experiment 1, append exactly one train-fitted categorical feature for the video_id \u00d7 weekday cross, scored as an additive residual; retain existing features, BCE loss, optimizer settings, split, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.002 if weekday-specific video relevance improves within-user ordering.",
+      "nDCG@5": "Increase by 0.000 to 0.003 if the context-conditioned item residual improves top-five placement."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

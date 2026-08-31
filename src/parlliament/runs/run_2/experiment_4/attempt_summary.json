@@ -1,0 +1,24 @@
+{
+  "attempt_id": "2ced42de6981",
+  "status": "scored",
+  "generation": 4,
+  "mode": "improve",
+  "parent_experiment_id": 3,
+  "hypothesis_text": "Replace row-mean BCE with inverse-training-user-candidate-count weighted BCE to align training influence with within-user evaluation.",
+  "active_sub_agents": [
+    "model_designer",
+    "trainer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 114.64543015300296,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

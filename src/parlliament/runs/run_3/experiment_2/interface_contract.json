@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "encode(splits) remains unchanged and returns encoded[name] = (features, labels, users). users are canonical-row-order values sourced from the exact raw field user_id. Training weights are not a data.py output: train.py derives one float32 weight per encoded training row exclusively from train_users, with weight_i = (1 / training_count(user_id_i)) * (N_train / sum_j(1 / training_count(user_id_j)))."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model.logits and Model.predict continue to accept encoded int32 feature matrices. Model.step accepts (features, labels, sample_weights), where labels and sample_weights are aligned one-dimensional arrays of the same batch length; sample_weights are globally normalized training-only inverse-user-frequency float32 weights. Validation and test prediction calls do not receive labels or weights."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

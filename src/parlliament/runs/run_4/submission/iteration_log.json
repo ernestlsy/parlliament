@@ -1,0 +1,348 @@
+{
+  "manual_interventions": 0,
+  "attempts": [
+    {
+      "attempt_id": "432f633d660e",
+      "experiment_id": 1,
+      "generation": 1,
+      "status": "scored",
+      "parent_experiment_id": 0,
+      "hypothesis": "Add the impression-time request_context feature family\u2014tab, hour, and weekday\u2014to the neutral user/video ID scorer, leaving architecture, optimizer, and loss unchanged. This tests whether observed context signal improves within-user ordering.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 7,
+        "evidence_ids": [
+          "screen:request_context"
+        ],
+        "exact_ablation": "Add only tab, hour, and weekday request-context inputs; keep the seed additive ID model and training procedure unchanged.",
+        "expected_effect": {
+          "GAUC": "Likely small positive gain because context can reorder candidates differently within users; expected direction +0.001 to +0.004.",
+          "nDCG@5": "Likely modest positive or flat effect; expected direction 0.000 to +0.003, with less confidence than GAUC."
+        },
+        "expected_primary_gain": 0.002,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "task.leakage_policy",
+          "task.kuairand_ranking"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -1,6 +1,8 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Neutral seed data contract using user, item, and request-context identifiers.\"\"\"\n \n import csv\n+import datetime\n+import math\n import os\n \n import numpy as np\n@@ -12,7 +14,16 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n+\n+\n+def _hour(hourmin):\n+    value = int(math.floor(float(hourmin) / 100.0))\n+    return max(0, min(23, value))\n+\n+\n+def _weekday(date):\n+    return datetime.datetime.strptime(str(date), \"%Y%m%d\").weekday()\n \n \n def load(data_dir, max_rows_per_split=None):\n@@ -23,8 +34,14 @@\n     ):\n         with open(os.path.join(data_dir, filename), encoding=\"utf-8\") as handle:\n             for row in csv.DictReader(handle):\n+                date = int(row[\"date\"])\n                 rows.append((\n-                    int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n+                    date,\n+                    row[\"user_id\"],\n+                    row[\"video_id\"],\n+                    row[\"tab\"],\n+                    _hour(row[\"hourmin\"]),\n+                    _weekday(date),\n                     1 if row[LABEL] != \"0\" else 0,\n                 ))\n     result = {}\n@@ -38,8 +55,9 @@\n     train = splits[\"train\"]\n     if not train:\n         raise ValueError(\"training split is empty\")\n+\n     def raw(row):\n-        return [row[1], row[2]]\n+        return [row[1], row[2], row[3], row[4], row[5]]\n \n     vocabs = [dict() for _ in FIELDS]\n     for row in train:\n@@ -54,12 +72,14 @@\n         features = np.empty((len(rows), len(FIELDS)), dtype=np.int32)\n         labels = np.empty(len(rows), dtype=np.float32)\n         users = np.empty(len(rows), dtype=\"U32\")\n+        row_ids = np.arange(len(rows), dtype=np.int64)\n         for row_index, row in enumerate(rows):\n             for field_index, value in enumerate(raw(row)):\n                 features[row_index, field_index] = (\n-                    vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n+                    vocabs[field_index].get(value, unknown[field_index])\n+                    + offsets[field_index]\n                 )\n-            labels[row_index] = row[3]\n+            labels[row_index] = row[6]\n             users[row_index] = row[1]\n-        encoded[name] = (features, labels, users)\n+        encoded[name] = (features, labels, users, row_ids)\n     return encoded, int(sum(dimensions))\n",
+        "model.py": "--- model.py\n+++ model.py\n@@ -9,6 +9,8 @@\n \n class Model:\n     def __init__(self, dimension, learning_rate=0.01, l2=1e-6):\n+        # The shared vector covers every encoded column supplied by data.py,\n+        # including the user, video, and request-context fields.\n         self.weights = np.zeros(dimension, dtype=np.float32)\n         self.bias = np.float32(0.0)\n         self.learning_rate = learning_rate\n@@ -18,7 +20,7 @@\n         self.step_number = 0\n \n     def logits(self, features):\n-        return self.bias + self.weights[features].sum(1)\n+        return self.bias + self.weights[features].sum(axis=1)\n \n     def step(self, features, labels):\n         size = len(labels)\n@@ -26,7 +28,11 @@\n         probabilities = sigmoid(logits)\n         gradient = ((probabilities - labels) / size).astype(np.float32)\n         grad_weights = np.zeros_like(self.weights)\n-        np.add.at(grad_weights, features, gradient[:, None])\n+        np.add.at(\n+            grad_weights,\n+            features,\n+            np.broadcast_to(gradient[:, None], features.shape),\n+        )\n         grad_weights += self.l2 * self.weights\n         self.step_number += 1\n         beta1, beta2, epsilon = 0.9, 0.999, 1e-8\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -1,4 +1,4 @@\n-\"\"\"Train the neutral seed scaffold and emit validation scores for fixed evaluation.\"\"\"\n+\"\"\"Train the context-augmented additive scorer and emit validation and test scores.\"\"\"\n \n import argparse\n import json\n@@ -11,7 +11,7 @@\n \n \n def within_user_auc(user_ids, labels, scores):\n-    \"\"\"Training-only early-stop proxy; final scoring is owned by the Experimentor.\"\"\"\n+    \"\"\"Compute the validation-only within-user AUC proxy.\"\"\"\n     grouped = {}\n     for user, label, score in zip(user_ids, labels, scores):\n         grouped.setdefault(str(user), []).append((float(score), int(label)))\n@@ -35,6 +35,16 @@\n     return numerator / denominator if denominator else 0.5\n \n \n+def _unpack_train_or_test(encoded_split):\n+    if len(encoded_split) == 3:\n+        features, labels, row_ids = encoded_split\n+    elif len(encoded_split) == 4:\n+        features, labels, _, row_ids = encoded_split\n+    else:\n+        raise ValueError(\"encoded split must contain three or four values\")\n+    return features, labels, row_ids\n+\n+\n def main():\n     parser = argparse.ArgumentParser()\n     parser.add_argument(\"--config\", required=True)\n@@ -42,30 +52,44 @@\n     parser.add_argument(\"--output\", required=True)\n     parser.add_argument(\"--contract-check\", action=\"store_true\")\n     args = parser.parse_args()\n+\n     with open(args.config, encoding=\"utf-8\") as handle:\n         config = json.load(handle)\n+\n     splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n     encoded, dimension = encode(splits)\n-    train_features, train_labels, _ = encoded[\"train\"]\n-    valid_features, valid_labels, valid_users = encoded[\"valid\"]\n-    test_features, test_labels, _ = encoded[\"test\"]\n+    train_features, train_labels, _train_row_ids = _unpack_train_or_test(encoded[\"train\"])\n+    valid_features, valid_labels, valid_users, valid_row_ids = encoded[\"valid\"]\n+    test_features, _test_labels, test_row_ids = _unpack_train_or_test(encoded[\"test\"])\n+\n+    for name, features in (\n+        (\"train\", train_features),\n+        (\"valid\", valid_features),\n+        (\"test\", test_features),\n+    ):\n+        if features.ndim != 2 or features.shape[1] != 5:\n+            raise ValueError(f\"{name} features must have shape (n, 5)\")\n+\n     model = Model(\n         dimension,\n         learning_rate=config[\"learning_rate\"],\n         l2=config[\"l2\"],\n     )\n+\n     if args.contract_check:\n         probe_size = min(8, len(train_labels))\n         if probe_size == 0 or len(valid_labels) == 0:\n             raise ValueError(\"contract probe requires non-empty train and validation slices\")\n         loss = model.step(train_features[:probe_size], train_labels[:probe_size])\n         probe_scores = model.predict(valid_features[:probe_size])\n-        if probe_scores.ndim != 1 or len(probe_scores) != min(probe_size, len(valid_features)):\n+        expected_size = min(probe_size, len(valid_features))\n+        if probe_scores.ndim != 1 or len(probe_scores) != expected_size:\n             raise ValueError(\"model prediction shape violates the interface contract\")\n         if not np.isfinite(loss) or not np.all(np.isfinite(probe_scores)):\n             raise ValueError(\"model produced NaN or infinity during contract probe\")\n         print(json.dumps({\"contract\": \"ok\", \"feature_shape\": list(train_features.shape)}))\n         return\n+\n     rng = np.random.default_rng(config[\"seed\"])\n     best_score, best_state, stale = -1.0, None, 0\n     for epoch in range(1, config[\"max_epochs\"] + 1):\n@@ -83,18 +107,22 @@\n             stale += 1\n             if stale >= config[\"patience\"]:\n                 break\n+\n     if best_state is None:\n         raise RuntimeError(\"training produced no checkpoint\")\n+\n     model.load_state(best_state)\n+    valid_scores = np.asarray(model.predict(valid_features), dtype=np.float32)\n+    test_scores = np.asarray(model.predict(test_features), dtype=np.float32)\n     np.savez(\n         args.output,\n-        row_ids=np.arange(len(valid_labels), dtype=np.int64),\n-        scores=model.predict(valid_features),\n+        row_ids=np.asarray(valid_row_ids, dtype=np.int64),\n+        scores=valid_scores,\n     )\n     np.savez(\n         Path(args.output).with_name(\"predictions_test.npz\"),\n-        row_ids=np.arange(len(test_labels), dtype=np.int64),\n-        scores=model.predict(test_features),\n+        row_ids=np.asarray(test_row_ids, dtype=np.int64),\n+        scores=test_scores,\n     )\n \n \n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6689116170510226,
+        "classification": {
+          "accuracy": 0.6704560920350014,
+          "balanced_accuracy": 0.6945295994593694,
+          "confusion_matrix": {
+            "false_negative": 9431,
+            "false_positive": 31732,
+            "true_negative": 54045,
+            "true_positive": 29701
+          },
+          "f1": 0.5906826430666733,
+          "matthews_correlation": 0.36096201255412097,
+          "precision": 0.483469796363518,
+          "predicted_positive_rate": 0.4918220464498155,
+          "recall": 0.7589951957477257,
+          "specificity": 0.6300640031710132,
+          "threshold": -0.697097897529602,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.845848321914673,
+          "score_mean": -0.9800092612058329,
+          "score_min": -7.238213539123535,
+          "score_std": 1.4085754551020575
+        },
+        "nDCG@5": 0.5369580777053825,
+        "primary": 0.6029348473782026,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6772578987353086,
+          "MAP@5": 0.48565604315939687,
+          "MRR@5": 0.542483353443273,
+          "Precision@5": 0.375364585660858,
+          "Recall@5": 0.6002686181792386,
+          "average_precision": 0.5714958062082477,
+          "global_AUC": 0.7650263756079765
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [
+        {
+          "kind": "contract_fulfillment",
+          "message": "model_designer complete-file response was invalid: ValueError: agent returned complete files with no changes",
+          "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/parlliament/src/parlliament/parlliament/overseer.py\", line 416, in request_and_apply_replacements\n    apply_agent_replacements(sandbox, replacements, AGENT_FILES[agent])\n  File \"/mnt/d/parlliament/src/parlliament/parlliament/sandbox.py\", line 104, in apply_agent_replacements\n    raise ValueError(\"agent returned complete files with no changes\")\nValueError: agent returned complete files with no changes\n",
+          "responsible_agents": [
+            "model_designer"
+          ],
+          "attempt": 1,
+          "return_code": null
+        },
+        {
+          "kind": "contract_usage",
+          "message": "contract probe exited 1",
+          "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/parlliament/src/parlliament/runs/run_4/attempts/attempt_432f633d660e/train.py\", line 118, in <module>\n    main()\n  File \"/mnt/d/parlliament/src/parlliament/runs/run_4/attempts/attempt_432f633d660e/train.py\", line 51, in main\n    train_features, train_labels, _, _ = encoded[\"train\"]\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: not enough values to unpack (expected 4, got 3)\n",
+          "responsible_agents": [
+            "feature_engineer",
+            "model_designer",
+            "trainer"
+          ],
+          "attempt": 1,
+          "return_code": 1
+        }
+      ],
+      "recovery_action": "The Overseer classified each failure, routed it to the responsible code agent, and retried within the configured attempt and wall-clock limits.",
+      "elapsed_seconds": 189.62146129900066,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_4/experiment_1"
+    },
+    {
+      "attempt_id": "09c56097d95f",
+      "experiment_id": 2,
+      "generation": 2,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Replace pointwise BCE with within-user RankNet pairwise loss while retaining the current user, video, and request-context inputs, optimizer family, and canonical displayed-candidate evaluation.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 6,
+        "evidence_ids": [
+          "experiment:1:metrics"
+        ],
+        "exact_ablation": "Change only the training objective from row-wise BCE to within-user RankNet loss using positive-negative pairs from the same intact user candidate group; keep features, model capacity, optimizer, sampling limits, and evaluation unchanged.",
+        "expected_effect": {
+          "GAUC": "Expected small positive gain of +0.001 to +0.006 because the loss directly optimizes positive-over-negative ordering within users.",
+          "nDCG@5": "Expected flat to modestly positive change of -0.001 to +0.004; top-five gains depend on whether sampled pairs include high-scoring negatives."
+        },
+        "expected_primary_gain": 0.0025,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "objective.within_user_ranknet_pairwise_loss",
+          "training.group_complete_stratified_minibatching",
+          "task.kuairand_ranking"
+        ],
+        "runtime_risk": "medium"
+      },
+      "code_diff": {
+        "model.py": "--- model.py\n+++ model.py\n@@ -1,4 +1,4 @@\n-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n+\"\"\"Fresh-start additive ID model with within-user RankNet optimization.\"\"\"\n \n import numpy as np\n \n@@ -22,16 +22,43 @@\n     def logits(self, features):\n         return self.bias + self.weights[features].sum(axis=1)\n \n-    def step(self, features, labels):\n-        size = len(labels)\n+    def step(self, features, labels, user_ids):\n+        labels = np.asarray(labels)\n+        user_ids = np.asarray(user_ids)\n         logits = self.logits(features)\n-        probabilities = sigmoid(logits)\n-        gradient = ((probabilities - labels) / size).astype(np.float32)\n+        row_gradient = np.zeros(len(labels), dtype=np.float64)\n+        total_loss = 0.0\n+        pair_count = 0\n+\n+        for user_id in np.unique(user_ids):\n+            group = np.flatnonzero(user_ids == user_id)\n+            positive = group[labels[group] == 1]\n+            negative = group[labels[group] == 0]\n+            if len(positive) == 0 or len(negative) == 0:\n+                continue\n+\n+            differences = (\n+                logits[positive, None].astype(np.float64)\n+                - logits[negative][None, :].astype(np.float64)\n+            )\n+            pair_probabilities = sigmoid(differences)\n+            positive_gradient = pair_probabilities - 1.0\n+            negative_gradient = 1.0 - pair_probabilities\n+\n+            row_gradient[positive] += positive_gradient.sum(axis=1)\n+            row_gradient[negative] += negative_gradient.sum(axis=0)\n+            total_loss += float(np.logaddexp(0.0, -differences).sum())\n+            pair_count += differences.size\n+\n+        if pair_count == 0:\n+            return 0.0\n+\n+        row_gradient /= pair_count\n         grad_weights = np.zeros_like(self.weights)\n         np.add.at(\n             grad_weights,\n             features,\n-            np.broadcast_to(gradient[:, None], features.shape),\n+            np.broadcast_to(row_gradient[:, None], features.shape),\n         )\n         grad_weights += self.l2 * self.weights\n         self.step_number += 1\n@@ -43,11 +70,8 @@\n         first_hat = self.first_moment / (1 - beta1 ** self.step_number)\n         second_hat = self.second_moment / (1 - beta2 ** self.step_number)\n         self.weights -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n-        self.bias -= self.learning_rate * gradient.sum()\n-        return float(-np.mean(\n-            labels * np.log(probabilities + 1e-9)\n-            + (1 - labels) * np.log(1 - probabilities + 1e-9)\n-        ))\n+        self.bias -= self.learning_rate * row_gradient.sum()\n+        return float(total_loss / pair_count)\n \n     def predict(self, features, batch_size=200_000):\n         return np.concatenate([\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -35,14 +35,46 @@\n     return numerator / denominator if denominator else 0.5\n \n \n-def _unpack_train_or_test(encoded_split):\n-    if len(encoded_split) == 3:\n-        features, labels, row_ids = encoded_split\n-    elif len(encoded_split) == 4:\n-        features, labels, _, row_ids = encoded_split\n-    else:\n-        raise ValueError(\"encoded split must contain three or four values\")\n-    return features, labels, row_ids\n+def _assert_artifact(path, row_ids, scores):\n+    row_ids = np.asarray(row_ids)\n+    scores = np.asarray(scores)\n+    if row_ids.ndim != 1 or scores.ndim != 1:\n+        raise ValueError(\"prediction artifact arrays must be one-dimensional\")\n+    if len(row_ids) != len(scores):\n+        raise ValueError(\"prediction artifact arrays must have equal lengths\")\n+    with np.load(path) as artifact:\n+        if set(artifact.files) != {\"row_ids\", \"scores\"}:\n+            raise ValueError(\"prediction artifact has an unexpected key set\")\n+        if artifact[\"row_ids\"].ndim != 1 or artifact[\"scores\"].ndim != 1:\n+            raise ValueError(\"prediction artifact arrays must be one-dimensional\")\n+        if len(artifact[\"row_ids\"]) != len(artifact[\"scores\"]):\n+            raise ValueError(\"prediction artifact arrays must have equal lengths\")\n+\n+\n+def _group_complete_batches(user_ids, batch_size, rng):\n+    groups = {}\n+    for index, user_id in enumerate(user_ids):\n+        groups.setdefault(user_id, []).append(index)\n+\n+    group_values = list(groups.values())\n+    shuffled_order = rng.permutation(len(group_values))\n+    batches = []\n+    current = []\n+    for group_index in shuffled_order:\n+        group = group_values[int(group_index)]\n+        if current and len(current) + len(group) > batch_size:\n+            batches.append(np.asarray(current, dtype=np.int64))\n+            current = []\n+        if len(group) > batch_size:\n+            if current:\n+                batches.append(np.asarray(current, dtype=np.int64))\n+                current = []\n+            batches.append(np.asarray(group, dtype=np.int64))\n+        else:\n+            current.extend(group)\n+    if current:\n+        batches.append(np.asarray(current, dtype=np.int64))\n+    return batches\n \n \n def main():\n@@ -58,9 +90,10 @@\n \n     splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n     encoded, dimension = encode(splits)\n-    train_features, train_labels, _train_row_ids = _unpack_train_or_test(encoded[\"train\"])\n+    train_features, train_labels, train_users, _train_row_ids = encoded[\"train\"]\n     valid_features, valid_labels, valid_users, valid_row_ids = encoded[\"valid\"]\n-    test_features, _test_labels, test_row_ids = _unpack_train_or_test(encoded[\"test\"])\n+    test_features = encoded[\"test\"][0]\n+    test_row_ids = encoded[\"test\"][3]\n \n     for name, features in (\n         (\"train\", train_features),\n@@ -80,7 +113,11 @@\n         probe_size = min(8, len(train_labels))\n         if probe_size == 0 or len(valid_labels) == 0:\n             raise ValueError(\"contract probe requires non-empty train and validation slices\")\n-        loss = model.step(train_features[:probe_size], train_labels[:probe_size])\n+        loss = model.step(\n+            train_features[:probe_size],\n+            train_labels[:probe_size],\n+            train_users[:probe_size],\n+        )\n         probe_scores = model.predict(valid_features[:probe_size])\n         expected_size = min(probe_size, len(valid_features))\n         if probe_scores.ndim != 1 or len(probe_scores) != expected_size:\n@@ -93,11 +130,15 @@\n     rng = np.random.default_rng(config[\"seed\"])\n     best_score, best_state, stale = -1.0, None, 0\n     for epoch in range(1, config[\"max_epochs\"] + 1):\n-        order = rng.permutation(len(train_labels))\n         losses = []\n-        for index in range(0, len(order), config[\"batch_size\"]):\n-            batch = order[index:index + config[\"batch_size\"]]\n-            losses.append(model.step(train_features[batch], train_labels[batch]))\n+        for batch in _group_complete_batches(train_users, config[\"batch_size\"], rng):\n+            losses.append(\n+                model.step(\n+                    train_features[batch],\n+                    train_labels[batch],\n+                    train_users[batch],\n+                )\n+            )\n         predictions = model.predict(valid_features)\n         proxy = within_user_auc(valid_users, valid_labels, predictions)\n         print(f\"epoch={epoch} loss={np.mean(losses):.6f} valid_gauc_proxy={proxy:.6f}\")\n@@ -114,16 +155,14 @@\n     model.load_state(best_state)\n     valid_scores = np.asarray(model.predict(valid_features), dtype=np.float32)\n     test_scores = np.asarray(model.predict(test_features), dtype=np.float32)\n-    np.savez(\n-        args.output,\n-        row_ids=np.asarray(valid_row_ids, dtype=np.int64),\n-        scores=valid_scores,\n-    )\n-    np.savez(\n-        Path(args.output).with_name(\"predictions_test.npz\"),\n-        row_ids=np.asarray(test_row_ids, dtype=np.int64),\n-        scores=test_scores,\n-    )\n+    valid_path = Path(args.output)\n+    test_path = valid_path.with_name(\"predictions_test.npz\")\n+    valid_row_ids = np.asarray(valid_row_ids, dtype=np.int64)\n+    test_row_ids = np.asarray(test_row_ids, dtype=np.int64)\n+    np.savez(valid_path, row_ids=valid_row_ids, scores=valid_scores)\n+    np.savez(test_path, row_ids=test_row_ids, scores=test_scores)\n+    _assert_artifact(valid_path, valid_row_ids, valid_scores)\n+    _assert_artifact(test_path, test_row_ids, test_scores)\n \n \n if __name__ == \"__main__\":\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6685063951303031,
+        "classification": {
+          "accuracy": 0.5601437846752436,
+          "balanced_accuracy": 0.6427540645698305,
+          "confusion_matrix": {
+            "false_negative": 5323,
+            "false_positive": 49619,
+            "true_negative": 36158,
+            "true_positive": 33809
+          },
+          "f1": 0.5517134464751957,
+          "matthews_correlation": 0.28118322137704077,
+          "precision": 0.4052476386824567,
+          "predicted_positive_rate": 0.6679102386537399,
+          "recall": 0.8639732188490238,
+          "specificity": 0.42153491029063733,
+          "threshold": 0.6790621876716614,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.7075252532958984,
+          "score_mean": 0.6505214705397926,
+          "score_min": -4.23922061920166,
+          "score_std": 1.1175549628338806
+        },
+        "nDCG@5": 0.5367903359407852,
+        "primary": 0.6026483655355441,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6772132099924029,
+          "MAP@5": 0.4855739151807679,
+          "MRR@5": 0.5418137671120707,
+          "Precision@5": 0.3752126439349786,
+          "Recall@5": 0.6001583687091553,
+          "average_precision": 0.4703747052385294,
+          "global_AUC": 0.6997688776167588
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 101.57031958299922,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_4/experiment_2"
+    },
+    {
+      "attempt_id": "d0a28ce20df0",
+      "experiment_id": 3,
+      "generation": 3,
+      "status": "scored",
+      "parent_experiment_id": 2,
+      "hypothesis": "Use a hybrid loss that combines within-user RankNet with a small pointwise BCE anchor over the same displayed impressions.",
+      "hypothesis_rationale": {
+        "candidate_id": "c08",
+        "confidence": 5,
+        "evidence_ids": [
+          "experiment:1:metrics",
+          "experiment:2:metrics"
+        ],
+        "exact_ablation": "Add only a pointwise BCE term with fixed weight 0.10 to the existing within-user RankNet loss; retain features, architecture, optimizer, group sampling, split, and early stopping.",
+        "expected_effect": {
+          "GAUC": "Small positive or flat change, approximately -0.001 to +0.005, if the anchor stabilizes score learning without overwhelming pairwise ordering.",
+          "nDCG@5": "Small positive change, approximately 0 to +0.006, if absolute relevance calibration helps identify top candidates among close pairwise scores."
+        },
+        "expected_primary_gain": 0.002,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "objective.mixed_group_listnet_top1_loss",
+          "task.kuairand_ranking"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "model.py": "--- model.py\n+++ model.py\n@@ -50,10 +50,21 @@\n             total_loss += float(np.logaddexp(0.0, -differences).sum())\n             pair_count += differences.size\n \n-        if pair_count == 0:\n-            return 0.0\n+        bce_logits = logits.astype(np.float64)\n+        bce_labels = labels.astype(np.float64)\n+        bce_loss = np.logaddexp(0.0, -bce_logits) - bce_labels * bce_logits\n+        bce_weight = 0.10\n+        if len(labels) > 0:\n+            row_gradient /= pair_count if pair_count else 1\n+            row_gradient += bce_weight * (\n+                sigmoid(bce_logits) - bce_labels\n+            ) / len(labels)\n+            total_loss = total_loss / pair_count if pair_count else 0.0\n+            total_loss += bce_weight * float(bce_loss.mean())\n+        elif pair_count:\n+            row_gradient /= pair_count\n+            total_loss /= pair_count\n \n-        row_gradient /= pair_count\n         grad_weights = np.zeros_like(self.weights)\n         np.add.at(\n             grad_weights,\n@@ -71,7 +82,7 @@\n         second_hat = self.second_moment / (1 - beta2 ** self.step_number)\n         self.weights -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n         self.bias -= self.learning_rate * row_gradient.sum()\n-        return float(total_loss / pair_count)\n+        return float(total_loss)\n \n     def predict(self, features, batch_size=200_000):\n         return np.concatenate([\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.668322714126043,
+        "classification": {
+          "accuracy": 0.631267562785708,
+          "balanced_accuracy": 0.6712421993578073,
+          "confusion_matrix": {
+            "false_negative": 8676,
+            "false_positive": 37382,
+            "true_negative": 48395,
+            "true_positive": 30456
+          },
+          "f1": 0.5694306814994858,
+          "matthews_correlation": 0.3188952002943875,
+          "precision": 0.4489519148559804,
+          "predicted_positive_rate": 0.5430993763459798,
+          "recall": 0.7782888684452622,
+          "specificity": 0.5641955302703522,
+          "threshold": -0.6035758852958679,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 1.4093629121780396,
+          "score_mean": -0.8485751256249416,
+          "score_min": -5.130552768707275,
+          "score_std": 1.0519647676435444
+        },
+        "nDCG@5": 0.5365871373160064,
+        "primary": 0.6024549257210248,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6771238325065916,
+          "MAP@5": 0.4851212306286746,
+          "MRR@5": 0.5419232545321894,
+          "Precision@5": 0.3754629008952507,
+          "Recall@5": 0.6002285590071779,
+          "average_precision": 0.5317154856955623,
+          "global_AUC": 0.7381920198591445
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 116.56365507800365,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_4/experiment_3"
+    },
+    {
+      "attempt_id": "00f9bef2d406",
+      "experiment_id": 4,
+      "generation": 4,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Use context-conditioned linear interactions between each context field and the video identity.",
+      "hypothesis_rationale": {
+        "candidate_id": "c07",
+        "confidence": 6,
+        "evidence_ids": [
+          "screen:request_context",
+          "experiment:3:segment:tab:8",
+          "experiment:3:segment:tab:3"
+        ],
+        "exact_ablation": "Add only video-by-tab, video-by-hour, and video-by-weekday interaction parameters to the existing additive scorer; keep user/video/context main effects, BCE, optimizer, and training schedule unchanged.",
+        "expected_effect": {
+          "GAUC": "Expected +0.002 to +0.007 if context-specific video preferences improve within-user ordering; risk is -0.004 on sparse videos or tabs from memorization.",
+          "nDCG@5": "Expected +0.002 to +0.009 because candidate scores can adapt to the active context; risk is volatile top-five rankings for rare combinations."
+        },
+        "expected_primary_gain": 0.004,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "architecture.deep_cross_ranker"
+        ],
+        "runtime_risk": "medium"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -14,7 +14,16 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n+FIELDS = [\n+    \"user_id\",\n+    \"video_id\",\n+    \"tab\",\n+    \"hour\",\n+    \"weekday\",\n+    \"video_id-tab\",\n+    \"video_id-hour\",\n+    \"video_id-weekday\",\n+]\n \n \n def _hour(hourmin):\n@@ -57,7 +66,20 @@\n         raise ValueError(\"training split is empty\")\n \n     def raw(row):\n-        return [row[1], row[2], row[3], row[4], row[5]]\n+        video_id = row[2]\n+        tab = row[3]\n+        hour = row[4]\n+        weekday = row[5]\n+        return [\n+            row[1],\n+            video_id,\n+            tab,\n+            hour,\n+            weekday,\n+            (video_id, tab),\n+            (video_id, hour),\n+            (video_id, weekday),\n+        ]\n \n     vocabs = [dict() for _ in FIELDS]\n     for row in train:\n",
+        "model.py": "--- model.py\n+++ model.py\n@@ -10,7 +10,7 @@\n class Model:\n     def __init__(self, dimension, learning_rate=0.01, l2=1e-6):\n         # The shared vector covers every encoded column supplied by data.py,\n-        # including the user, video, and request-context fields.\n+        # including the user, video, request-context, and supplied interaction fields.\n         self.weights = np.zeros(dimension, dtype=np.float32)\n         self.bias = np.float32(0.0)\n         self.learning_rate = learning_rate\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -45,6 +45,24 @@\n     return features, labels, row_ids\n \n \n+def _check_prediction_archive(path, expected_row_ids, expected_scores):\n+    with np.load(path, allow_pickle=False) as archive:\n+        if set(archive.files) != {\"row_ids\", \"scores\"}:\n+            raise ValueError(f\"{path} must contain exactly row_ids and scores\")\n+        row_ids = archive[\"row_ids\"]\n+        scores = archive[\"scores\"]\n+        if row_ids.ndim != 1 or scores.ndim != 1:\n+            raise ValueError(f\"{path} arrays must be one-dimensional\")\n+        if len(row_ids) != len(scores):\n+            raise ValueError(f\"{path} row_ids and scores must have matching lengths\")\n+        if len(row_ids) != len(expected_row_ids) or len(scores) != len(expected_scores):\n+            raise ValueError(f\"{path} has an unexpected number of predictions\")\n+        if row_ids.dtype != np.dtype(np.int64):\n+            raise ValueError(f\"{path} row_ids must have dtype int64\")\n+        if scores.dtype != np.dtype(np.float32):\n+            raise ValueError(f\"{path} scores must have dtype float32\")\n+\n+\n def main():\n     parser = argparse.ArgumentParser()\n     parser.add_argument(\"--config\", required=True)\n@@ -60,15 +78,15 @@\n     encoded, dimension = encode(splits)\n     train_features, train_labels, _train_row_ids = _unpack_train_or_test(encoded[\"train\"])\n     valid_features, valid_labels, valid_users, valid_row_ids = encoded[\"valid\"]\n-    test_features, _test_labels, test_row_ids = _unpack_train_or_test(encoded[\"test\"])\n+    test_features, _, test_row_ids = _unpack_train_or_test(encoded[\"test\"])\n \n     for name, features in (\n         (\"train\", train_features),\n         (\"valid\", valid_features),\n         (\"test\", test_features),\n     ):\n-        if features.ndim != 2 or features.shape[1] != 5:\n-            raise ValueError(f\"{name} features must have shape (n, 5)\")\n+        if features.ndim != 2 or features.shape[1] != 8:\n+            raise ValueError(f\"{name} features must have shape (n, 8)\")\n \n     model = Model(\n         dimension,\n@@ -114,16 +132,20 @@\n     model.load_state(best_state)\n     valid_scores = np.asarray(model.predict(valid_features), dtype=np.float32)\n     test_scores = np.asarray(model.predict(test_features), dtype=np.float32)\n+    valid_output = Path(args.output)\n+    test_output = valid_output.with_name(\"predictions_test.npz\")\n     np.savez(\n-        args.output,\n+        valid_output,\n         row_ids=np.asarray(valid_row_ids, dtype=np.int64),\n         scores=valid_scores,\n     )\n     np.savez(\n-        Path(args.output).with_name(\"predictions_test.npz\"),\n+        test_output,\n         row_ids=np.asarray(test_row_ids, dtype=np.int64),\n         scores=test_scores,\n     )\n+    _check_prediction_archive(valid_output, valid_row_ids, valid_scores)\n+    _check_prediction_archive(test_output, test_row_ids, test_scores)\n \n \n if __name__ == \"__main__\":\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6573385117880062,
+        "classification": {
+          "accuracy": 0.6448614591422556,
+          "balanced_accuracy": 0.6813414552484771,
+          "confusion_matrix": {
+            "false_negative": 8647,
+            "false_positive": 35713,
+            "true_negative": 50064,
+            "true_positive": 30485
+          },
+          "f1": 0.5788474318807558,
+          "matthews_correlation": 0.33705158058475443,
+          "precision": 0.46051240218737727,
+          "predicted_positive_rate": 0.5299698180275241,
+          "recall": 0.7790299499131146,
+          "specificity": 0.5836529605838395,
+          "threshold": -0.7301914691925049,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 1.7465673685073853,
+          "score_mean": -0.8308425768442639,
+          "score_min": -4.156081676483154,
+          "score_std": 0.9358530934897903
+        },
+        "nDCG@5": 0.5323570976841144,
+        "primary": 0.5948478047360604,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6759619251910444,
+          "MAP@5": 0.480393248524034,
+          "MRR@5": 0.5370730363021617,
+          "Precision@5": 0.37350553395598196,
+          "Recall@5": 0.5975151811970223,
+          "average_precision": 0.5447346468338291,
+          "global_AUC": 0.7482667006226733
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 92.40293867400032,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_4/experiment_4"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "attempt_id": "09c56097d95f",
+  "status": "scored",
+  "generation": 2,
+  "mode": "improve",
+  "parent_experiment_id": 1,
+  "hypothesis_text": "Replace pointwise BCE with within-user RankNet pairwise loss while retaining the current user, video, and request-context inputs, optimizer family, and canonical displayed-candidate evaluation.",
+  "active_sub_agents": [
+    "model_designer",
+    "trainer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 101.57031958299922,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

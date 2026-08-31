@@ -5,6 +5,10 @@ hypothesis-driven experiment engine for KuaiRand-Pure. Generated experiments bra
 parent, change only explicitly delegated files, emit raw validation predictions, and are scored by
 evaluation code that agents cannot edit.
 
+For a submission-oriented overview, environment setup, the exact GPT-5.6 reproduction command,
+limitations, and team contribution placeholders, see the [repository README](../../README.md) and
+[project description](../../project_description.txt).
+
 ## Architecture
 
 The implementation keeps the specification's responsibilities separate:
@@ -103,6 +107,21 @@ the full experiment archive, and a dedicated `scored_metric_history` containing 
 experiment's complete nested metric object. This makes classification, ranking, and score-distribution
 diagnostics directly available for hypothesis decisions without changing the official objective.
 
+## Starter Kit empirical experiment priors
+
+The organizer's experimentally verified guidance is encoded in the always-included, system-owned
+card `task.starter_kit_empirical_priors`. It tells the Evolution Judge to deprioritize broad static
+feature bundles and changes that only increase embedding width or parameter capacity. The same card
+prioritizes ranking-aligned objectives, causal user histories, auxiliary-task learning, watch-time
+modeling, temporal shift, and separately declared random-exposure robustness analysis.
+
+These findings are soft research priors rather than hard validation rules. A targeted feature or
+capacity change may still be proposed when the current train-only screen or scored archive identifies
+a specific interaction, segment weakness, or underfitting signature. Committee results remain
+literature context and cannot be cited as measured ParLLiaMent experiment evidence. See the
+[fixed prior card](parlliament/knowledge/00_task/starter_kit_empirical_priors.md) and the Starter Kit's
+[translated guidance](../kuairand-starter-kit/README_TRANSLATED.md#where-to-start-modifying).
+
 ## Populate the literature knowledge base once
 
 The population command is a pre-run preparation utility. Run it manually before starting ParLLiaMent;
@@ -183,6 +202,15 @@ parlliament run \
   --base-url https://api.openai.com/v1
 ```
 
+The GPT-5.6 development workflow was launched from this directory with:
+
+```bash
+parlliament run --workspace . --data-dir ../kuairand-starter-kit/KuaiRand-Pure/data --model gpt-5.6-terra --run_name run_2 --seed-model simple
+```
+
+`--run_name` is a supported compatibility alias for the canonical `--run-name` spelling, so the
+recorded command can be reused unchanged.
+
 Use `--seed-model kuairand-baseline` on a new run to start parent 0 from the starter kit's official
 FM architecture and training setup. The default is `simple`. Seed selection is immutable for a run:
 resuming an existing `--run-name` with a different value is rejected to preserve lineage.
@@ -210,8 +238,8 @@ JSON object on stdin:
 It must print the requested JSON object to stdout. Prompts contain the exact response schema for
 each role. This adapter is also useful for audit/replay and local models.
 
-Resume a run with the same `--workspace` and `--run-name`. The append-only journal determines the
-next experiment ID, next generation, parent archive, and stop state. Inspect it with:
+Resume a run with the same `--workspace` and `--run-name` (or `--run_name`). The append-only journal
+determines the next experiment ID, next generation, parent archive, and stop state. Inspect it with:
 
 ```bash
 parlliament status runs/run_1

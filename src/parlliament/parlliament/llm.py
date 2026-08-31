@@ -1,3 +1,9 @@
+"""Provide model clients, structured-response parsing, retries, and LLM auditing.
+
+The module supports OpenAI Responses, compatible Chat Completions, local JSON command adapters, and
+scripted test clients while preserving provider errors, request metadata, and token usage.
+"""
+
 from __future__ import annotations
 
 import json

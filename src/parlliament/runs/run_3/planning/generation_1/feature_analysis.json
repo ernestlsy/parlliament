@@ -1,0 +1,19 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context"
+      ],
+      "finding": "Request context is the only prioritized train-only feature group: it has a positive primary lift of 0.00221 with full coverage, and its lift is positive on all four temporal holdout days. This is the available evidence most consistent with a modest, stable within-user ranking improvement.",
+      "recommended_action": "Proceed with tab, hour, and weekday only, using time-available request-time values and a small-budget confirmation run focused on GAUC plus nDCG@5. Retain only if the positive within-user ranking result reproduces; do not expand the feature set under the strict early-stopping rule."
+    }
+  ],
+  "avoid": [
+    "Do not add user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response: each was rejected in completed training-only screening, with non-positive primary lift.",
+    "Do not use current-impression outcomes, including engagement or dwell outcomes, as ranking inputs; they are forbidden because unavailable at ranking time.",
+    "Do not use aggregate video statistic snapshot fields without per-impression availability timestamps; they remain quarantined for leakage risk.",
+    "Do not claim a cold-item conclusion from the available metrics: the cold-item segment has only 8 rows.",
+    "Do not prioritize historical author/item response features despite their apparent historical framing: both screened strongly negative, so there is no ranking justification to spend experiment budget on them."
+  ],
+  "metric_diagnosis": "The strongest available evidence is a small but consistently positive primary lift for request_context in training-only temporal holdout. Its daily standard deviation (0.00580) exceeds the aggregate lift, so the result warrants a narrowly scoped confirmation rather than broad rollout. Segment diagnostics do not identify a weakest segment because no weakest-segment evidence is supplied. For request_context, warm user-and-item GAUC is 0.6312 while nDCG@5 is 0.5076, and cold-user GAUC is 0.6536 while nDCG@5 is 0.4921; thus within-user discrimination is stronger than top-five ordering, especially for cold users. Optimize and gate primarily on stable GAUC evidence, while explicitly monitoring nDCG@5 so a GAUC gain does not conceal degraded top-five quality. Cold-item results are not decision-grade because of the 8-row sample."
+}

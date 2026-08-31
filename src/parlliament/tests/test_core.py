@@ -260,6 +260,10 @@ class ContractTests(unittest.TestCase):
             "run", "--workspace", "workspace", "--data-dir", "data", "--model", "model",
         ]
         self.assertEqual(_parser().parse_args(common).seed_model, "simple")
+        self.assertEqual(
+            _parser().parse_args(common + ["--run_name", "reproduction-run"]).run_name,
+            "reproduction-run",
+        )
         selected = _parser().parse_args(
             common + ["--seed-model", "kuairand-baseline"]
         )

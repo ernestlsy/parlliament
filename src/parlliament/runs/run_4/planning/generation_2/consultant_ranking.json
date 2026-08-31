@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.82,
+      "rationale": "Best balance of focused scope, direct alignment with within-user GAUC, moderate runtime, low leakage risk, and confidence 6. It is a clean objective ablation with plausible upside and minimal duplication."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 2,
+      "utility_score": 0.79,
+      "rationale": "Safer than a full pairwise replacement because BCE supervision is retained, while the auxiliary RankNet term targets ordering and nDCG. Slightly lower expected gain and higher implementation complexity than c01."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 3,
+      "utility_score": 0.73,
+      "rationale": "Very low runtime and leakage risk with exact user-level weighting and no feature or architecture changes. Expected gain is smaller, but it is a strong low-risk experiment that addresses the mismatch between row weighting and user-normalized evaluation."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 4,
+      "utility_score": 0.69,
+      "rationale": "Targets the observed GAUC-to-nDCG gap by correcting confusing negatives within displayed groups without synthetic-negative leakage. Penalized for hard-negative overfitting, sampling complexity, and weaker evidence."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 5,
+      "utility_score": 0.65,
+      "rationale": "A bounded interaction could address severe tab and hour heterogeneity at low runtime cost. Penalized because tab and hour are already present, the evidence is mainly train-only screening and small diagnostic slices, and the experiment is partly duplicative."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 6,
+      "utility_score": 0.61,
+      "rationale": "Group-complete training is compatible with the task and may stabilize within-user contrasts, but the fixed 60/20/20 mixture is arbitrary, can distort the official population, and has only modest expected upside."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 7,
+      "utility_score": 0.57,
+      "rationale": "Explicit interactions are relevant to the context and tab weaknesses, but replacing the additive scorer increases capacity and runtime without strong validation evidence. Overfitting risk is meaningful."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 8,
+      "utility_score": 0.52,
+      "rationale": "A bounded MLP tests nonlinear effects, but it is a generic capacity increase with weakly differentiated evidence and moderate runtime and overfitting risk. Expected gain is lower than the more task-aligned ranking changes."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 9,
+      "utility_score": 0.48,
+      "rationale": "Cheap and leakage-safe, but cyclic hour may discard genuinely non-smooth categorical effects. The weak-hour diagnostics do not establish that representation smoothing will improve global ranking, and expected gain is small."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 10,
+      "utility_score": 0.43,
+      "rationale": "ListNet directly targets group ranking and may help nDCG, but high runtime, group handling complexity, possible loss of absolute propensity information, and confidence 5 make it inferior to the simpler pairwise alternatives."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 11,
+      "utility_score": 0.35,
+      "rationale": "Causal history is potentially valuable for personalization and top-five ranking, but implementation scope and runtime are high, leakage auditing is nontrivial, and confidence is only 4. The proposed last-20-ID representation also risks sparse or weakly useful signals."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 12,
+      "utility_score": 0.25,
+      "rationale": "Candidate-conditioned history attention has substantial theoretical upside but is the broadest and riskiest proposal: it combines new features and architecture, has high runtime, medium leakage risk, confidence 3, and substantial overfitting and validation-risk exposure."
+    }
+  ]
+}

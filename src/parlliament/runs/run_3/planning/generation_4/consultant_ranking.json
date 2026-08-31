@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c05",
+      "rank": 1,
+      "utility_score": 0.76,
+      "rationale": "Best scarce-run choice: an isolated, low-runtime correction to checkpoint selection that aligns training selection with the official primary metric while retaining the validated experiment 1 model. It has the strongest feasibility and confidence, minimal implementation risk, and avoids feature-scope expansion. Penalized modestly because validation-based checkpoint selection can overfit if repeatedly reused, so it should be a single predeclared selection rule."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 2,
+      "utility_score": 0.68,
+      "rationale": "The strongest objective experiment: it retains BCE stability while adding a bounded same-user ordering signal directly aligned with GAUC and plausibly helpful for the nDCG@5 gap. Its scope is narrow and leakage risk is low. It is preferred to replacing BCE outright, but pair construction and coefficient choice add runtime and tuning risk."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 3,
+      "utility_score": 0.61,
+      "rationale": "Directly targets the observed weak nDCG@5 behavior and retains BCE, giving it a credible mechanism beyond another interaction feature. However, the top-five rationale is drawn from retrospective validation slices, LambdaRank swap weighting is materially more complex, and the fixed coefficient and list construction create higher implementation and validation-overfitting risk than c01."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 4,
+      "utility_score": 0.52,
+      "rationale": "A compact, low-runtime request-context interaction with training-only vocabulary and a mechanism distinct from the failed high-cardinality video-by-tab interaction. It has some support from the positively screened request-context family, but the evidence for tab-hour specifically is indirect and relies partly on noisy diagnostic slices."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 5,
+      "utility_score": 0.47,
+      "rationale": "Very cheap, clean underfitting diagnostic with no leakage or scope expansion. It is ranked ahead of more speculative extensions because one scarce experiment favors reliability, but its expected gain is small and there is no direct evidence that experiment 1 is over-regularized."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 6,
+      "utility_score": 0.43,
+      "rationale": "A conceptually clean test of within-user ordering, but replacing BCE removes the stable pointwise anchor and has lower confidence than the BCE-plus-RankNet alternative. It is substantially duplicative of c01 while being more likely to trade away nDCG@5 or calibration."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 7,
+      "utility_score": 0.38,
+      "rationale": "Video-by-weekday is lower-cardinality and potentially more stable than the failed video-by-tab interaction, with low runtime and leakage risk. Still, it is another item-context interaction after experiment 3 slightly regressed, and the supporting request-context screen does not specifically validate item-by-weekday effects."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 8,
+      "utility_score": 0.35,
+      "rationale": "Video-by-hour has a plausible temporal mechanism, but is sparser and more temporally fragile than video-by-weekday. It is closely related to the already unsuccessful video-by-tab interaction and the weak-hour slice evidence is diagnostic rather than causal evidence for an item-hour feature."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 9,
+      "utility_score": 0.29,
+      "rationale": "A distinct listwise objective, but complete same-user list batching substantially raises implementation and runtime risk. Evidence that training lists represent meaningful candidate competition is absent, and this overlaps the same objective-alignment hypothesis already tested more safely by c01 and c03."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 10,
+      "utility_score": 0.25,
+      "rationale": "Repeat exposure could add useful dynamic information, but serving-time availability and strict timestamp handling make leakage risk material. The proposed feature also conflates preference, prior delivery policy, and exposure fatigue; segment evidence does not specifically establish repeat behavior as the limiting factor."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 11,
+      "utility_score": 0.2,
+      "rationale": "Dynamic intent is a plausible long-term direction, but this is excessive scope for one scarce experiment: causal-history correctness, representation design, sequence truncation, and integration into the additive scorer all introduce validation, runtime, and leakage risks. Its broad mechanism has only indirect support."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 12,
+      "utility_score": 0.1,
+      "rationale": "Lowest expected utility: a user-only history-length term generally cannot reorder candidates within a contemporaneous user list, which is what GAUC and nDCG@5 measure. It also carries causal-history leakage risk despite offering little direct ranking mechanism or strong supporting evidence."
+    }
+  ]
+}

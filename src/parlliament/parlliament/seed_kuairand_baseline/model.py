@@ -1,4 +1,8 @@
-"""KuaiRand five-field Factorization Machine baseline implemented with NumPy."""
+"""Implement the organizer-style five-field Factorization Machine seed.
+
+The NumPy model combines bias, first-order terms, pairwise embedding interactions, sigmoid scoring,
+and Adam-style optimization as an optional unscored parent-zero scaffold.
+"""
 
 import numpy as np
 

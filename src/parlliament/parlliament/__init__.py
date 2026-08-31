@@ -1,4 +1,8 @@
-"""ParLLiaMent: a bounded autonomous experimentation system for recommenders."""
+"""Expose ParLLiaMent's primary public orchestration and configuration interfaces.
+
+Import ``Overseer`` to run the autonomous lifecycle programmatically or ``SystemConfig`` to define
+and validate a persistent run configuration.
+"""
 
 from .config import SystemConfig
 from .overseer import Overseer

@@ -1,0 +1,398 @@
+[
+  {
+    "text": "Add a user-by-tab categorical interaction so request surface can modulate each user's item ranking.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The request-context screen was the only positive feature-family screen (+0.00221 primary), while tab 0 remains weak on validation (GAUC 0.5419, nDCG@5 0.0577 over 13,726 rows). A user-by-tab term can vary within a user when request surfaces differ, unlike a user-only term.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:tab:0",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Append exactly one hashed categorical feature representing the pair (user_id, tab) to experiment 1's existing additive feature matrix; retain all existing fields, row-averaged BCE, optimizer, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.004 from surface-specific user preference ordering.",
+      "nDCG@5": "+0.000 to +0.003 if the interaction promotes relevant items on weak high-volume tabs."
+    },
+    "expected_primary_gain": 0.0018,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "task.leakage_policy",
+      "task.starter_kit_empirical_priors"
+    ]
+  },
+  {
+    "text": "Add a video-by-tab categorical interaction to learn surface-specific item appeal.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Tab is request-time available and positively screened as part of request context. The large validation weakness on tabs 0 and 6 indicates that a global video effect may be insufficient when the same candidate is scored on different surfaces.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:tab:0",
+      "experiment:2:segment:tab:6"
+    ],
+    "exact_ablation": "Append exactly one hashed categorical feature representing the pair (video_id, tab) to experiment 1's additive feature matrix; keep the existing individual fields, BCE objective, optimizer, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.003 through context-dependent item ordering.",
+      "nDCG@5": "+0.001 to +0.004 because the ablation directly targets surface-specific top-rank errors."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "task.leakage_policy",
+      "task.starter_kit_empirical_priors"
+    ]
+  },
+  {
+    "text": "Add a video-by-hour categorical interaction to capture time-dependent item relevance.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "The request-context screen improved primary on every internal temporal-holdout day. Validation early-hour slices are particularly weak, including hour 3 GAUC 0.4894 and hour 4 GAUC 0.5318, leaving room for item appeal to vary by time of day.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:hour:3",
+      "experiment:2:segment:hour:4"
+    ],
+    "exact_ablation": "Append exactly one hashed categorical feature representing the pair (video_id, hour) to experiment 1's additive feature matrix; leave all other features and training settings unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.003 from correcting hour-specific item misorders.",
+      "nDCG@5": "+0.000 to +0.003 if relevant videos move into the top five in weak hour slices."
+    },
+    "expected_primary_gain": 0.0013,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a tab-by-hour categorical interaction to model request-surface temporal regimes.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The positive request-context screen establishes temporal and surface information as useful, while both tab and early-hour validation slices show substantial ranking deficits. A compact context-only cross avoids untrusted metadata and outcome fields.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:tab:0",
+      "experiment:2:segment:hour:3"
+    ],
+    "exact_ablation": "Append exactly one categorical feature representing the pair (tab, hour) to experiment 1's additive feature matrix; retain user/video IDs, existing context fields, BCE, optimizer, and stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.002 from distinguishing context regimes.",
+      "nDCG@5": "+0.000 to +0.003 if surface-hour context resolves top-five ties."
+    },
+    "expected_primary_gain": 0.0011,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer with a low-rank factorization-machine scorer over the existing five fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "Experiment 1's additive model reached GAUC 0.6689 but nDCG@5 only 0.5370. Its score has no learned feature interactions, so a low-rank interaction scorer supplies a distinct within-user ordering mechanism without introducing new data sources.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:segment:tab:0",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace experiment 1's linear additive logit with a rank-8 factorization-machine logit over exactly user_id, video_id, tab, hour, and weekday; preserve the same data split, fields, row-averaged BCE, optimizer schedule, and early-stopping procedure.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.005 from user-item and item-context interactions.",
+      "nDCG@5": "+0.001 to +0.005 if interactions improve ordering near the top of each user's candidates."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "task.starter_kit_empirical_priors"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with within-user sampled RankNet loss on training impressions.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 5
+    },
+    "rationale": "The official objective is within-user ranking, yet experiment 1 was trained with pointwise BCE. The validation pattern of moderate nDCG@5 and weak surface slices supports testing a directly ordering-oriented objective, while experiment 2 shows that merely reweighting pointwise BCE was harmful.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:0"
+    ],
+    "exact_ablation": "Replace row-averaged BCE in experiment 1 with RankNet logistic loss over positive-negative pairs sampled only among each user's training-split impressions, using at most four uniformly sampled negatives per positive and equal weight per user; keep the scorer and features unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.006 because the loss directly trains positive-versus-negative order within user.",
+      "nDCG@5": "-0.001 to +0.004; broad user-history pairs may not preferentially correct top-five inversions."
+    },
+    "expected_primary_gain": 0.0022,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "training.group_complete_stratified_minibatching",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add an nDCG@5-weighted LambdaRank-style pair term to the existing BCE objective.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 5
+    },
+    "rationale": "Experiment 1 has stronger GAUC than nDCG@5, and the medium-frequency-item slice in experiment 2 has GAUC 0.7213 but nDCG@5 only 0.2444. That separation motivates a top-five-focused correction rather than another calibration-oriented pointwise change.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:segment:item_frequency:medium_5_19",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Change only the loss to row-averaged BCE plus a lambda=0.25 detached nDCG@5-swap-weighted RankNet term over positive-negative pairs within each user's training impressions; keep experiment 1's scorer, features, optimizer, and checkpointing unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.003 because top-five weighting can trade broad pairwise order for head ranking.",
+      "nDCG@5": "+0.001 to +0.006 if top-rank positive-negative inversions are common."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with per-user ListNet top-one loss over training impressions.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 4
+    },
+    "rationale": "The principal shortfall is top-five quality rather than only global discrimination. A listwise objective is materially different from experiment 2's inverse-user-count BCE and explicitly makes candidates compete within user groups.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:item_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Replace experiment 1's BCE with ListNet top-one cross-entropy computed separately over every user's complete training-impression group, excluding all-negative and all-positive groups from the listwise term; retain features and scorer unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.002 to +0.003 because list normalization can weaken broad pairwise discrimination.",
+      "nDCG@5": "+0.001 to +0.005 if list competition better promotes positives near each user's head."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "training.group_complete_stratified_minibatching",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a causal prior user-video long-view affinity feature for repeated item exposure.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 6
+    },
+    "rationale": "Validation rare and medium-frequency items have much weaker nDCG@5 than the global score, so repeated exposure history may provide candidate-specific preference information. The existing user-author history screen was negative, making this a deliberately narrow and uncertain user-item alternative rather than a broad history rollout.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:historical_user_author_affinity",
+      "experiment:2:segment:item_frequency:rare_1_4",
+      "experiment:2:segment:item_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Append exactly one discretized causal feature: the smoothed long-view rate for prior training events with the same (user_id, video_id), emitting the feature before updating state with the current row and using an explicit unseen bucket; retain experiment 1's scorer and BCE unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.003; repeated-item affinity may order familiar candidates better, but the negative author-affinity screen is adverse evidence.",
+      "nDCG@5": "-0.001 to +0.003, with any gain expected mainly where repeated candidate exposure exists."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 3,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "architecture.candidate_conditioned_history_attention",
+      "task.starter_kit_empirical_priors"
+    ]
+  },
+  {
+    "text": "Select checkpoints by validation primary rather than the current validation-GAUC proxy.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 9
+    },
+    "rationale": "The fixed selection objective averages GAUC and nDCG@5, but experiment 1 checkpointing uses only a GAUC proxy. Its nDCG@5 is materially below GAUC, and experiment 2 demonstrated that a presumed GAUC-alignment change can reduce both official metrics.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Change only checkpoint selection: after each epoch, retain the checkpoint with the highest official validation primary=(GAUC+nDCG@5)/2 instead of the highest validation-GAUC proxy; preserve experiment 1's model, fields, BCE updates, seed, and epoch budget.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.001 because selection may accept a small GAUC trade-off.",
+      "nDCG@5": "+0.000 to +0.003 because checkpoint choice is aligned to the top-five component."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.experiment_protocol",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Use frequency-adaptive L2 regularization for video-ID weights to reduce sparse-item overfitting.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 7
+    },
+    "rationale": "Item-frequency slices show sharply lower top-five quality for rare and medium-frequency videos despite medium items having strong GAUC. Frequency-adaptive shrinkage is a narrowly targeted regularization change that can stabilize item scores without using prohibited aggregate snapshots.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:2:segment:item_frequency:rare_1_4",
+      "experiment:2:segment:item_frequency:medium_5_19",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Change only regularization by applying L2 to each video_id weight scaled as 1/sqrt(training impression count for that video_id), with counts computed from the training split only; all non-video weights retain experiment 1's existing L2 and all other training settings remain fixed.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.002; additional shrinkage can improve tail generalization but may damp useful item distinctions.",
+      "nDCG@5": "+0.000 to +0.003 if reduced sparse-item variance improves top-five stability."
+    },
+    "expected_primary_gain": 0.0009,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training",
+      "loss"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Lower the Adam learning rate from 0.01 to 0.005 for the existing experiment-1 model.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 3,
+      "feasibility": 10
+    },
+    "rationale": "The latest loss change reduced primary by 0.00452 against experiment 1, so a low-risk optimization-control candidate can test whether the simple additive model's held-out ranking is sensitive to update magnitude without adding features or altering the target. This is intentionally low priority because no measured underfitting signature establishes a likely gain.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Change only the learning_rate in experiment 1's configuration from 0.01 to 0.005; preserve the model, fields, row-averaged BCE, batch size, seed, maximum epochs, and patience.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.002 depending on whether smaller updates improve temporal generalization.",
+      "nDCG@5": "-0.001 to +0.002; slower fitting may either stabilize or underfit head ordering within the fixed epoch budget."
+    },
+    "expected_primary_gain": 0.0004,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

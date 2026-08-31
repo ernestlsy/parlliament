@@ -1,0 +1,54 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "features",
+      "evaluation",
+      "bias_and_robustness",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "cold-start",
+      "temporal-generalization"
+    ],
+    "preferred_tags": [
+      "context-aware-recommendation",
+      "feature-interactions",
+      "temporal-ranking",
+      "cold-start"
+    ],
+    "purpose": "Resolve whether the observed request-context lift is likely to require explicit context-item or context-user interactions rather than an additive scorer, and identify leakage-safe architectures suitable for the fixed temporal evaluation.",
+    "query": "Empirical studies of context-aware feature interactions for recommendation ranking, especially tab, time-of-day, and weekday signals in within-user impression ranking; compare additive models with explicit interaction architectures and report GAUC, nDCG@5, cold-start, and temporal generalization results.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "evaluation",
+      "experiment_strategy",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "MAP@5",
+      "MRR@5"
+    ],
+    "preferred_tags": [
+      "listwise-ranking",
+      "top-k-ranking",
+      "ndcg-optimization",
+      "implicit-feedback"
+    ],
+    "purpose": "Resolve the objective-design uncertainty after successive RankNet and hybrid-loss declines, particularly whether a top-k or listwise objective is better aligned with the severe nDCG@5 failures in low-performing tabs without changing the fixed evaluation.",
+    "query": "Literature comparing RankNet, listwise ranking, LambdaRank, and top-k or nDCG-aligned objectives for implicit-feedback recommendation with logged impression groups; focus on cases where pairwise training improves or fails to improve nDCG@5 and within-user ranking metrics.",
+    "request_index": 2,
+    "round": 1
+  }
+]

@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "encode(splits) returns (encoded, dimension). encoded[\"train\"] and encoded[\"valid\"] are (features, labels, users), where features is int32 [n, 5] in exact field order [user_id, video_id, tab, hour, weekday], labels is float32 [n], and users is the user_id array in source-row order. encoded[\"test\"] is (features, None, users) with the same feature representation and canonical test source-row order. Each categorical field has an independent training-only vocabulary, one unknown bucket, and a disjoint global offset; dimension is the sum of all field dimensions."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives the int32 globally offset categorical feature matrix from data.py and dimension equal to its embedding/weight-table size. It remains an additive linear scorer whose logits are bias plus the sum of one weight per feature column, trained with the unchanged BCE step."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

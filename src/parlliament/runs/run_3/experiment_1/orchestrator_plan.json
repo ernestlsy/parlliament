@@ -1,0 +1,105 @@
+{
+  "active_agents": [
+    "feature_engineer",
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "encode(splits) returns (encoded, dimension). encoded[\"train\"] and encoded[\"valid\"] are (features, labels, users), where features is int32 [n, 5] in exact field order [user_id, video_id, tab, hour, weekday], labels is float32 [n], and users is the user_id array in source-row order. encoded[\"test\"] is (features, None, users) with the same feature representation and canonical test source-row order. Each categorical field has an independent training-only vocabulary, one unknown bucket, and a disjoint global offset; dimension is the sum of all field dimensions."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model receives the int32 globally offset categorical feature matrix from data.py and dimension equal to its embedding/weight-table size. It remains an additive linear scorer whose logits are bias plus the sum of one weight per feature column, trained with the unchanged BCE step."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Extend the seed categorical feature matrix in data.py with exactly the predeclared request-context fields tab, hour, and weekday, while fitting every vocabulary exclusively from training rows.",
+      "required_changes": [
+        "In data.py, change FIELDS to exactly [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"].",
+        "When reading each log row, retain raw \"tab\" and derive hour solely from raw \"hourmin\" with the canonical recipe integer floor(numeric hourmin / 100); validate that the derived hour is in 0..23.",
+        "Derive weekday solely from raw \"date\" using the canonical calendar weekday recipe for YYYYMMDD dates, with Monday=0 through Sunday=6.",
+        "Make raw(row) return values in the exact FIELDS order: user_id, video_id, tab, derived hour, derived weekday. Do not add any other raw, derived, profile, metadata, outcome, aggregate, or timestamp feature.",
+        "Continue to build separate categorical vocabularies from splits[\"train\"] only, reserve one unknown bucket per field, and apply those training vocabularies unchanged to validation and test rows.",
+        "Preserve source CSV iteration order and split filtering so encoded validation and test feature rows remain in canonical source-row order.",
+        "Ensure test labels are not loaded or retained for training: test split records/encoded output must provide no test ground truth while still providing test features and row count. Training and validation labels remain available as needed for BCE training and validation-only checkpoint selection."
+      ],
+      "preserve": [
+        "Keep LABEL as the raw \"long_view\" training/validation target and preserve the existing date split boundaries.",
+        "Keep the encode return shape and global-offset categorical representation usable by the existing additive Model: encoded split entries must still expose features, labels, and users in that order, with test labels represented as None rather than an array.",
+        "Do not modify model.py, introduce feature interactions, or change the BCE objective."
+      ],
+      "coordination_notes": [
+        "The trainer will consume encoded[\"test\"] as (test_features, None, test_users); it must obtain the test prediction count from len(test_features), never from test labels.",
+        "The fixed prediction artifacts require canonical row IDs np.arange(len(features), dtype=np.int64), aligned to the feature row order emitted here.",
+        "Use only exact schema fields \"tab\", \"hourmin\", and \"date\". hour and weekday are canonical derived feature names, not source-column aliases."
+      ]
+    },
+    "trainer": {
+      "objective": "Update train.py so the fixed training command always emits canonical validation and test prediction files without consuming test labels, while retaining validation-only early stopping.",
+      "required_changes": [
+        "In train.py, unpack the test encoded split without a test-label variable, e.g. test_features, _, _ = encoded[\"test\"].",
+        "Replace the validation prediction save path behavior with an unconditional file named predictions_valid.npz in the directory Path(args.output).parent. Save exactly row_ids=np.arange(len(valid_features), dtype=np.int64) and scores=model.predict(valid_features).",
+        "Save the test artifact unconditionally as Path(args.output).parent / \"predictions_test.npz\". Save exactly row_ids=np.arange(len(test_features), dtype=np.int64) and scores=model.predict(test_features).",
+        "Do not inspect, unpack into a usable variable, score, print, or otherwise consume test labels anywhere in train.py.",
+        "Retain checkpoint selection and patience logic based solely on within_user_auc(valid_users, valid_labels, predictions); do not add any test-based metric, stopping rule, model selection, or configuration selection.",
+        "Update the train.py module docstring if needed to state that it emits both validation and test prediction artifacts."
+      ],
+      "preserve": [
+        "Keep the additive Model construction, optimizer hyperparameter reads, shuffled training batches, BCE training calls, and validation-only within_user_auc proxy unchanged.",
+        "Keep the existing config.json unchanged; its current keys and values remain the complete training configuration.",
+        "Keep --contract-check behavior as a no-artifact interface probe, using only training and validation data."
+      ],
+      "coordination_notes": [
+        "data.py will extend feature width from two to five columns and will represent test labels as None; train.py must remain agnostic to feature width.",
+        "The required artifact names are predictions_valid.npz and predictions_test.npz regardless of the basename supplied through --output; both files belong in Path(args.output).parent.",
+        "row_ids are canonical zero-based positions in the encoded validation/test source-row order, not user IDs or CSV indices."
+      ]
+    }
+  },
+  "reasoning": "The hypothesis changes only the request-context feature family, so feature_engineer owns the substantive experiment edit. trainer is additionally required because the parent trainer binds test labels solely to determine output length and does not guarantee the required predictions_valid.npz filename. The additive scorer, BCE objective, hyperparameters, and validation-only model selection are otherwise retained. The only added inputs are schema-approved tab plus canonical hour derived from hourmin and weekday derived from date; their vocabularies are fit on training rows only."
+}

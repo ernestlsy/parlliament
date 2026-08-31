@@ -1,0 +1,53 @@
+[
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "within-user ranking",
+      "implicit feedback",
+      "pairwise loss",
+      "listwise loss",
+      "nDCG",
+      "GAUC",
+      "temporal evaluation"
+    ],
+    "purpose": "Resolve the material objective-and-training uncertainty before spending a scarce experiment on a ranking-aligned loss, after user-normalized BCE regressed relative to the request-context BCE parent. Seek evidence on whether pairwise or listwise objectives improve top-k ordering without harming within-user discrimination in logged implicit-feedback ranking.",
+    "query": "Within-user implicit-feedback recommendation objectives for a fixed logged-impression candidate set: compare pointwise BCE, RankNet/BPR pairwise loss, and ListNet/listwise top-k losses for optimizing group AUC and nDCG@5; include practical negative-pair construction, weighting for users with variable impression counts, and temporal holdout evaluation.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "features",
+      "architectures",
+      "training",
+      "bias_and_robustness",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "sequential recommendation",
+      "causal history",
+      "candidate-conditioned attention",
+      "temporal leakage",
+      "implicit feedback",
+      "efficiency"
+    ],
+    "purpose": "Resolve whether the negative screen for simple historical author/item and user-author aggregates should rule out, or instead motivate, a bounded causal sequence representation. Literature is needed to define a leakage-safe and computationally feasible history mechanism before considering an architecture change.",
+    "query": "Causally truncated sequential user-behavior representations for temporal implicit-feedback recommendation with logged impressions: candidate-conditioned attention or compact sequence pooling versus simple prior user-item/author response aggregates; include leakage-safe feature construction, cold or sparse-history behavior, and evaluation on within-user top-k ranking.",
+    "request_index": 2,
+    "round": 1
+  }
+]

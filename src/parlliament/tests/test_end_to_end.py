@@ -74,8 +74,8 @@ class EndToEndTests(unittest.TestCase):
                 Path(__file__).parents[1] / "parlliament" / "seed" / "model.py"
             ).read_text(encoding="utf-8")
             updated_model = seed_model.replace(
-                "Fresh-start additive ID model with no interaction or baseline-derived architecture.",
-                "Fresh-start additive ID model with no interaction or inherited architecture.",
+                "Implement the neutral seed's additive user/item ranking model.",
+                "Implement the neutral seed's additive user/item ranker.",
             )
             llm = ScriptedLLMClient([
                 {"priorities": [{

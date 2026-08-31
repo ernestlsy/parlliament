@@ -1,4 +1,8 @@
-"""KuaiRand five-field baseline data loader adapted to ParLLiaMent's fixed contract."""
+"""Load and encode canonical splits for the KuaiRand five-field baseline seed.
+
+The loader joins organizer metadata, derives training-fitted duration buckets, preserves canonical
+row order, and encodes user, video, author, tab, and duration fields with unknown handling.
+"""
 
 import csv
 import os

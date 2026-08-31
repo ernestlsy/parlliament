@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "data.load(data_dir, max_rows_per_split=None) returns train, valid, and test row lists in existing canonical source-derived chronological split order. data.encode(splits) returns (encoded, dimension), where encoded[name] is (features, labels, users). For every split, features is a two-dimensional np.int32 matrix with exactly six columns ordered [user_id, video_id, tab, hour, weekday, hashed_video_id_tab]. Columns 0 through 4 use the parent train-fitted vocabulary plus one unknown ID per field and retain their parent offsets and values. Column 5 is the deterministic FNV-1a-64 bucket of str(video_id)+'\\x1f'+str(tab), modulo 262144, offset after the first five field ranges. labels is float32 for train/valid and None for test; users is the raw user_id vector in the same row order. dimension is an int strictly greater than every feature ID and equals the sum of all six field dimensions."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives dimension from data.encode and a features np.int32 matrix with six valid global categorical IDs per row. The unchanged additive Model indexes weights by all six columns and sums them with the bias. train.py supplies labels only for train batches and valid proxy evaluation; it selects checkpoints and early-stops only using valid_features, valid_labels, and valid_users. Test features have no labels and are used only after loading the validation-selected checkpoint for prediction artifact generation."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

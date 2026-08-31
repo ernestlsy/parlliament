@@ -1,0 +1,37 @@
+{
+  "winner": {
+    "text": "Add a video-by-tab categorical interaction to learn surface-specific item appeal.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Tab is request-time available and positively screened as part of request context. The large validation weakness on tabs 0 and 6 indicates that a global video effect may be insufficient when the same candidate is scored on different surfaces.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:tab:0",
+      "experiment:2:segment:tab:6"
+    ],
+    "exact_ablation": "Append exactly one hashed categorical feature representing the pair (video_id, tab) to experiment 1's additive feature matrix; keep the existing individual fields, BCE objective, optimizer, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.003 through context-dependent item ordering.",
+      "nDCG@5": "+0.001 to +0.004 because the ablation directly targets surface-specific top-rank errors."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "task.leakage_policy",
+      "task.starter_kit_empirical_priors"
+    ]
+  },
+  "selection_rationale": "c02 is the strongest scarce-experiment choice: it has the highest consultant rank and utility (rank 1, 78), the highest expected primary gain among the low-risk single-feature candidates (0.0020), and higher confidence than c01 (6 vs. 5). It directly extends the only empirically positive screened family, request context (+0.00221 primary across all internal temporal-holdout days), with a candidate-specific mechanism that can correct surface-dependent item ordering. It targets materially weak, sufficiently large validation tabs 0 (13,726 rows; GAUC 0.5419, nDCG@5 0.0621) and 6 (5,170 rows; GAUC 0.5708, nDCG@5 0.1052), while preserving the proven baseline scorer, BCE training recipe, and low leakage/runtime risk. This is a more reliable and attributable improvement than broader architecture or loss replacements.",
+  "counted_experiments_consumed": 0
+}

@@ -1,0 +1,49 @@
+{
+  "data_output": "data.load() preserves the existing train/valid/test split order and data.encode() returns (features, labels, user_ids, row_ids) for each split. features has exactly eight columns in this order: user_id, video_id, tab, hour, weekday, video_id-tab, video_id-hour, video_id-weekday. All vocabularies, including interaction vocabularies, are fit on training rows only.",
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": "Model(dimension, learning_rate, l2) receives an integer feature matrix of shape (n, 8). It computes bias plus one learned weight per encoded feature index, thereby preserving all five main effects and adding exactly the three video-by-context interaction parameter groups.",
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

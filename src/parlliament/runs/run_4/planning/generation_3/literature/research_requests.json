@@ -1,0 +1,52 @@
+[
+  {
+    "categories": [
+      "features",
+      "architectures",
+      "training",
+      "bias_and_robustness",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "causal-history",
+      "sequential-recommendation",
+      "short-video",
+      "leakage",
+      "ranking"
+    ],
+    "purpose": "Resolve the architecture, feature-availability, leakage, and training-design uncertainty about whether a bounded causal user-history representation can address severe underperformance in specific request-context tabs without violating the temporal protocol.",
+    "query": "Causal, impression-time user behavior history features for logged-video recommendation, including sequence truncation, leakage-safe feature construction, candidate-aware pooling or attention, and evidence on within-user ranking metrics such as GAUC and nDCG@5, especially on KuaiRand or comparable short-video datasets.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "evaluation",
+      "bias_and_robustness",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "multitask-learning",
+      "watch-time",
+      "censored-feedback",
+      "implicit-feedback",
+      "learning-to-rank"
+    ],
+    "purpose": "Resolve whether the next scarce experiment should pursue multitask or watch-time modeling after the RankNet objective produced a negative primary gain, while retaining binary long_view as the fixed evaluation target and avoiding current-impression outcome leakage.",
+    "query": "Auxiliary-task or censored watch-time objectives for long-view prediction in recommendation, comparing pointwise, pairwise, listwise, multitask engagement, and survival or censored-duration modeling under logged implicit-feedback data; report effects on top-k ranking and within-user AUC.",
+    "request_index": 2,
+    "round": 1
+  }
+]

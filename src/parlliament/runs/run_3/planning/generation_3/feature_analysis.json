@@ -1,0 +1,23 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:2:segment:tab:0",
+        "experiment:2:segment:tab:6",
+        "experiment:2:segment:hour:3",
+        "experiment:2:segment:hour:4"
+      ],
+      "finding": "Request context is the sole train-only feature group with positive screening lift (+0.00221) and positive lift on all four temporal-holdout days. Its daily variability is material relative to the mean lift, so the evidence supports a narrowly scoped confirmation rather than broad rollout. Post-score diagnostics identify tab and hour as consequential ranking slices: tab 0 and tab 6 have large support but weak GAUC and very weak nDCG@5, while hours 3 and 4 are also weak on both within-user discrimination and top-five quality.",
+      "recommended_action": "Allocate at most one early-stopping-controlled feature increment to tab, hour, and weekday using only request-time values. Require improvement in GAUC and nDCG@5 on temporal holdout, with no material regression in the high-volume tab 0/tab 6 and early-hour slices; otherwise stop feature expansion."
+    }
+  ],
+  "avoid": [
+    "Reject user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, and historical_item_response: each has non-positive train-only screening lift.",
+    "Do not treat strong GAUC alone as sufficient evidence of top-five quality. Rare and medium-frequency items show relatively high GAUC but substantially weaker nDCG@5 and primary scores than global performance.",
+    "Do not optimize against user_positive_count=zero: it has no validation positives, so its zero top-five metrics are retrospective diagnostic artifacts rather than an actionable ranking target.",
+    "Do not use current-impression outcomes or aggregate snapshots without per-impression availability timestamps; these are leakage risks.",
+    "Do not continue user-normalized BCE as the next budgeted direction without a new causal justification: the latest experiment underperformed its parent despite a positive predicted gain."
+  ],
+  "metric_diagnosis": "Experiment 2 has acceptable global within-user ranking discrimination (GAUC 0.6631) but only moderate top-five ranking quality (nDCG@5 0.5338, primary 0.5984), and its primary score declined by 0.00452 versus experiment 1. The largest actionable weakness is not a uniform GAUC failure: tab 0 has GAUC 0.5419 and nDCG@5 0.0621 across 13,726 rows, while tab 6 has GAUC 0.5708 and nDCG@5 0.1052 across 5,170 rows. Early hours also combine low GAUC with weak nDCG@5. Conversely, item-frequency rare_1_4 has GAUC 0.7000 but nDCG@5 0.1735, demonstrating that top-five ordering and candidate/label conditions remain weak despite apparently favorable pairwise ranking. The strict stopping decision is therefore a single request-context confirmation experiment only; reject broad feature additions and leakage-prone sources."
+}

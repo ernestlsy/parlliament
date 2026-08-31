@@ -1,0 +1,20 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "feature:request_context"
+      ],
+      "finding": "Request context is the only screened feature group with positive primary lift (+0.00221), but the daily lift is not yet stable (daily standard deviation 0.00580; negative on the first day and positive thereafter). Its cold-user primary (0.57283) is slightly above warm-user-and-item primary (0.56941), supporting tentative within-user ranking value, while cold-item results are uninformative because GAUC is 0.5 on only 8 rows.",
+      "recommended_action": "Retain request_context as the sole feature priority, but stop expansion spending and require a fresh temporal confirmation before adding complexity."
+    }
+  ],
+  "avoid": [
+    "Reject user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, and historical_item_response based on their negative training-only screening lifts: screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response.",
+    "Do not use current-impression outcomes or snapshot aggregates without impression-time availability; exclude or quarantine the listed outcome-derived and untimestamped aggregate features rather than treating them as ranking signals: feature:author_id, feature:historical_author_response, feature:historical_item_response, feature:historical_user_author_affinity.",
+    "Do not overreact to user_positive_count=zero: its GAUC is 0.5 and top-five metrics are all zero because the segment has no positives, so it is a label-availability diagnostic rather than evidence of ranking failure: experiment:2:segment:user_positive_count:zero.",
+    "Prioritize investigation of tab 8 and tab 3, where both within-user ranking and top-five metrics are weak; tab 8 has GAUC 0.4074 and nDCG@5 0.0267, while tab 3 has GAUC 0.5 and nDCG@5 0.0062: experiment:2:segment:tab:8, experiment:2:segment:tab:3.",
+    "Treat small segments such as tab 14 and UNKNOWN activity as diagnostic only, not as budget-driving evidence: experiment:2:segment:tab:14, experiment:2:segment:user_active_degree:UNKNOWN."
+  ],
+  "metric_diagnosis": "Apply the strict early-stop rule to the latest experiment: RankNet achieved GAUC 0.66851 and nDCG@5 0.53679, but its observed primary gain versus experiment 1 was -0.000286 despite a predicted gain of +0.0025, so further budget for this line should stop: experiment:2:metrics. The overall GAUC indicates reasonably strong within-user ordering, whereas the weakest segments show that top-five usefulness can fail much more severely than aggregate ranking; tab 8 is poor on both GAUC and nDCG@5, while user_positive_count=zero is primarily an absence-of-positive-label slice: experiment:2:segment:tab:8, experiment:2:segment:user_positive_count:zero. All segment results are post-score official-validation diagnostics rather than independent test estimates, so use them to target follow-up analysis, not to override the early stop: experiment:2:metrics."
+}

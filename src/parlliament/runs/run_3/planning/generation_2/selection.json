@@ -1,0 +1,38 @@
+{
+  "winner": {
+    "text": "Replace row-averaged BCE with user-normalized BCE so each user's training impressions contribute equal total loss mass.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 6,
+      "feasibility": 7
+    },
+    "rationale": "The official objective is within-user, while the current trainer averages loss over shuffled rows. Official validation has 22,377 users and shows materially heterogeneous slice quality, so reducing domination by prolific users is a direct alignment test without introducing a new feature family.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_frequency:warm_20_plus",
+      "experiment:1:segment:user_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Change only the BCE reduction: weight each training row by the inverse number of training impressions for its user, normalized to mean weight one; keep features, additive scorer, optimizer, batch size, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.004 from closer within-user objective alignment.",
+      "nDCG@5": "-0.001 to +0.002; equal-user weighting may reduce emphasis on high-volume users that supply many top-five examples."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  "selection_rationale": "Select c01. It is the consultant's top-ranked candidate (utility 8.2) and offers the most reliable scarce-experiment tradeoff: a tightly isolated, low-runtime, low-leakage correction to the mismatch between row-mean BCE training and the official within-user evaluation. The parent validation covers 22,377 users and shows heterogeneous user-frequency slices, so preventing prolific users from dominating loss mass is directly supported and broadly applicable. Although its expected primary gain (+0.0015) is lower than some higher-variance ranking and interaction alternatives, its stronger confidence, minimal downside, and unchanged features/scorer make it the preferred dependable improvement.",
+  "counted_experiments_consumed": 0
+}

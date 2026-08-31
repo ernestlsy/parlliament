@@ -1,3 +1,9 @@
+"""Define shared enums, dataclasses, contracts, and response parsers.
+
+These schemas form the validated interface between planning agents, code agents, the Experimentor,
+the Journal, and submission reporting, including ownership and fixed command declarations.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field

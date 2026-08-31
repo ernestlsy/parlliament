@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.86,
+      "rationale": "Best choice for one scarce experiment: it directly tests the only feature family with positive, consistent screened lift, while preserving the scaffold and keeping leakage and runtime risk low. Evidence is still limited to an internal temporal holdout, so temporal instability remains a validation concern."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 2,
+      "utility_score": 0.69,
+      "rationale": "A focused hybrid objective targets within-user ordering while retaining BCE supervision for homogeneous groups, making it safer than a full loss replacement. It has no direct experiment evidence, and fixed loss weighting plus pair construction introduce moderate runtime and tuning risk."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 3,
+      "utility_score": 0.64,
+      "rationale": "Strong objective alignment with GAUC and a clean single-component ablation, but mixed-group coverage, pair sampling quality, calibration changes, and moderate runtime risk weaken confidence. Its cited evidence does not directly validate RankNet."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 4,
+      "utility_score": 0.58,
+      "rationale": "Builds logically on the validated context signal and could capture context-dependent item preference, but sparse context-video interactions may memorize transient combinations. It changes architecture and features together, increasing overfitting and interpretability risk."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 5,
+      "utility_score": 0.56,
+      "rationale": "A targeted context-conditioned mechanism could improve within-user ordering beyond additive features, but gating can overfit rare contexts or suppress useful item affinity. Moderate runtime and architecture risk remain without direct validation."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 6,
+      "utility_score": 0.53,
+      "rationale": "An FM scorer offers principled user-video-context interactions, but it is a broader architecture replacement than c06 and risks sparse-ID memorization and instability. Expected gains are speculative and evidence is indirect."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 7,
+      "utility_score": 0.43,
+      "rationale": "Simple and relatively controlled, but inverse group-size weighting may conflict with positive-count-weighted GAUC and remains pointwise, limiting nDCG benefit. Expected lift is small, confidence is low, and the sampling change carries moderate risk."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 8,
+      "utility_score": 0.39,
+      "rationale": "Group-complete sampling is relevant infrastructure but pointwise BCE does not exploit most of the added group structure, so direct metric benefit is unlikely. It also changes exposure weighting and throughput without a strong gain hypothesis."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 9,
+      "utility_score": 0.36,
+      "rationale": "Could model state-dependent user preferences, but user-context interactions are sparse, warm-user dependent, and vulnerable to temporal overfitting. Expected benefit is modest and weaker than directly modeling context-item compatibility."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 10,
+      "utility_score": 0.29,
+      "rationale": "Low-cost and leakage-safe, but date is especially prone to memorizing the short evaluation calendar and nonstationary exposure mix. Evidence is weak and expected gains are near zero, making scarce experimentation inefficient."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 11,
+      "utility_score": 0.22,
+      "rationale": "Low runtime and implementation risk, but there is no evidence optimization is the bottleneck and the proposed weight-decay behavior is underspecified relative to the fixed learning rate. Expected gains are minimal with low confidence."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 12,
+      "utility_score": 0.18,
+      "rationale": "Although ListNet is relevant to nDCG@5, it has the highest runtime and group-packing risk, low mixed-group coverage concerns, and no direct supporting evidence. Potential calibration and GAUC regression make it a poor choice for one scarce experiment."
+    }
+  ]
+}

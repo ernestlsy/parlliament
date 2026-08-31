@@ -1,3 +1,9 @@
+"""Validate and retrieve catalogued research literature for experiment planning.
+
+The Librarian combines deterministic TF-IDF/MMR search with LLM query expansion and selection,
+then enforces document IDs, paths, hashes, uniqueness, and character budgets during guarded fetch.
+"""
+
 from __future__ import annotations
 
 import hashlib

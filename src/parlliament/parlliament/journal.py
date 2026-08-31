@@ -1,3 +1,9 @@
+"""Maintain durable experiment history, IDs, lineage, and stopping state.
+
+The append-only Journal records scored and abandoned attempts, assigns gap-free IDs only to scored
+experiments, and evaluates the experiment cap and anchor-based convergence rule.
+"""
+
 from __future__ import annotations
 
 import json

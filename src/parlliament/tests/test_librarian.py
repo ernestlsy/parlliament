@@ -38,10 +38,12 @@ class KnowledgeCatalogTests(unittest.TestCase):
     def test_shipped_catalog_and_hashes_are_valid(self):
         catalog = KnowledgeCatalog(KNOWLEDGE_ROOT)
         self.assertGreaterEqual(len(catalog.entries), 11)
-        self.assertEqual(len(catalog.fixed_documents()), 5)
+        fixed_ids = {item["id"] for item in catalog.fixed_documents()}
+        self.assertEqual(len(fixed_ids), 6)
+        self.assertIn("task.starter_kit_empirical_priors", fixed_ids)
         self.assertEqual(len(catalog.by_id), len(catalog.entries))
         self.assertEqual(
-            sum(bool(item.get("system_owned")) for item in catalog.entries), 11
+            sum(bool(item.get("system_owned")) for item in catalog.entries), 12
         )
 
     def test_catalog_rejects_parent_traversal(self):

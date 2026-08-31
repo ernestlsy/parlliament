@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c02",
+      "rank": 1,
+      "utility_score": 78,
+      "rationale": "Best single-feature bet: it directly adds item-specific surface effects on top of the already validated request-context family, targets the two substantive weak tab slices (0: 13,726 rows; 6: 5,170 rows), has low leakage/runtime risk, and preserves the proven baseline training recipe. It is more directly relevant to candidate ordering than a context-only cross."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 2,
+      "utility_score": 75,
+      "rationale": "A compact, low-risk interaction with a credible mechanism: user preferences can differ by request surface, which the additive baseline cannot express. It is strongly related to the only positive feature-family screen and targets the high-volume weak tab-0 slice. Slightly behind c02 because user-by-tab can be sparse for infrequent users and has less direct item-ranking specificity."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 3,
+      "utility_score": 63,
+      "rationale": "Provides a broad interaction mechanism that includes useful user-item and item-context effects without new data or leakage. However, replacing the scorer greatly expands scope versus a single interaction, has medium runtime/implementation risk, weak direct empirical support, and can make any outcome harder to attribute under one scarce experiment."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 4,
+      "utility_score": 59,
+      "rationale": "Very cheap and protocol-aligned correction because the official primary includes nDCG@5 while current selection uses GAUC only. It is ranked below interaction features because it can overfit repeated checkpoint choice to the same validation set and has only a small plausible gain, but it is a strong operational fallback."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 5,
+      "utility_score": 55,
+      "rationale": "Video-by-hour is a focused, low-risk item-context interaction supported by the positive request-context screen and weak early-hour diagnostics. Evidence is weaker than for tab: the cited bad hours are smaller slices, and many hour deficits are diagnostic rather than evidence that item-time interactions will generalize."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 6,
+      "utility_score": 50,
+      "rationale": "Safe and inexpensive, but tab and hour are already active baseline fields, so this modest context-only cross is comparatively duplicative and lacks a direct candidate-specific ranking mechanism. The weak tab/hour slices are reused validation diagnostics, not independent proof that their cross is beneficial."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 7,
+      "utility_score": 45,
+      "rationale": "Narrow, training-only regularization has low leakage and runtime risk and is at least directionally motivated by poor sparse and medium-item top-rank metrics. Still, the proposed 1/sqrt(count) scaling is not empirically calibrated, and poor segment nDCG does not isolate video-ID overfitting as the cause."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 8,
+      "utility_score": 42,
+      "rationale": "A simpler direct-ranking objective than the other loss candidates and well aligned with within-user evaluation. Its evidence is mostly conceptual: the closest tested loss change, user-normalized BCE, reduced primary by 0.00452, and sampled broad user-history pairs may not optimize nDCG@5. Medium runtime and batching complexity further reduce scarce-experiment value."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 9,
+      "utility_score": 38,
+      "rationale": "Potentially targets the GAUC-versus-nDCG gap, but it is more complex and validation-tailored than c06. The lambda value, detached swap weighting, and nDCG@5 focus introduce several unvalidated choices, increasing validation-overfitting and implementation risk under a one-experiment budget."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 10,
+      "utility_score": 32,
+      "rationale": "Listwise competition is relevant to ranking, but complete per-user grouping, exclusion rules, and list normalization create the highest feasibility and optimization risk among loss-only proposals. It has low confidence and no direct evidence that its assumptions fit these mostly sparse or incomplete user impression groups."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 11,
+      "utility_score": 21,
+      "rationale": "The candidate is narrow, but it relies on causal state construction with medium leakage risk and directly conflicts with the negative historical user-author-affinity screen. Repeated same-video exposure may be too limited to materially affect global ranking, while implementation errors in temporal ordering would be costly."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 12,
+      "utility_score": 14,
+      "rationale": "Lowest-risk implementation but weakest hypothesis. There is no optimization diagnostic indicating that 0.01 is too high, the expected gain is smallest, and changing learning rate under fixed epoch/patience can simply underfit. It is best reserved as a post-failure control rather than the scarce primary experiment."
+    }
+  ]
+}

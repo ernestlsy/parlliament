@@ -1,0 +1,104 @@
+{
+  "active_agents": [
+    "model_designer",
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "encode(splits) remains unchanged and returns encoded[name] = (features, labels, users). users are canonical-row-order values sourced from the exact raw field user_id. Training weights are not a data.py output: train.py derives one float32 weight per encoded training row exclusively from train_users, with weight_i = (1 / training_count(user_id_i)) * (N_train / sum_j(1 / training_count(user_id_j)))."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model.logits and Model.predict continue to accept encoded int32 feature matrices. Model.step accepts (features, labels, sample_weights), where labels and sample_weights are aligned one-dimensional arrays of the same batch length; sample_weights are globally normalized training-only inverse-user-frequency float32 weights. Validation and test prediction calls do not receive labels or weights."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "model_designer": {
+      "objective": "Implement weighted binary cross-entropy gradient and reporting in model.py so the trainer can apply per-training-row user-normalized loss weights.",
+      "required_changes": [
+        "Change Model.step in model.py to accept a third required argument sample_weights aligned one-to-one with labels and features rows.",
+        "Validate that sample_weights is one-dimensional, has len(sample_weights) == len(labels), and is finite; raise ValueError for a violation.",
+        "Compute the per-row logit derivative as ((sigmoid(logits) - labels) * sample_weights / len(labels)).astype(np.float32). Use this derivative for both np.add.at weight gradients and the bias update.",
+        "Keep the existing L2 term exactly as self.l2 * self.weights, added once per batch after accumulating the weighted data gradient.",
+        "Return weighted BCE reported as the arithmetic mean of sample_weights * (-(labels * log(probabilities + 1e-9) + (1 - labels) * log(1 - probabilities + 1e-9)))."
+      ],
+      "preserve": [
+        "Preserve the additive scorer exactly: bias plus the sum of embedding weights selected by the existing encoded feature columns.",
+        "Preserve sigmoid clipping, Adam hyperparameters and state behavior, learning-rate handling, L2 behavior, prediction batching, and checkpoint state interface.",
+        "Do not add features, change data loading, alter optimizer configuration, or use validation or test labels in Model."
+      ],
+      "coordination_notes": [
+        "Trainer will call model.step(train_features[batch], train_labels[batch], train_weights[batch]) and will provide float32 weights with global training-set mean equal to one.",
+        "The weighted derivative must divide by the actual current batch length, not by sum(sample_weights), so normalized weights alter user contribution while retaining the parent batch-scale convention.",
+        "The contract-check path will also pass aligned probe weights."
+      ]
+    },
+    "trainer": {
+      "objective": "Implement training-only inverse-training-impression user weights in train.py and pass them to the weighted Model.step call without changing configured optimization or validation-only checkpoint selection.",
+      "required_changes": [
+        "Retain the encoded training user array by changing the train unpacking to train_features, train_labels, train_users = encoded[\"train\"].",
+        "Immediately after encoding, derive train_weights solely from train_users (which originate from the exact raw field user_id in canonical training-row order): count each distinct user_id's occurrences over the entire training split, assign every row preliminary weight 1.0 / count(train_users[row]), then multiply all preliminary weights by len(train_users) / preliminary_weights.sum(). Store the result as a one-dimensional np.float32 array. This produces mean weight exactly approximately one in float32 and equal total preliminary mass per user.",
+        "Raise ValueError if the training split is empty, if derived weights are non-finite, or if their length differs from len(train_labels).",
+        "In normal training, replace each two-argument step call with model.step(train_features[batch], train_labels[batch], train_weights[batch]).",
+        "In --contract-check mode, derive and slice the same train_weights and call model.step(train_features[:probe_size], train_labels[:probe_size], train_weights[:probe_size]). Do not use a separately recomputed probe-only user frequency.",
+        "Do not edit config.json; its seed, learning_rate, l2, batch_size, max_epochs, patience, and split values remain exactly unchanged."
+      ],
+      "preserve": [
+        "Preserve the current load and encode feature pipeline, including its training-only vocabularies and canonical split row order.",
+        "Preserve shuffled row batching, configured optimizer settings, configured batch size, epoch count, seed, and patience.",
+        "Continue selecting checkpoints and early stopping solely from within_user_auc on encoded validation users, validation labels, and validation predictions. Never load, infer, inspect, or use test labels.",
+        "Preserve creation of predictions_valid.npz and predictions_test.npz. Each must contain exactly row_ids and scores, with row_ids=np.arange for its respective encoded split and scores in canonical validation or test source row order."
+      ],
+      "coordination_notes": [
+        "Model.step will require sample_weights as its third argument after model_designer's change; pass only training-derived train_weights to it.",
+        "Do not modify data.py: user_id is already carried as the third element of every encoded split tuple and is the only source required for this loss weighting.",
+        "The normalization must be global over all training rows, not separately normalized within shuffled batches, so every user has equal total loss mass across a full epoch."
+      ]
+    }
+  },
+  "reasoning": "This is a loss-only ablation. It uses only the existing exact raw user_id carried from the training log, computes inverse training-impression weights exclusively from the training split, globally normalizes their mean to one, and applies them only to training BCE. Features, additive architecture, optimizer, batch size, configuration, validation proxy, validation-only checkpoint selection, and prediction artifact contract remain unchanged."
+}

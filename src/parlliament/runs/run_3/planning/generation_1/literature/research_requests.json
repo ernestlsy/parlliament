@@ -1,0 +1,55 @@
+[
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "evaluation",
+      "efficiency",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "within-user ranking",
+      "pairwise loss",
+      "RankNet",
+      "BPR",
+      "implicit feedback",
+      "negative sampling"
+    ],
+    "purpose": "Resolve the material objective-and-training uncertainty before spending a scarce experiment on the highest-priority unexplored direction: a ranking-aligned loss. The current seed uses pointwise logistic training, while fixed research context prioritizes pairwise/listwise alternatives; implementation details are needed to define a leakage-safe, computationally bounded single-loss ablation.",
+    "query": "Within-user implicit-feedback recommendation with binary long-view labels: practical pairwise ranking objectives (RankNet/BPR) versus pointwise logistic loss, including pair construction within user impression groups, negative sampling, and effects on GAUC and top-k nDCG.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "features",
+      "architectures",
+      "training",
+      "bias_and_robustness",
+      "efficiency",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "sequential recommendation",
+      "causal history",
+      "candidate-conditioned attention",
+      "temporal split",
+      "cold start",
+      "short video"
+    ],
+    "purpose": "Resolve whether a causal history representation can be implemented safely and efficiently with the available impression logs after the screened aggregate affinity features were rejected. Literature is needed to distinguish a candidate-aware sequence mechanism from the already rejected coarse historical aggregates and to establish appropriate temporal truncation and cold-user defaults.",
+    "query": "Causally truncated user behavior history models for candidate ranking in short-video recommendation: candidate-conditioned attention or compact sequence pooling, impression-time feature construction, cold-user handling, and efficient training/evaluation under temporal splits.",
+    "request_index": 2,
+    "round": 1
+  }
+]

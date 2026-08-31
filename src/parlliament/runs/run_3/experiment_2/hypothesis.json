@@ -1,0 +1,34 @@
+{
+  "text": "Replace row-averaged BCE with user-normalized BCE so each user's training impressions contribute equal total loss mass.",
+  "parent_experiment_id": 1,
+  "scores": {
+    "interestingness": 8,
+    "novelty": 6,
+    "feasibility": 7
+  },
+  "rationale": "The official objective is within-user, while the current trainer averages loss over shuffled rows. Official validation has 22,377 users and shows materially heterogeneous slice quality, so reducing domination by prolific users is a direct alignment test without introducing a new feature family.",
+  "candidate_id": "c01",
+  "evidence_ids": [
+    "experiment:1:metrics",
+    "experiment:1:segment:user_frequency:warm_20_plus",
+    "experiment:1:segment:user_frequency:medium_5_19"
+  ],
+  "exact_ablation": "Change only the BCE reduction: weight each training row by the inverse number of training impressions for its user, normalized to mean weight one; keep features, additive scorer, optimizer, batch size, and early stopping unchanged.",
+  "expected_effect": {
+    "GAUC": "+0.001 to +0.004 from closer within-user objective alignment.",
+    "nDCG@5": "-0.001 to +0.002; equal-user weighting may reduce emphasis on high-volume users that supply many top-five examples."
+  },
+  "expected_primary_gain": 0.0015,
+  "confidence": 5,
+  "leakage_risk": "low",
+  "runtime_risk": "low",
+  "active_components": [
+    "loss",
+    "training"
+  ],
+  "literature_document_ids": [
+    "objective.user_normalized_binary_cross_entropy",
+    "evaluation.within_user_metrics",
+    "task.kuairand_ranking"
+  ]
+}

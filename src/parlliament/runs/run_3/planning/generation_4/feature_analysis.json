@@ -1,0 +1,23 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:3:metrics",
+        "experiment:3:segment:tab:0",
+        "experiment:3:segment:tab:6",
+        "experiment:3:segment:tab:5",
+        "experiment:3:segment:tab:8"
+      ],
+      "finding": "Request context is the only train-only screened group with a positive aggregate lift (+0.00221), full coverage, and positive lift on all four reported temporal days. However, the funded video-by-tab interaction did not validate: experiment 3 primary was 0.60194, a -0.00099 change versus its parent, despite GAUC of 0.66810. Top-five ranking remains materially weak on major tab slices, especially tab 0 (nDCG@5 0.06315; 13,726 rows) and tab 6 (nDCG@5 0.10611; 5,170 rows), with extreme failures on tabs 5 and 8.",
+      "recommended_action": "Apply strict early stopping to further video-by-tab interaction work. Preserve or test only a minimal, leakage-safe request-context representation using tab, hour, and weekday, with regularization and per-tab monitoring; require a positive within-user/top-five validation gain before spending additional budget."
+    }
+  ],
+  "avoid": [
+    "Reject all screened groups with negative training-only lift, including user profile, historical user-author affinity, upload recency, content duration, item metadata, historical author response, and historical item response; none meet the positive, stable screening bar. [screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response]",
+    "Do not use current-impression engagement/outcome fields or aggregate item-statistic snapshots lacking per-impression availability timestamps; they are leakage risks and are not eligible for experiments.",
+    "Do not treat user_positive_count=zero as a deployable weak-user segment: it has no validation positives, so its GAUC=0.5 and nDCG@5=0 are retrospective metric artifacts rather than ranking evidence. [experiment:3:segment:user_positive_count:zero]",
+    "Do not fund an experiment solely on global GAUC: the model has acceptable global within-user discrimination but severe top-five and tab-level ranking deficits. [experiment:3:metrics, experiment:3:segment:tab:0, experiment:3:segment:tab:6]"
+  ],
+  "metric_diagnosis": "Experiment 3 shows a distinction between broad ranking discrimination and top-five quality: global GAUC is 0.66810 while nDCG@5 is 0.53579 and primary is 0.60194. The prior interaction missed its parent primary by 0.00099, following another calibration miss in experiment 2, so the budget rule should stop broader interaction expansion. Post-score segments are diagnostics rather than independent test estimates, but their large-sample slices identify actionable weaknesses: tab 0 and tab 6 have relatively usable GAUC (0.57265 and 0.66728) yet very poor nDCG@5 (0.06315 and 0.10611), indicating that candidate ordering near the top five\u2014not merely pairwise discrimination\u2014is the core problem. [experiment:3:metrics, experiment:3:segment:tab:0, experiment:3:segment:tab:6]"
+}

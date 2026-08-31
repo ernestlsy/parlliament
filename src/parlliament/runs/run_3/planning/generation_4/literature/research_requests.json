@@ -1,0 +1,54 @@
+[
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "efficiency",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "primary"
+    ],
+    "preferred_tags": [
+      "within-user-ranking",
+      "pairwise-loss",
+      "listwise-loss",
+      "RankNet",
+      "ListNet",
+      "nDCG@5"
+    ],
+    "purpose": "The best scored parent uses pointwise BCE and has a material GAUC-to-top-five gap, while the only attempted objective change (user-normalized BCE) regressed. Literature is needed to choose one bounded ranking-loss ablation and avoid an under-specified or computationally infeasible objective experiment.",
+    "query": "Retrieve repository literature on within-user ranking-aligned objectives suitable for binary long-view impression ranking, prioritizing RankNet pairwise loss and mixed group ListNet/Top-1 loss. Include implementation requirements for constructing causal within-user training groups, negative sampling or weighting, computational complexity, and expected GAUC versus nDCG@5 tradeoffs relative to pointwise BCE.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "features",
+      "architectures",
+      "training",
+      "efficiency",
+      "bias_and_robustness",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "primary"
+    ],
+    "preferred_tags": [
+      "causal-history",
+      "temporal-leakage",
+      "candidate-conditioned-attention",
+      "sequential-recommendation"
+    ],
+    "purpose": "Existing screened historical aggregates regressed, but this does not resolve whether a causally truncated sequence representation can address poor top-five ordering. Literature is needed to determine whether such a representation is valid and sufficiently distinct from rejected aggregate histories before proposing a scarce experiment.",
+    "query": "Retrieve repository literature on leakage-safe causal behavior-history and candidate-conditioned history-attention methods for temporal recommendation. Focus on exact event-time truncation, handling unavailable/current-impression outcomes, compact bounded histories, candidate-aware user-item interaction, and efficiency under a 900-second experiment limit.",
+    "request_index": 2,
+    "round": 1
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "\"within-user\" implicit feedback recommendation pairwise ranking RankNet BPR pointwise logistic loss impression groups negative sampling GAUC nDCG@5",
+      "(\"Bayesian Personalized Ranking\" OR BPR OR RankNet OR \"pairwise logistic loss\") recommender systems implicit binary feedback \"within user\" sampled negatives \"group AUC\" OR GAUC nDCG@5",
+      "\"learning to rank\" recommender systems impression logs binary engagement labels pair construction same-user candidate set negative sampling \"GAUC\" \"nDCG@5\"",
+      "(\"pairwise ranking\" OR \"pairwise loss\") versus \"pointwise logistic\" recommendation implicit feedback user-level ranking negative sampling top-k nDCG groupwise AUC",
+      "recommender system pairwise objective implementation \"impression group\" positives negatives within-user BPR RankNet computational efficiency sampled pair training GAUC nDCG@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "\"sequential recommendation\" \"candidate-aware attention\" causal user behavior history impression logs temporal split GAUC nDCG@5",
+      "\"target-aware\" sequence representation candidate ranking short video recommendation \"impression time\" features leakage-free temporal evaluation",
+      "\"candidate-conditioned attention\" user behavior sequence \"cold-start user\" recommendation temporal truncation GAUC nDCG@5",
+      "\"causal sequential recommendation\" truncated interaction history efficient sequence pooling candidate ranking time-based split",
+      "short-video recommendation user behavior sequence \"multi-interest\" attention compact pooling cold user temporal evaluation impression logs"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

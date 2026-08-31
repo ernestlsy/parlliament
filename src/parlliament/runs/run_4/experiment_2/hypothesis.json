@@ -1,0 +1,31 @@
+{
+  "text": "Replace pointwise BCE with within-user RankNet pairwise loss while retaining the current user, video, and request-context inputs, optimizer family, and canonical displayed-candidate evaluation.",
+  "parent_experiment_id": 1,
+  "scores": {
+    "interestingness": 9,
+    "novelty": 8,
+    "feasibility": 7
+  },
+  "rationale": "The current scorer reaches GAUC 0.6689 and nDCG@5 0.5370, but its pointwise objective is not directly aligned with within-user ordering. Pairwise training is a focused objective ablation with plausible GAUC upside.",
+  "candidate_id": "c01",
+  "evidence_ids": [
+    "experiment:1:metrics"
+  ],
+  "exact_ablation": "Change only the training objective from row-wise BCE to within-user RankNet loss using positive-negative pairs from the same intact user candidate group; keep features, model capacity, optimizer, sampling limits, and evaluation unchanged.",
+  "expected_effect": {
+    "GAUC": "Expected small positive gain of +0.001 to +0.006 because the loss directly optimizes positive-over-negative ordering within users.",
+    "nDCG@5": "Expected flat to modestly positive change of -0.001 to +0.004; top-five gains depend on whether sampled pairs include high-scoring negatives."
+  },
+  "expected_primary_gain": 0.0025,
+  "confidence": 6,
+  "leakage_risk": "low",
+  "runtime_risk": "medium",
+  "active_components": [
+    "loss"
+  ],
+  "literature_document_ids": [
+    "objective.within_user_ranknet_pairwise_loss",
+    "training.group_complete_stratified_minibatching",
+    "task.kuairand_ranking"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "winner": {
+    "text": "Add the impression-time request_context feature family\u2014tab, hour, and weekday\u2014to the neutral user/video ID scorer, leaving architecture, optimizer, and loss unchanged. This tests whether observed context signal improves within-user ordering.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The train-only screen found request_context to be the only tested feature group with positive overall primary lift and positive lift on every reported day. Downside risks are temporal instability, weak benefit outside the late screened dates, and possible overfitting to context frequency patterns.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only tab, hour, and weekday request-context inputs; keep the seed additive ID model and training procedure unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely small positive gain because context can reorder candidates differently within users; expected direction +0.001 to +0.004.",
+      "nDCG@5": "Likely modest positive or flat effect; expected direction 0.000 to +0.003, with less confidence than GAUC."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  "selection_rationale": "Select c01 because it has the strongest measured evidence: request_context was the only screened feature family with positive overall lift and positive lift on every reported day. It offers the highest consultant utility, expected primary gain of 0.002, high confidence, low leakage risk, low runtime risk, and a controlled feature-only ablation that preserves the existing architecture, optimizer, and loss.",
+  "counted_experiments_consumed": 0
+}

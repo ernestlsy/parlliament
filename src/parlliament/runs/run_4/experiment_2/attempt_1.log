@@ -1,0 +1,14 @@
+command: ['/home/user/anaconda3/envs/evo/bin/python', 'train.py', '--config', 'config.json', '--data-dir', '/mnt/d/parlliament/src/kuairand-starter-kit/KuaiRand-Pure/data', '--output', '/mnt/d/parlliament/src/parlliament/runs/run_4/attempts/attempt_09c56097d95f/predictions_valid.npz']
+elapsed_seconds: 29.996
+return_code: 0
+--- stdout ---
+epoch=1 loss=0.601259 valid_gauc_proxy=0.664613
+epoch=2 loss=0.557406 valid_gauc_proxy=0.668155
+epoch=3 loss=0.549270 valid_gauc_proxy=0.668126
+epoch=4 loss=0.546134 valid_gauc_proxy=0.667629
+epoch=5 loss=0.544773 valid_gauc_proxy=0.668506
+epoch=6 loss=0.544209 valid_gauc_proxy=0.668454
+epoch=7 loss=0.543339 valid_gauc_proxy=0.668334
+epoch=8 loss=0.542628 valid_gauc_proxy=0.668275
+
+--- stderr ---

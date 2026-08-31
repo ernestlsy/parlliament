@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c07",
+      "rank": 1,
+      "utility_score": 78.0,
+      "rationale": "Best targeted response to the strongest failure evidence: context is the only positively screened feature family and tab slices are extremely weak. It has relatively strong confidence, meaningful expected gain, and less scope than a full nonlinear head, though sparse interaction overfitting remains a risk."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 2,
+      "utility_score": 73.0,
+      "rationale": "Broadly tests whether nonlinear user-video-context interactions can convert the validated context signal into candidate-specific ordering. Confidence is comparatively strong, but the larger capacity and medium runtime increase overfitting risk versus c07."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 3,
+      "utility_score": 68.0,
+      "rationale": "A bounded low-rank cross branch directly targets context conjunctions while controlling parameter growth. It is relevant to the tab failures, but evidence is indirect and confidence is lower than for c01 or c07."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 4,
+      "utility_score": 64.0,
+      "rationale": "Clean, cheap ablation isolating the most problematic context field, tab. Its low runtime and strong diagnostic motivation are valuable under one experiment, but the expected aggregate gain is small and it may discard complementary hour and weekday signal."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 5,
+      "utility_score": 58.0,
+      "rationale": "Low-cost robustness test for noisy context effects, supported by large slice instability and screen variance. However, it may shrink genuine signal and does not directly address the severe candidate-ordering failures."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 6,
+      "utility_score": 54.0,
+      "rationale": "Cheap, tightly scoped representation change with plausible generalization across adjacent hours. The context evidence supports testing hour, but the expected gain is modest and tab appears more important."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 7,
+      "utility_score": 51.0,
+      "rationale": "Aligns training aggregation with the within-user evaluation metric at moderate runtime cost. Evidence is conceptual rather than experimentally demonstrated, and equal weighting can amplify noisy small-user gradients."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 8,
+      "utility_score": 48.0,
+      "rationale": "Late-period screening lifts provide a plausible drift signal, but the result is internal temporal-holdout evidence with substantial variability. Recency weighting risks validation overfitting and discarding stable earlier-period information."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 9,
+      "utility_score": 44.0,
+      "rationale": "Improves alignment between minibatches and within-user ranking without changing the model, but it overlaps conceptually with the already-tested group-aware RankNet direction, which produced a small negative primary change and incurs training complexity."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 10,
+      "utility_score": 39.0,
+      "rationale": "Directly targets nDCG@5 and could help top-five ordering, but it has high runtime and instability risk. The prior RankNet experiment was essentially flat or negative, weakening confidence in another pairwise objective."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 11,
+      "utility_score": 36.0,
+      "rationale": "ListNet is ranking-aligned and addresses group competition, but it is high runtime, sensitive to incomplete or homogeneous groups, and lacks supporting direct evidence. Recent ranking-loss experiments have not improved the primary metric."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 12,
+      "utility_score": 32.0,
+      "rationale": "Very feasible and clean, but hour-only augmentation omits the more strongly implicated tab signal. Its expected gain is smallest among the context alternatives and evidence for hour-specific improvement is weak and noisy."
+    }
+  ]
+}

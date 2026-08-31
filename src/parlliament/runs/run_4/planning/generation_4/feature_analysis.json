@@ -1,0 +1,19 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context"
+      ],
+      "finding": "Prioritize request-context features (tab, hour, weekday). Training-only screening shows the only positive primary lift, +0.00221 with full coverage; the lift is positive on three of four days, though variability is material. Cold-user and warm-user/item GAUC remain above 0.63, indicating useful within-user ranking signal, while nDCG@5 is only moderate, so validate top-five impact separately.",
+      "recommended_action": "Allocate the next budget increment to a small request-context ablation and interaction test, with daily and segment-level monitoring; do not expand broadly until the top-five weakness is addressed."
+    }
+  ],
+  "avoid": [
+    "Reject user-profile features based on negative primary lift and unstable daily results: screen:user_profile.",
+    "Reject historical user-author affinity, upload recency, content duration, item metadata, historical author response, and historical item response because their training-only screening lifts are negative: screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response.",
+    "Do not use user_positive_count as a modeling feature; it is a retrospective validation-label diagnostic, especially the zero-positive slice: experiment:3:segment:user_positive_count:zero.",
+    "Do not spend additional budget on the current hybrid-loss direction after successive primary declines in experiments 2 and 3: experiment:2:metrics, experiment:3:metrics.",
+    "Do not infer broad success from global GAUC alone. The weakest tab slices have severe within-user ranking and top-five failures, especially tab 8 and tab 3: experiment:3:segment:tab:8, experiment:3:segment:tab:3."
+  ],
+  "metric_diagnosis": "The latest experiment has global GAUC 0.6683 and primary 0.6025, but the calibration history shows deterioration from experiment 1 through experiments 2 and 3, triggering early stopping: experiment:1:metrics, experiment:2:metrics, experiment:3:metrics. Post-score diagnostics show that warm item-frequency performance is near global, while duration buckets and several hours are weaker; the most important operational gap is tab-specific. Tab 8 has GAUC 0.3148 and nDCG@5 0.026, and tab 3 has GAUC 0.5 with nDCG@5 0.006, demonstrating that top-five quality can fail even when aggregate GAUC is acceptable: experiment:3:segment:tab:8, experiment:3:segment:tab:3, experiment:3:segment:duration_bucket:(136900.0, inf]. Treat all post-score slices as diagnostics rather than independent test estimates, and preserve the leakage exclusions for current-impression outcomes and aggregate snapshots without verified availability timestamps."
+}

@@ -1,4 +1,8 @@
-"""Post-score diagnostics. These run only after official scoring has succeeded."""
+"""Compute retrospective segment diagnostics after official scoring succeeds.
+
+The module analyzes warm/cold, frequency, activity, context, duration, and label-support slices and
+attaches them to internal experiment artifacts without changing the official selection metric.
+"""
 
 from __future__ import annotations
 

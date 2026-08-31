@@ -1,0 +1,73 @@
+ParLLiaMent: Autonomous Machine Learning Research Agent for Recommender Systems
+
+Project Overview
+
+ParLLiaMent is an autonomous, hypothesis-driven machine learning research agent designed for the KuaiRand-Pure recommendation benchmark. It automates the repetitive MLE development cycle described in the problem statement: understanding the task, inspecting the data, engineering features, training and tuning models, evaluating results, reflecting on the evidence, and revising the next experiment.
+
+The system is designed around scarce, sequential experiments. Instead of changing many parts of the pipeline at once, ParLLiaMent uses an LLM-supported research team to propose and compare concrete hypotheses, select one interpretable ablation, implement the required code, run the experiment, evaluate it with fixed metrics, and use the result to plan the next iteration. The host application retains control of experiment counting, file permissions, evaluation, canonical row order, stopping rules, and final model selection.
+
+How the Solution Addresses the Problem Statement
+
+1. Reproducing and comparing against the official baseline
+
+ParLLiaMent includes an adaptation of the organizer-provided Factorization Machine baseline as an optional parent-zero scaffold. The official validation scores remain external reference values rather than being misrepresented as agent-generated experimental evidence. Every scored experiment is compared using the official GAUC, nDCG@5, and combined primary metric. A retained development run reached a validation primary score of 0.604496, compared with the published baseline primary score of 0.6016. This is validation evidence only and is not presented as a hidden-test result.
+
+2. Automating the complete MLE iteration loop
+
+Before official experimentation, a research engine profiles the supplied data and performs train-only temporal feature screening. A Feature Analyst summarizes this evidence and identifies weaknesses in previous results. An Evolution Judge uses the analysis, experiment history, and a curated recommender-system knowledge base to generate candidate hypotheses. A Consultant compares the candidates, after which the Judge selects one proposal. An Orchestrator converts that proposal into an explicit implementation contract and delegates only the necessary files to specialized Feature Engineer, Model Designer, and Trainer roles.
+
+The generated experiment then passes a small contract check before full training. Fixed host-side evaluation computes the official metrics and additional diagnostic metrics. The result, code diff, hypothesis, failures, and recovery history are written to an append-only journal and supplied to the next iteration. This creates the required reflect-and-revise loop without requiring a person to choose each successive experiment.
+
+3. Improving across the algorithmic stack
+
+The agent can revise data processing, feature engineering, model architecture, loss functions, optimization, regularization, sampling, and training configuration. It is not restricted to architecture search. Its knowledge base covers ranking objectives, causal behavior histories, multitask learning, temporal shift, exposure bias, efficiency, and experiment strategy.
+
+The organizer's Starter Kit findings are included as always-available empirical guidance. Broad static-feature bundles and capacity-only scaling are deprioritized because the organizer reported little benefit from those directions. Ranking-aligned objectives, causal user histories, auxiliary tasks, watch-time modeling, temporal effects, and robustness analysis receive higher priority. These findings are treated as research priors rather than hard prohibitions, allowing current measured evidence to justify a targeted exception.
+
+4. Reliable and minimally supervised operation
+
+ParLLiaMent runs experiments strictly one at a time and assigns experiment IDs only after valid predictions have been scored. Planning, feature screening, retries, and abandoned attempts do not consume official experiment IDs. Generated code is restricted to experiment-owned data.py, model.py, train.py, and config.json files, according to role ownership. Responses are validated as complete-file replacements before anything is executed.
+
+Failures are classified by type and routed back only to the responsible role. Contract failures, code errors, resource failures, timeouts, and malformed LLM responses use bounded repair and retry paths. Failed attempts retain detailed logs and can trigger a replacement hypothesis without corrupting the successful experiment sequence. Durable journals, audited LLM traffic, atomic experiment finalization, and resumable run state support long-running operation.
+
+5. Protecting evaluation and test integrity
+
+The evaluator, labels, temporal split, canonical row order, convergence logic, and submission generation are controlled by the host rather than generated experiment code. Checkpoint selection uses validation data only. Test predictions are generated from the validation-selected checkpoint, checked for schema, alignment, and finite values, and never scored locally. The final submission is selected from the experiment with the best observed validation primary score rather than automatically using the last experiment.
+
+Development Tools
+
+- Visual Studio Code (VSCode) was used as the primary development environment for implementing, reviewing, testing, and refactoring the project.
+- Git was used for source control and change tracking.
+
+APIs and Models Used
+
+- OpenAI GPT-5.6 Terra and Luna were used as the reasoning and code-generation model for the agent roles.
+- OpenAI GPT-5.6 Terra, with web search tools enabled, was used to populate the knowledge base of relevant research and literature.
+- ParLLiaMent integrates with the OpenAI Responses API for structured LLM requests and audited token usage.
+- The LLM layer also supports compatible Chat Completions endpoints and a JSON-over-standard-input command adapter, although the intended submission configuration uses OpenAI GPT-5.6.
+- API requests use bounded retries, exponential backoff, timeout handling, provider error capture, structured JSON validation, and per-call audit records.
+
+Libraries and Frameworks Used
+
+- Python 3.9 or later: primary implementation language.
+- NumPy: numerical computation, model parameters, optimization state, and prediction artifacts.
+- pandas: dataset loading, joins, profiling, temporal filtering, and feature-screening preparation.
+- scikit-learn: train-only screening models and supporting evaluation utilities.
+- Python standard library: argparse, csv, dataclasses, datetime, hashlib, json, pathlib, subprocess, tempfile, urllib, and unittest are used for orchestration, schemas, hashing, process isolation, API access, persistence, and testing.
+- setuptools with pyproject.toml: package definition and command-line entry points.
+
+Datasets and Assets Used
+
+- KuaiRand-Pure: the required public recommender-system benchmark. ParLLiaMent uses the standard-exposure impression logs and the organizer-defined temporal split:
+  - Training: 2022-04-08 through 2022-04-21.
+  - Validation: 2022-04-22 through 2022-04-28.
+  - Test prediction period: 2022-04-29 through 2022-05-08.
+- KuaiRand-Pure metadata tables: user, video, author, content, duration, upload-time, request-context, and other available metadata are profiled and exposed to leakage-aware feature engineering.
+- KuaiRand random-exposure logs: retained as a separate distribution for explicitly declared robustness research; they are not silently mixed into official training, validation, or test evaluation.
+- Official KuaiRand Starter Kit: used as a read-only reference for the baseline, metric definitions, row-order requirements, submission format, feature-ablation findings, and recommended research directions.
+- ParLLiaMent research knowledge base: a local, hash-validated collection of task, dataset, feature, architecture, objective, training, evaluation, robustness, efficiency, and experiment-strategy cards. A guarded Librarian retrieves only catalogued documents relevant to the current hypothesis.
+- Seed assets: a minimal user/item seed scaffold and an optional organizer-style Factorization Machine scaffold provide reproducible parent-zero starting points. Both remain unscored until a descendant completes the official experiment pipeline.
+
+Output and Reproducibility
+
+Each successful experiment retains its hypothesis, implementation contract, final code and configuration, validation and test prediction artifacts, official and diagnostic metrics, code diff, execution logs, and LLM audit events. When a run stops, ParLLiaMent can generate a submission bundle containing the iteration history, resource usage, validation-best results, manifest, and canonical KuaiRand-Pure submission CSV. Each run is initiated manually via CLI, while the subsequent research and experiment loop operates fully autonomously with no manual intervention necessary.

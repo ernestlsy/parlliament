@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "Unchanged interface from data.py: load returns canonical split rows ordered by source traversal and date filtering; encode returns encoded['train'] = (train_features, train_labels, train_users), encoded['valid'] = (valid_features, valid_labels, valid_users), and encoded['test'] = (test_features, None, test_users). Feature matrices are int32 with one global categorical index per field. valid_labels are float32 binary long_view labels and valid_users are raw user_id strings in canonical validation order. Test has no labels."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model remains unchanged: construct Model(dimension, learning_rate=config['learning_rate'], l2=config['l2']); call step(features_batch, labels_batch) only on training batches; call predict(features) to obtain one-dimensional logits. Trainer selects only a saved validation-scored model state and emits its logits for validation and test."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

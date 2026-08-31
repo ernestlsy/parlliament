@@ -1,3 +1,9 @@
+"""Orchestrate the complete sequential autonomous research lifecycle.
+
+``Overseer`` coordinates screening, literature retrieval, hypothesis tournaments, code delegation,
+bounded repair, experiment execution, journaling, convergence checks, timing, and final submission.
+"""
+
 from __future__ import annotations
 
 import difflib

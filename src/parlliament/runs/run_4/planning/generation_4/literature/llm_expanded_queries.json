@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Empirical research on context-aware recommender ranking with request-context feature interactions, focusing on tab, hour-of-day, and weekday effects in within-user impression or slate ranking; compare additive user-item scorers with explicit context-item and context-user interaction models, and report GAUC, nDCG@5, cold-start performance, and temporal out-of-time generalization under leakage-safe feature construction.",
+      "Studies of feature-cross architectures for recommendation and personalized ranking, including factorization machines, deep-and-cross networks, neural feature interaction models, and context-gated ranking, using tab, time-of-day, and day-of-week signals; evaluate within-user displayed-impression ordering against additive baselines with GAUC, nDCG@5, cold-start, and temporal generalization metrics while excluding current-impression outcomes and unverified aggregate snapshots.",
+      "Contextual ranking and session/request-aware recommendation experiments examining whether request context requires explicit user-context, item-context, or user-item-context interactions rather than additive scoring; prioritize tab, hour, and weekday features, canonical within-user impression evaluation, GAUC and nDCG@5, cold-start slices, and fixed temporal generalization with leakage-safe availability-timestamp rules.",
+      "Empirical comparisons of additive generalized-linear or embedding-based recommendation models versus explicit interaction architectures for sparse categorical context, especially placement/tab, hour-of-day, and weekday in within-user candidate ranking; include results for GAUC, top-five nDCG, warm versus cold items or users, and future-time transfer, using only impression-time features and historically available aggregates without target leakage.",
+      "Research on contextual feature crossing for recommender-system ranking and distribution shift, connecting request-context effects with cold-start and temporal robustness; find studies that compare additive user/item/request-context models with factorization, cross network, attention, or gating architectures for tab, time-of-day, and weekday signals in displayed-impression ranking, reporting GAUC, nDCG@5, cold-start, and temporal out-of-time results under leakage-controlled evaluation."
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "Literature comparing RankNet, LambdaRank, listwise learning-to-rank, and top-k or nDCG-aware losses for implicit-feedback recommender systems trained on logged impression groups; identify when pairwise objectives improve or fail to improve within-user nDCG@5, MAP@5, MRR@5, and GAUC under fixed displayed-candidate evaluation.",
+      "Studies of listwise recommendation objectives, LambdaRank, LambdaMART-style gradient weighting, and top-k ranking losses for implicit feedback with impression-level grouping, focusing on severe nDCG@5 degradation in specific tabs or user segments despite acceptable aggregate GAUC and effects on within-user ranking metrics.",
+      "Comparative evaluations of pointwise BCE, within-user RankNet, hybrid BCE-plus-pairwise losses, listwise softmax objectives, and differentiable nDCG or top-k surrogates for logged recommender impressions; focus on objective alignment with nDCG@5, MAP@5, MRR@5, and GAUC without changing the canonical displayed-impression evaluation.",
+      "Research on optimizing top-five recommendation quality from implicit logged impressions using listwise ranking, LambdaRank, ApproxNDCG, ListNet, ListMLE, or other nDCG-aligned objectives; examine cases where pairwise training worsens or fails to improve low-performing tabs and within-user ranking while aggregate metrics remain stable.",
+      "Information-retrieval and recommender-system papers comparing pairwise versus listwise and top-k loss functions for grouped implicit-feedback data, including exposure or impression-grouped training, with reported GAUC, nDCG@5, MAP@5, and MRR@5; exclude methods requiring current-impression outcomes or unavailable aggregate snapshots and preserve fixed candidate-set evaluation."
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

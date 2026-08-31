@@ -1,3 +1,9 @@
+"""Define and validate the persisted configuration for a ParLLiaMent run.
+
+``SystemConfig`` centralizes paths, seed choice, experiment limits, LLM settings, screening, and
+literature budgets so resumed runs cannot silently change protocol-critical options.
+"""
+
 from __future__ import annotations
 
 import json

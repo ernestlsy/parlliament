@@ -1,3 +1,9 @@
+"""Create isolated attempt directories and enforce generated-code file ownership.
+
+Sandbox helpers copy parent scaffolds, guard resolved paths, validate complete Python/JSON file
+replacements, compute diffs, and atomically finalize successful or abandoned attempts.
+"""
+
 from __future__ import annotations
 
 import ast

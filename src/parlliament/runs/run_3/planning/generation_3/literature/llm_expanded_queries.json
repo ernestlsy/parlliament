@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "\"within-user\" implicit feedback recommendation \"group AUC\" GAUC nDCG@5 pointwise BCE pairwise RankNet BPR logged impressions temporal split",
+      "(\"BPR\" OR \"RankNet\" OR \"pairwise ranking loss\") recommender implicit feedback per-user candidate set negative sampling impression logs GAUC nDCG@5",
+      "(\"ListNet\" OR listwise OR \"top-k loss\" OR LambdaRank) implicit-feedback recommendation logged impression candidates within-user ranking nDCG@5 temporal evaluation",
+      "recommender-system implicit feedback user-normalized loss variable number of impressions per user pairwise loss weighting negative-positive pair construction",
+      "offline evaluation logged-impression recommendation fixed candidate set within-user AUC GAUC nDCG@5 chronological holdout pairwise versus listwise objectives"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "(\"sequential recommendation\" OR \"next-item recommendation\") AND (causal OR temporal OR \"time-aware\") AND (\"truncated history\" OR \"bounded history\" OR \"recent interaction sequence\") AND \"implicit feedback\" AND \"logged impressions\" AND (\"within-user ranking\" OR GAUC OR \"nDCG@5\")",
+      "(\"candidate-conditioned attention\" OR \"target-aware attention\" OR \"target-aware sequential recommendation\") AND (\"user behavior sequence\" OR \"interaction history\") AND (causal OR \"strictly prior\" OR \"temporal leakage\") AND \"implicit feedback\" AND recommendation AND (efficiency OR \"compact model\")",
+      "(\"sequential user representation\" OR \"sequence pooling\" OR \"attention pooling\" OR \"interest pooling\") AND recommendation AND (\"fixed-length history\" OR \"recent-k\" OR truncation OR \"bounded memory\") AND (\"cold start\" OR \"sparse history\") AND \"top-k ranking\"",
+      "(\"temporal leakage\" OR \"feature leakage\" OR \"point-in-time correct\" OR \"as-of feature\") AND recommender systems AND (\"historical aggregate\" OR \"user-item statistics\" OR \"user-author affinity\" OR \"response rate\") AND (impressions OR exposure OR \"implicit feedback\")",
+      "(\"logged impressions\" OR \"impression-level recommendation\" OR \"exposure-aware recommendation\") AND (\"sequential recommendation\" OR \"user behavior modeling\") AND (\"candidate-conditioned\" OR \"target-aware\" OR \"history attention\") AND (GAUC OR \"group AUC\" OR \"nDCG@5\" OR \"within-user top-k\")"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

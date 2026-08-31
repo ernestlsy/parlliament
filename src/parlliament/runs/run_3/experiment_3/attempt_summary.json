@@ -1,0 +1,23 @@
+{
+  "attempt_id": "2403aaf83bb5",
+  "status": "scored",
+  "generation": 3,
+  "mode": "draft",
+  "parent_experiment_id": 1,
+  "hypothesis_text": "Add a video-by-tab categorical interaction to learn surface-specific item appeal.",
+  "active_sub_agents": [
+    "feature_engineer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 90.55434077399696,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

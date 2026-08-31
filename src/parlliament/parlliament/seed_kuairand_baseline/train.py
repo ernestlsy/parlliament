@@ -1,4 +1,8 @@
-"""Train the KuaiRand FM seed and emit validation scores for fixed evaluation."""
+"""Train, select, and export predictions from the KuaiRand FM seed.
+
+The script runs the contract probe, performs validation-only early stopping with official-style
+training metrics, and emits canonical validation and test NPZ artifacts from the best checkpoint.
+"""
 
 import argparse
 import collections

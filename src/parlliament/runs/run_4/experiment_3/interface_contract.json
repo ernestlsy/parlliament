@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "data.py remains unchanged and returns encoded[split] as (features, labels, user_ids, row_ids), with features shaped (n, 5), labels from the existing long_view field, user_ids aligned row-for-row, and row_ids preserving canonical source order for train, valid, and test."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "model.py receives Model.step(features, labels, user_ids), where features are the existing five-column encoded inputs, labels are the same displayed-impression long_view targets used for RankNet and BCE, and user_ids define within-user pairs. Model.predict receives features only and returns one finite score per input row."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

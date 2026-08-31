@@ -1,3 +1,9 @@
+"""Execute one generated experiment under fixed contracts and time limits.
+
+The Experimentor validates code/configuration, runs contract probes and training subprocesses,
+checks prediction artifacts, invokes fixed evaluation, and classifies failures for targeted repair.
+"""
+
 from __future__ import annotations
 
 import ast

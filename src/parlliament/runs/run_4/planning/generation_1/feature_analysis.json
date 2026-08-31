@@ -1,0 +1,23 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "feature:request_context",
+        "feature:tab",
+        "feature:hourmin"
+      ],
+      "finding": "Prioritize request-context features. They are the only screened group with positive overall primary lift (+0.00221), positive daily lift on all four dates, full coverage, and the strongest within-user ranking evidence among the tested groups: cold-user GAUC is 0.654 and warm-user/item GAUC is 0.631. The daily variation is material, so treat this as a cautious budget allocation rather than a strong stable win.",
+      "recommended_action": "Fund a limited experiment using request_context, then apply the strict early-stopping rule. Do not expand the budget without post-score confirmation of within-user GAUC and daily stability."
+    }
+  ],
+  "avoid": [
+    "Reject user_profile because its aggregate lift is negative and daily variability is high: screen:user_profile.",
+    "Reject historical_user_author_affinity because lift is negative across every reported day: screen:historical_user_author_affinity.",
+    "Reject upload_recency, content_duration, and item_metadata because their primary lifts are consistently negative overall: screen:upload_recency, screen:content_duration, screen:item_metadata.",
+    "Reject historical_author_response and historical_item_response; both have large negative lifts and warm-segment GAUC below 0.5: screen:historical_author_response, screen:historical_item_response.",
+    "Do not use outcome-derived current-impression features because they are forbidden for ranking: feature:historical_author_response, feature:historical_item_response.",
+    "Do not use aggregate video-statistic snapshot features because per-impression availability timing is unverified; no corresponding available screening evidence supports them."
+  ],
+  "metric_diagnosis": "The decision should emphasize GAUC as the within-user ranking metric. Request_context improves cold-user GAUC more clearly than top-five quality: cold-user GAUC is 0.654 versus nDCG@5 of 0.492, while warm-user/item GAUC is 0.631 versus nDCG@5 of 0.508. The tiny cold-item segment is weak at GAUC 0.5 and nDCG@5 0.25, but it has only 8 rows and should not drive stopping decisions. No weakest-segment post-score diagnostics are available, so require them before scaling. Screening is training-only internal temporal holdout; excluded current-impression outcomes and untimestamped aggregate snapshots must remain quarantined to avoid leakage."
+}

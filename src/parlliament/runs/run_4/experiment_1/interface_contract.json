@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "data.py loads the existing date-partitioned logs and returns train, valid, and test encoded splits in canonical source-row order. Each split contains a five-column int32 feature matrix ordered user_id, video_id, tab, hour, weekday; float32 long_view labels; user IDs for validation grouping; and positional int64 row_ids for canonical output. Vocabularies and unknown buckets are fit from training rows only. hour is floor(numeric hourmin / 100) constrained to 0..23, and weekday is the YYYYMMDD calendar weekday Monday=0 through Sunday=6."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "model.py receives a shared integer feature dimension and an int32 matrix with exactly five columns per row: user_id, video_id, tab, hour, weekday. It returns one additive logit per row using a scalar bias plus the sum of the corresponding shared-vector weights, with the existing Adam-style optimizer, binary cross-entropy loss, l2 regularization, and prediction/state interfaces unchanged."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

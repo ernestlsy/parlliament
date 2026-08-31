@@ -1,4 +1,8 @@
-"""Build a self-contained submission bundle from one ParLLiaMent run."""
+"""Build a self-contained submission bundle from one ParLLiaMent run.
+
+The exporter selects the validation-best experiment and writes iteration logs, result and resource
+summaries, a completeness manifest, and the canonical test prediction CSV without scoring test data.
+"""
 
 from __future__ import annotations
 

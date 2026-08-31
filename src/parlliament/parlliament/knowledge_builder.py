@@ -1,3 +1,10 @@
+"""Build or extend the research knowledge catalog as a manual preparation utility.
+
+The builder plans and generates cards with an audited LLM, validates structure and citations,
+stages hashes and catalog metadata, and atomically installs a verified knowledge base with backup.
+It is not invoked during normal recommender experiments.
+"""
+
 from __future__ import annotations
 
 import argparse

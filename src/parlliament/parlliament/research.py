@@ -1,4 +1,8 @@
-"""Train-only dataset research used to inform, but never count as, experiments."""
+"""Profile data and screen feature groups using only the official training period.
+
+The Research Engine builds leakage-aware schemas and causal feature recipes, runs a temporal proxy
+holdout, and caches auditable evidence without consuming an experiment ID or reading validation.
+"""
 
 from __future__ import annotations
 

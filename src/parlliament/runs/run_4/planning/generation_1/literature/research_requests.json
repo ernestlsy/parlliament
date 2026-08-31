@@ -1,0 +1,52 @@
+[
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "evaluation"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "primary"
+    ],
+    "preferred_tags": [
+      "learning-to-rank",
+      "implicit-feedback",
+      "pairwise-loss",
+      "listwise-loss",
+      "temporal-evaluation"
+    ],
+    "purpose": "Resolve the objective and training uncertainty for a single bounded comparison between pointwise logistic training and a ranking-aligned loss without changing the fixed evaluation protocol.",
+    "query": "Pairwise and listwise learning-to-rank objectives for implicit-feedback recommendation, especially RankNet/BPR and ListNet/ListMLE variants, with evidence on GAUC or per-user AUC and nDCG@5 trade-offs under temporal evaluation",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "architectures",
+      "features",
+      "training",
+      "bias_and_robustness"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "cold-user GAUC",
+      "warm-user GAUC"
+    ],
+    "preferred_tags": [
+      "sequential-recommendation",
+      "causal-history",
+      "candidate-conditioned-attention",
+      "leakage-prevention",
+      "cold-start"
+    ],
+    "purpose": "Resolve whether a bounded causal history representation is technically justified and how to construct it from impression logs while preserving impression-time availability and the official temporal holdout.",
+    "query": "Causally truncated user behavior-history modeling for sequential recommendation, including candidate-conditioned attention or compact history pooling, with safeguards against future-information leakage and evidence on cold-start and within-user ranking",
+    "request_index": 2,
+    "round": 1
+  }
+]

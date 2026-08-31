@@ -1,3 +1,9 @@
+"""Define ParLLiaMent's LLM-backed research, review, and coding roles.
+
+The module builds and validates prompts for the Feature Analyst, Evolution Judge, Consultant,
+Orchestrator, and file-owning code agents, turning research hypotheses into executable contracts.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict, replace
@@ -23,6 +29,11 @@ JSON_ONLY = "Return only one valid JSON object. Do not use Markdown fences."
 
 
 def _files(path: Path) -> Dict[str, str]:
+    """Read the complete set of managed experiment files that currently exist in ``path``.
+
+    The returned mapping is used as immutable parent context for planning; ownership remains
+    constrained by ``AGENT_FILES`` when replacements are later requested.
+    """
     return {
         name: (path / name).read_text(encoding="utf-8")
         for names in AGENT_FILES.values() for name in names
@@ -31,7 +42,10 @@ def _files(path: Path) -> Dict[str, str]:
 
 
 def _scored_metric_history(archive: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Preserve complete nested metric objects in execution order for Judge analysis."""
+    """Return complete nested metrics for scored experiments in execution order.
+
+    Seed and abandoned records are excluded so the Judge cannot mistake them for measured results.
+    """
     return [
         {
             "experiment_id": item["experiment_id"],
@@ -46,7 +60,11 @@ def _scored_metric_history(archive: List[Dict[str, Any]]) -> List[Dict[str, Any]
 
 
 class FeatureAnalyst:
-    """Turns deterministic research artifacts into a concise planning assessment."""
+    """Translate deterministic research artifacts into a concise planning assessment.
+
+    The analyst identifies promising evidence, features or directions to avoid, and the current
+    metric weakness while being restricted to evidence IDs supplied by the host.
+    """
 
     def __init__(self, llm: LLMClient):
         self.llm = llm
@@ -54,6 +72,11 @@ class FeatureAnalyst:
     def analyze(
         self, *, research_brief: Dict[str, Any], available_evidence_ids: Sequence[str]
     ) -> Dict[str, Any]:
+        """Analyze screening and diagnostic evidence with bounded schema-repair attempts.
+
+        Returns validated priorities, avoidance guidance, and a metric diagnosis. Invalid or stale
+        evidence citations are returned to the model for repair rather than entering planning.
+        """
         system = (
             "You are the Feature Analyst for a recommender experiment budget with a strict early "
             "stopping rule. Interpret train-only screening and post-score segment diagnostics. "
@@ -101,6 +124,13 @@ class FeatureAnalyst:
 
 
 class EvolutionJudge:
+    """Own hypothesis research, generation, revision, and final experiment selection.
+
+    The Judge combines fixed task knowledge, retrieved literature, train-only screening, full
+    experiment history, and nested metrics while keeping measured evidence and literature IDs in
+    separate namespaces.
+    """
+
     def __init__(
         self,
         llm: LLMClient,
@@ -128,6 +158,11 @@ class EvolutionJudge:
         retrieval_round: int,
         experiment_timeout_seconds: int,
     ) -> List[ResearchRequest]:
+        """Identify bounded literature requests needed before proposing experiments.
+
+        Requests are optional and must use allowed catalog categories and document limits. The
+        method validates every response and retries with precise feedback when the schema is wrong.
+        """
         system = (
             "Before proposing scarce recommender experiments, identify any specific literature "
             "needed to resolve a material architecture, feature, objective, training, evaluation, "
@@ -203,6 +238,12 @@ class EvolutionJudge:
         retrieved_literature: Optional[Sequence[Dict[str, str]]] = None,
         retrieved_document_ids: Optional[Sequence[str]] = None,
     ) -> List[Hypothesis]:
+        """Propose one or more hypotheses for direct improvement or failure replacement.
+
+        Improve mode requires one hypothesis, while Draft mode may return a diverse set. Every
+        result must reference an available parent, preserve valid literature citations, and pass
+        host-side parsing before it can continue to implementation.
+        """
         system = (
             "You are the Evolution Judge for a recommender-system MLE loop. Propose concrete, "
             "testable hypotheses, not broad research themes. Honor the fixed within-user ranking "
@@ -321,6 +362,12 @@ class EvolutionJudge:
         retrieved_literature: Optional[Sequence[Dict[str, str]]] = None,
         retrieved_document_ids: Optional[Sequence[str]] = None,
     ) -> List[Hypothesis]:
+        """Generate and validate the complete candidate portfolio for a tournament.
+
+        Candidates must have unique IDs and ablations, measured evidence, available parents,
+        explicit metric expectations, and acceptable leakage risk. Misclassified knowledge-card
+        IDs are repaired into the literature namespace when the correction is unambiguous.
+        """
         fixed_literature_ids = {
             str(item["id"])
             for item in self.knowledge_documents
@@ -459,6 +506,11 @@ class EvolutionJudge:
         ranking: Dict[str, Any],
         research_brief: Dict[str, Any],
     ) -> Tuple[Hypothesis, str]:
+        """Select exactly one validated candidate using evidence and Consultant ranking.
+
+        The returned tuple contains the original candidate object and a non-empty selection
+        rationale; unknown IDs trigger bounded response repair rather than an implicit fallback.
+        """
         system = (
             "Select exactly one candidate for the next scarce counted experiment. Use measured "
             "evidence, expected primary gain, confidence, downside risk, and the Consultant's "
@@ -497,6 +549,11 @@ class EvolutionJudge:
         archive: List[Dict[str, Any]],
         available_parent_ids: Sequence[int],
     ) -> Hypothesis:
+        """Revise a rejected hypothesis from Consultant feedback without changing lineage rules.
+
+        The revised hypothesis must use an available parent. Existing literature provenance is
+        carried forward when the model omits it from an otherwise valid revision.
+        """
         system = (
             "Revise one rejected recommender-system hypothesis using the consultant feedback. "
             "Keep exactly one parent from available_parent_ids and return the scored replacement. "
@@ -531,6 +588,12 @@ class EvolutionJudge:
 
 
 class Consultant:
+    """Provide independent feasibility review and head-to-head candidate ranking.
+
+    The Consultant detects duplicate, over-scoped, risky, or infeasible proposals and can request
+    bounded Judge revisions before accepting, accepting with a caveat, or dropping a hypothesis.
+    """
+
     def __init__(self, llm: LLMClient, max_rounds: int = 3):
         self.llm = llm
         self.max_rounds = max_rounds
@@ -538,6 +601,11 @@ class Consultant:
     def review_once(
         self, hypothesis: Hypothesis, archive: List[Dict[str, Any]], round_number: int
     ) -> Dict[str, Any]:
+        """Review one hypothesis against the full scored and failed experiment history.
+
+        Returns a validated acceptance decision, feedback, and final-round action for use by the
+        bounded ``resolve`` loop.
+        """
         system = (
             "You are the Consultant. Compare the proposal against the full hypothesis history, "
             "including failures. Reject near-duplicates and structurally infeasible changes. "
@@ -572,6 +640,11 @@ class Consultant:
         archive: List[Dict[str, Any]],
         research_brief: Dict[str, Any],
     ) -> Dict[str, Any]:
+        """Rank every tournament candidate exactly once from best to worst.
+
+        Candidate IDs and consecutive rank positions are checked host-side, and every entry must
+        include a rationale before the ranking can be passed back to the Judge.
+        """
         system = (
             "Rank every proposed recommender candidate head-to-head for one scarce experiment. "
             "Penalize weak evidence, duplication, validation overfitting, leakage, excessive scope, "
@@ -621,6 +694,11 @@ class Consultant:
         archive: List[Dict[str, Any]],
         available_parent_ids: Sequence[int],
     ) -> Tuple[Optional[Hypothesis], int, Optional[str]]:
+        """Run the bounded review/revision loop for a single hypothesis.
+
+        Returns the accepted hypothesis or ``None``, the number of rounds used, and any caveat or
+        final rejection feedback retained for auditing.
+        """
         current = hypothesis
         for round_number in range(1, self.max_rounds + 1):
             verdict = self.review_once(current, archive, round_number)
@@ -640,6 +718,12 @@ class Consultant:
 
 
 class Orchestrator:
+    """Translate the winning hypothesis into a safe cross-file implementation plan.
+
+    The Orchestrator selects only necessary code agents, fixes their file ownership and explicit
+    instructions, and binds generated code to system-owned train, artifact, and evaluation contracts.
+    """
+
     def __init__(self, llm: LLMClient):
         self.llm = llm
 
@@ -649,6 +733,12 @@ class Orchestrator:
         parent_dir: Path,
         dataset_feature_schema: Optional[Dict[str, Any]] = None,
     ) -> ExperimentPlan:
+        """Create and validate an interface contract plus role-specific implementation scopes.
+
+        Parent file contents and the deterministic dataset schema provide concrete context. Fixed
+        execution commands and prediction contracts are overwritten by the host so the LLM cannot
+        redefine evaluation or test handling.
+        """
         system = (
             "You are the experiment Orchestrator. Define a precise interface contract before "
             "delegating and activate only the sub-agents needed. Give every active agent its own "
@@ -738,6 +828,12 @@ class Orchestrator:
         dataset_feature_schema: Optional[Dict[str, Any]] = None,
         failure: Optional[FailureReport] = None,
     ) -> Dict[str, str]:
+        """Request complete final contents for one active agent's owned files.
+
+        Initial implementation and targeted debugging use the same ownership boundary. The method
+        accepts the documented nested or flat JSON mapping and rejects malformed or extra response
+        shapes before the sandbox layer validates and installs any replacement.
+        """
         allowed_files = AGENT_FILES[agent]
         system = (
             f"You are the {agent}. Modify only {list(allowed_files)} and return the complete final "

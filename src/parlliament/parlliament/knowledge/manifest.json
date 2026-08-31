@@ -12,8 +12,8 @@
     "experiment_strategy",
     "papers"
   ],
-  "card_count": 47,
-  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "card_count": 48,
+  "catalog_sha256": "eb030055201365acb904ac9b27d001b5bba21490632d5c4fc96d5e7fbe6f3ab3",
   "document_hashes": {
     "architecture.candidate_conditioned_history_attention": "8af9df6ddd83a2541965a247a7f0bd0fcae609e2e632217224d1ab96efa324b6",
     "architecture.causal_sequence_transformer_ranker": "7263a238ebec15e080520b17b2b5f3dffab4f16d94495b1acc604a923fbb6c80",
@@ -57,6 +57,7 @@
     "task.kuairand_ranking": "b39856e9928b046ff758214f9b2949c182a62226ef895b1b0117316b14bca44e",
     "task.leakage_policy": "2349c37fe36c7539b44967a775ce47fd44c150b1887e60e4a1aed1a1fa5b48d9",
     "task.prediction_artifact": "0bf2654b50ccf946e64a661bf14a3db9bc002883e27a03221cea5afbb60f8604",
+    "task.starter_kit_empirical_priors": "80d63f0a6aee1b0ff626d0a43c8798ff981abf12acb3472aabfcb049119b78d7",
     "training.adversarial_embedding_regularization": "f776c2d5191a8dd09a99afc246f926c9b3ef8916f9e18f8cc79bfc1182d9bf48",
     "training.causal_sequence_contrastive_pretraining": "86ef4f232b26bea90f9be5b05cd5d2c931105af5dd1239fd3fa798e64802d2a5",
     "training.group_complete_stratified_minibatching": "ac4067495282d7b9958b561801403db5a3d02efd526f51595e93589f3edfb471",

@@ -1,4 +1,8 @@
-"""Fresh-start additive ID model with no interaction or baseline-derived architecture."""
+"""Implement the neutral seed's additive user/item ranking model.
+
+The NumPy model owns first-order weights, bias, sigmoid scoring, and Adam-style pointwise updates,
+providing a deliberately minimal parent-zero scaffold for generated descendants.
+"""
 
 import numpy as np
 

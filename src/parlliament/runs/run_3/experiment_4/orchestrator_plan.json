@@ -1,0 +1,82 @@
+{
+  "active_agents": [
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "Unchanged interface from data.py: load returns canonical split rows ordered by source traversal and date filtering; encode returns encoded['train'] = (train_features, train_labels, train_users), encoded['valid'] = (valid_features, valid_labels, valid_users), and encoded['test'] = (test_features, None, test_users). Feature matrices are int32 with one global categorical index per field. valid_labels are float32 binary long_view labels and valid_users are raw user_id strings in canonical validation order. Test has no labels."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model remains unchanged: construct Model(dimension, learning_rate=config['learning_rate'], l2=config['l2']); call step(features_batch, labels_batch) only on training batches; call predict(features) to obtain one-dimensional logits. Trainer selects only a saved validation-scored model state and emits its logits for validation and test."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "trainer": {
+      "objective": "Modify train.py only so checkpoint selection and early-stopping patience monitor the validation primary proxy defined as the arithmetic mean of validation within-user GAUC and validation within-user nDCG@5.",
+      "required_changes": [
+        "In train.py, retain within_user_auc as the validation GAUC computation and add a validation-only within_user_ndcg_at_5(user_ids, labels, scores) function. Group rows by str(user_id) in the canonical validation row order. For each user, rank that user's rows by descending score, breaking equal scores by ascending original validation row index for deterministic ordering. Compute DCG@5 as sum over ranks r=1..min(5, user_row_count) of (2**label - 1) / log2(r + 1), with binary long_view labels. Compute IDCG@5 from the same user's labels sorted descending, using the same discount and cutoff. Exclude users whose IDCG@5 is zero. Return the unweighted arithmetic mean of the retained per-user DCG@5/IDCG@5 values, and return 0.0 if no user is retained.",
+        "required_changes",
+        "After each training epoch, obtain validation predictions once, compute gauc_proxy = within_user_auc(valid_users, valid_labels, predictions), ndcg5_proxy = within_user_ndcg_at_5(valid_users, valid_labels, predictions), and primary_proxy = 0.5 * gauc_proxy + 0.5 * ndcg5_proxy. Use primary_proxy, rather than GAUC alone, in both the best-checkpoint comparison and stale/patience logic. Keep the existing strict improvement margin of 1e-5 and initialize best_score so the first epoch is eligible as before.",
+        "Update epoch logging to report valid_gauc_proxy, valid_ndcg5_proxy, and valid_primary_proxy. The logged primary value must be the exact value used for checkpoint selection.",
+        "Do not modify config.json: seed, learning_rate, l2, batch_size, max_epochs, patience, and split must remain exactly unchanged."
+      ],
+      "preserve": [
+        "Do not change data.py or model.py, the encoded feature interface, features, label, BCE optimization, Adam-style update behavior, random seed handling, batch order generation, batch size, epoch limit, or patience value.",
+        "Use train labels only for model.step and validation labels only to calculate validation GAUC, validation nDCG@5, the validation primary proxy, checkpoint selection, and early stopping. Do not load, infer, access, or use test labels for any purpose.",
+        "After loading the selected validation checkpoint, continue writing predictions_valid.npz and predictions_test.npz. Each file must contain exactly row_ids and scores; row_ids must be np.arange for its split with dtype int64; scores must be one-dimensional model logits in the corresponding canonical encoded validation or test row order; validation and test score counts must equal their respective row_ids counts.",
+        "Preserve --contract-check behavior, including its non-training return path and finite one-dimensional prediction checks."
+      ],
+      "coordination_notes": [
+        "No other agent is active. The existing data contract remains: encode(load(...)) returns (features, labels, users) for valid and (features, None, users) for test, with valid_labels representing raw long_view labels and valid_users representing raw user_id values in canonical validation order.",
+        "This is a training-only selection change. Do not add model configuration defaults or alter model.py to implement it; config.json also remains unchanged.",
+        "The fixed training command must continue to produce prediction artifacts in Path(args.output).parent, named predictions_valid.npz and predictions_test.npz."
+      ]
+    }
+  },
+  "reasoning": "The requested ablation changes only training checkpoint selection and patience monitoring. Activating only trainer respects binding file ownership and leaves the parent data pipeline, additive model, optimization settings, epoch limit, patience, and output artifact contract unchanged. The validation primary proxy is computed exclusively from validation labels and predictions as 0.5 times within-user GAUC plus 0.5 times mean per-user nDCG@5; test labels remain unavailable to training and selection."
+}

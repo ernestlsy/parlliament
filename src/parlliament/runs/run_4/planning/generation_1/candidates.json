@@ -1,0 +1,364 @@
+[
+  {
+    "text": "Add the impression-time request_context feature family\u2014tab, hour, and weekday\u2014to the neutral user/video ID scorer, leaving architecture, optimizer, and loss unchanged. This tests whether observed context signal improves within-user ordering.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The train-only screen found request_context to be the only tested feature group with positive overall primary lift and positive lift on every reported day. Downside risks are temporal instability, weak benefit outside the late screened dates, and possible overfitting to context frequency patterns.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only tab, hour, and weekday request-context inputs; keep the seed additive ID model and training procedure unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely small positive gain because context can reorder candidates differently within users; expected direction +0.001 to +0.004.",
+      "nDCG@5": "Likely modest positive or flat effect; expected direction 0.000 to +0.003, with less confidence than GAUC."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace the seed pointwise BCE update with within-user RankNet pairwise loss using only positive-negative pairs from the same intact user candidate group; retain the seed identifiers and no new features.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The official objective emphasizes within-user ranking, while the current scaffold optimizes independent row probabilities. Pairwise loss directly targets ordering. Downside risks are few eligible mixed groups, pair-construction cost, unstable calibration, and possible nDCG regression if sampled pairs are not top-rank informative.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only pointwise BCE with same-group RankNet pairwise loss; preserve the seed feature set, model scorer, optimizer family, and split.",
+    "expected_effect": {
+      "GAUC": "Likely positive if enough training groups contain both labels; expected direction +0.001 to +0.006.",
+      "nDCG@5": "Potentially positive but less certain because uniform sampled pairs may not emphasize the top five; expected direction -0.001 to +0.004."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace unweighted pointwise BCE with exact user-normalized BCE, weighting each training row by the inverse size of its complete user candidate group while changing nothing else.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The official GAUC is within-user and positive-count weighted, so reducing domination by users with long candidate lists is a targeted objective change. Downside risks are noisier gradients, mismatch with the evaluator's positive-count weighting, and flat or negative nDCG because the loss remains pointwise.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Change only the BCE reduction from row-unweighted to inverse complete-user-candidate-count weighting; retain seed features, scorer, optimizer, and batching.",
+    "expected_effect": {
+      "GAUC": "Could improve slightly if long candidate lists currently dominate training; expected direction -0.001 to +0.003.",
+      "nDCG@5": "Likely flat or mildly negative because top-rank ordering is not directly optimized; expected direction -0.002 to +0.002."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with mixed-group ListNet top-one loss over intact within-user candidate groups, using binary long_view labels and no additional features or architecture changes.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "Listwise optimization is directly aimed at selecting relevant candidates near the top, which is relevant to nDCG@5. Downside risks are low mixed-group coverage, group-packing complexity, loss of absolute propensity information, and degraded GAUC if group normalization discards useful cross-group signal.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only pointwise BCE with group-mean ListNet top-one loss on complete mixed groups; keep seed IDs, scorer, optimizer, and split unchanged.",
+    "expected_effect": {
+      "GAUC": "May improve through within-group competition but can trade off against calibration; expected direction -0.001 to +0.004.",
+      "nDCG@5": "The strongest expected benefit among the loss candidates because the objective emphasizes top-ranked candidates; expected direction 0.000 to +0.006."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Change only training sampling from independent row minibatches to group-complete, label-stratified minibatches with a predeclared 60% mixed, 20% zero-positive, and 20% all-positive group mixture; retain pointwise BCE and the seed model.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "Complete groups make within-user structure available to future ranking losses and reduce accidental sampling bias while retaining homogeneous groups for pointwise supervision. Downside risks are lower throughput, padding overhead, altered exposure weighting, and no gain if the seed pointwise loss does not use group structure.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Change only the training minibatch sampler to group-complete label-stratified sampling; keep the pointwise BCE, features, scorer, and optimizer unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely flat to slightly positive through better representation of informative mixed groups; expected direction -0.001 to +0.003.",
+      "nDCG@5": "Likely flat or slightly positive; expected direction -0.001 to +0.003."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "training.group_complete_stratified_minibatching",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a single second-order interaction block between request_context fields and the existing video ID embedding, while retaining the additive user/video terms, BCE loss, and training schedule.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The measured context signal is ranking-relevant, but an additive context term cannot express that a tab or hour changes preference for particular videos. Downside risks are sparse context-video interactions, increased parameter count, and memorization of transient context combinations.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only request_context-by-video-ID second-order interactions; do not add other fields or change loss, optimizer, split, or base embeddings.",
+    "expected_effect": {
+      "GAUC": "Potentially larger gain than additive context if context-dependent item preference is real; expected direction 0.000 to +0.005.",
+      "nDCG@5": "Potentially positive when context separates top candidates, but sparse interactions may make it flat; expected direction -0.001 to +0.004."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace the seed additive user/video scorer with a compact factorization-machine scorer containing only pairwise interactions among user ID, video ID, and request_context fields; retain pointwise BCE and the same training schedule.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "This is a focused interaction architecture rather than a capacity-only expansion, and it can model context-specific user-video compatibility. Downside risks are sparse ID interactions, stronger memorization, limited cold-item support, and possible training instability relative to the simple scaffold.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the additive scorer with a compact FM interaction scorer over user ID, video ID, and request_context; keep BCE, data split, and optimizer settings fixed.",
+    "expected_effect": {
+      "GAUC": "Could improve ordering through user-video-context interactions; expected direction -0.001 to +0.005.",
+      "nDCG@5": "Could improve if interactions identify a small set of relevant candidates, but may be flat for sparse users; expected direction -0.002 to +0.004."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.starter_kit_empirical_priors",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a request-context-conditioned gate that scales the existing video-ID contribution using tab, hour, and weekday, without adding any other features or changing the BCE training objective.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The gate gives context a direct mechanism to modulate item preference within a user, unlike a user-only additive term. Downside risks are unstable or overly sharp gates, context overfitting, and suppression of useful video preferences during rare context combinations.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only a small context-to-video-contribution gating layer using tab, hour, and weekday; retain all seed inputs, BCE, optimizer, and early stopping.",
+    "expected_effect": {
+      "GAUC": "Potentially positive if context changes the strength of item affinity; expected direction 0.000 to +0.004.",
+      "nDCG@5": "Likely small positive or flat, with risk of hurting top ranks under sparse contexts; expected direction -0.002 to +0.003."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Add only the observed impression date as a numeric or bucketed temporal feature to the seed scorer, leaving request_context, IDs, loss, and training unchanged.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "Date is known before ranking and may capture broad temporal drift not represented by hour or weekday. Downside risks are memorizing the short evaluation calendar, poor extrapolation to later dates, and spurious validation gains from nonstationary exposure mix.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "feature:date"
+    ],
+    "exact_ablation": "Add only the impression date feature with training-fitted transform; do not add tab/hour/weekday or change the seed model and objective.",
+    "expected_effect": {
+      "GAUC": "Likely flat to mildly positive if preference or inventory drift is substantial; expected direction -0.002 to +0.002.",
+      "nDCG@5": "Likely flat, with possible negative effect from calendar memorization; expected direction -0.002 to +0.002."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Replace the seed BCE loss with a fixed hybrid consisting of pointwise BCE plus a within-user RankNet term with weight 0.25, using only same-group positive-negative pairs and no feature changes.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The BCE anchor preserves supervision for homogeneous groups while the pairwise term adds direct within-user ordering pressure. Downside risks are loss-scale sensitivity, additional pair computation, and a tradeoff where GAUC improves but nDCG@5 remains flat or declines.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the seed BCE objective with BCE plus fixed-weight 0.25 same-group RankNet loss; keep inputs, scorer, optimizer, and split unchanged.",
+    "expected_effect": {
+      "GAUC": "More robustly positive than a full pairwise replacement if mixed groups are sparse; expected direction 0.000 to +0.005.",
+      "nDCG@5": "Potentially positive but dependent on whether sampled pairs include top-rank errors; expected direction -0.001 to +0.004."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace the seed optimizer update with a fixed learning-rate AdamW update, retaining the additive user/video scorer, all seed features, BCE loss, batch size, and epoch budget.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "The current scaffold uses Adam-like moments without decoupled weight decay; AdamW may improve sparse-ID optimization while keeping the ranking task unchanged. Downside risks are no benefit if optimization is not the bottleneck, altered score shrinkage, and sensitivity to the fixed learning rate.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the optimizer implementation with AdamW using the same nominal learning rate and explicit decoupled weight decay; keep model, features, loss, and schedule fixed.",
+    "expected_effect": {
+      "GAUC": "Likely flat to mildly positive if sparse ID optimization improves; expected direction -0.002 to +0.002.",
+      "nDCG@5": "Likely flat, with a small risk of lower separation from excess regularization; expected direction -0.002 to +0.002."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Add only a learned nonlinear interaction between request_context and the user ID, allowing context to alter user preference while leaving video terms, BCE, optimizer, and training schedule unchanged.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The positive context screen suggests that context may expose state-dependent user preferences, and a user-context interaction can change within-user rankings when combined with item scores. Downside risks are sparse user-context coverage, user memorization, weak cold-user transfer, and temporal instability.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only a compact user-ID-by-request-context interaction representation; retain the seed additive video term, BCE objective, optimizer, and split.",
+    "expected_effect": {
+      "GAUC": "May improve for warm users whose preferences vary by context, but could be flat overall; expected direction -0.001 to +0.004.",
+      "nDCG@5": "Likely smaller than the GAUC effect and potentially negative for sparse users; expected direction -0.002 to +0.003."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "task.leakage_policy"
+    ]
+  }
+]

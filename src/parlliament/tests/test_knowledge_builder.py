@@ -240,12 +240,13 @@ class KnowledgeBaseBuilderTests(unittest.TestCase):
                 categories=["training"], mode="replace", confirm_replace=True
             )
             catalog = KnowledgeCatalog(output)
-            self.assertEqual(result["total_card_count"], 12)
+            self.assertEqual(result["total_card_count"], 13)
             self.assertIn("training.gradient_conflict", catalog.by_id)
             self.assertIn("task.leakage_policy", catalog.by_id)
+            self.assertIn("task.starter_kit_empirical_priors", catalog.by_id)
             self.assertIn("dataset.inventory_and_splits", catalog.by_id)
             self.assertNotIn("training.regularization", catalog.by_id)
-            self.assertEqual(len(catalog.fixed_documents()), 5)
+            self.assertEqual(len(catalog.fixed_documents()), 6)
 
     def test_failed_generation_leaves_live_knowledge_base_untouched(self):
         llm = ScriptedLLMClient([{"cards": []}])

@@ -1,3 +1,9 @@
+"""Provide the ``parlliament`` command-line interface.
+
+The parser constructs model clients and system configuration, then dispatches run/resume, status,
+and submission commands to the Overseer, Journal, and submission exporter.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -18,7 +24,7 @@ def _parser() -> argparse.ArgumentParser:
     run = sub.add_parser("run", help="start or resume a sequential run")
     run.add_argument("--workspace", required=True, help="directory that will contain runs/")
     run.add_argument("--data-dir", required=True, help="KuaiRand-Pure data directory")
-    run.add_argument("--run-name", default="run_1")
+    run.add_argument("--run-name", "--run_name", dest="run_name", default="run_1")
     run.add_argument(
         "--seed-model",
         choices=["simple", "kuairand-baseline"],

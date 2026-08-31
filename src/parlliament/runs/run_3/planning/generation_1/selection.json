@@ -1,0 +1,36 @@
+{
+  "winner": {
+    "text": "Add the predeclared request-context family of tab, hour, and weekday to the seed scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 5,
+      "feasibility": 9
+    },
+    "rationale": "This is the strongest directly measured direction: request_context produced a +0.002213 primary lift in the train-only temporal screen with 1.0 coverage and positive lift on all four screen days.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:request_context"
+    ],
+    "exact_ablation": "Append exactly tab, hour, and weekday as categorical fields to the seed feature matrix, with all vocabularies fitted on training only; retain the additive scorer and BCE objective unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.002 to +0.004, expected to be the dominant component of the screened primary lift.",
+      "nDCG@5": "+0.001 to +0.003, but explicitly gate on this metric because the screen evidence is primary-level rather than top-five-specific."
+    },
+    "expected_primary_gain": 0.0022,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  "selection_rationale": "c04 is the strongest reliable scarce-experiment choice. It tests exactly the only positively screened, full-coverage feature family: request_context delivered a +0.002213 primary lift on the training-only temporal screen and was positive on all four screened days. Its expected primary gain (+0.0022) exceeds the isolated context-field alternatives, with confidence 7, low leakage risk, low runtime risk, and no architecture, loss, or optimization confounding. The main downside is that the combined ablation will not attribute any gain to individual fields and the daily lift variability warrants confirmation on the counted evaluation, but this is outweighed by the direct measured evidence. The Consultant ranked c04 first with the highest utility score (0.84), ahead of the higher-upside but less evidenced interaction-model alternative c05.",
+  "counted_experiments_consumed": 0
+}

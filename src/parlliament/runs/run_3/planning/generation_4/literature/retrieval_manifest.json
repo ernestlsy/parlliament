@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "memory_hit"
+  ],
+  "catalog_sha256": "eb030055201365acb904ac9b27d001b5bba21490632d5c4fc96d5e7fbe6f3ab3",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "objective.within_user_ranknet_pairwise_loss",
+      "path": "30_objectives/within_user_ranknet_pairwise_loss.md",
+      "sha256": "6216278cdf2db9cbda95e1b4c7bd3dc1c0d5f56ec944bc787e1ffce628dc8c57",
+      "source_characters": 7773,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.mixed_group_listnet_top1_loss",
+      "path": "30_objectives/mixed_group_listnet_top1_loss.md",
+      "sha256": "35f46aa8c8e1061fe7b968980537bb4a9d2a7a01aea803ffa38bb0c69cb14c27",
+      "source_characters": 6286,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.group_complete_stratified_minibatching",
+      "path": "40_training/group_complete_stratified_minibatching.md",
+      "sha256": "ac4067495282d7b9958b561801403db5a3d02efd526f51595e93589f3edfb471",
+      "source_characters": 10073,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.bce_lambdarank_ndcg5_hybrid",
+      "path": "30_objectives/bce_lambdarank_ndcg5_hybrid.md",
+      "sha256": "48f2455f2d5620a3b9548e5d66c4ef2249f048e19be4023f4d958e67901489a0",
+      "source_characters": 10086,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "efficiency.successive_halving_experiment_promotion",
+      "path": "70_efficiency/successive_halving_experiment_promotion.md",
+      "sha256": "2cea2a6aeaea2dcc5678507bac44a63bddd36ed4b79fd720b07313298d2d6ed3",
+      "source_characters": 10060,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.causal_sequence_transformer_ranker",
+      "path": "20_architectures/causal_sequence_transformer_ranker.md",
+      "sha256": "7263a238ebec15e080520b17b2b5f3dffab4f16d94495b1acc604a923fbb6c80",
+      "source_characters": 9350,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.candidate_conditioned_history_attention",
+      "path": "20_architectures/candidate_conditioned_history_attention.md",
+      "sha256": "8af9df6ddd83a2541965a247a7f0bd0fcae609e2e632217224d1ab96efa324b6",
+      "source_characters": 8227,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "efficiency.candidate_group_shared_representation_scoring",
+      "path": "70_efficiency/candidate_group_shared_representation_scoring.md",
+      "sha256": "ce458afec0f81303fac0db6385cf05f70f4963288205cd21214505a400600e65",
+      "source_characters": 8704,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "objective.within_user_ranknet_pairwise_loss",
+    "objective.mixed_group_listnet_top1_loss",
+    "training.group_complete_stratified_minibatching",
+    "objective.bce_lambdarank_ndcg5_hybrid",
+    "efficiency.successive_halving_experiment_promotion",
+    "architecture.causal_sequence_transformer_ranker",
+    "architecture.candidate_conditioned_history_attention",
+    "efficiency.candidate_group_shared_representation_scoring"
+  ],
+  "total_fetched_characters": 40000
+}

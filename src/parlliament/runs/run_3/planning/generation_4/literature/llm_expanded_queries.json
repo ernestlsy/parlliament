@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "(\"RankNet\" OR \"pairwise logistic loss\" OR \"pairwise ranking loss\") recommender systems \"within-user\" impression ranking binary feedback causal training groups negative sampling GAUC nDCG@5 pointwise BCE",
+      "(\"ListNet\" OR \"Top-1 ListNet\" OR \"listwise learning to rank\") recommendation \"user impression\" groups mixed pairwise listwise objective binary long-view labels nDCG@5 GAUC computational complexity",
+      "recommender-system learning-to-rank within-query user-session impression lists RankNet versus pointwise cross-entropy BCE top-K metrics nDCG@5 GAUC negative weighting sampled negatives",
+      "causal logged-impression recommendation ranking objectives construct per-user candidate groups timestamp-consistent exposure-only negatives inverse propensity weighting pairwise listwise loss leakage prevention",
+      "efficient large-scale recommendation pairwise and listwise ranking loss RankNet ListNet group construction negative sampling complexity memory runtime top-five ranking quality nDCG@5 versus AUC GAUC"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "(\"sequential recommendation\" OR \"session-based recommendation\") AND (\"causal history\" OR \"time-aware\" OR \"temporal leakage\" OR \"point-in-time\") AND (\"event time\" OR \"timestamp truncation\" OR \"as-of\" OR \"strictly before\") AND (\"candidate-aware attention\" OR \"target-aware attention\" OR \"candidate-conditioned\") AND (GAUC OR \"nDCG@5\")",
+      "(\"target-aware\" OR \"candidate-aware\" OR \"target attention\" OR \"DIN\") AND (\"user behavior sequence\" OR \"behavior history\") AND (\"temporal recommendation\" OR \"CTR prediction\") AND (\"causal\" OR \"leakage-free\" OR \"no future information\" OR \"time-based split\") AND (\"impression\" OR \"exposure\" OR \"unobserved feedback\")",
+      "(\"candidate-conditioned history attention\" OR \"target-aware sequence representation\" OR \"item-conditioned user history\") AND (\"fixed-length history\" OR \"bounded history\" OR \"recent behavior\") AND (\"online serving\" OR efficiency OR latency OR \"computational complexity\") AND recommendation AND (\"nDCG@5\" OR GAUC)",
+      "(\"impression-aware recommendation\" OR \"exposure-aware recommendation\" OR \"logged impressions\") AND (\"unavailable items\" OR \"current impression\" OR \"delayed feedback\" OR \"censored outcomes\") AND (\"causal truncation\" OR \"event-time\" OR \"historical features\") AND (\"sequential recommendation\" OR \"click-through rate prediction\")",
+      "(\"temporal leakage\" OR \"future information leakage\" OR \"data leakage in recommender systems\") AND (\"behavior sequence\" OR \"interaction history\") AND (\"candidate-aware attention\" OR \"target-aware attention\" OR \"cross attention\") AND (\"top-K ranking\" OR \"nDCG@5\" OR \"top-five ranking\") AND (efficient OR lightweight OR compact)"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

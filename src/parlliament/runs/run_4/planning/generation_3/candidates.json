@@ -1,0 +1,387 @@
+[
+  {
+    "text": "Train the current user/video/request-context scorer with mixed-group ListNet top-one loss instead of within-user RankNet, emphasizing competition at the top of each intact candidate group.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "Experiment 2 shows strong overall ordering but very poor top-five performance on several tabs, especially tab 8; a listwise objective directly targets top-of-group allocation rather than all positive-negative pairs equally.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:8"
+    ],
+    "exact_ablation": "Change only the training loss from within-user RankNet pairwise loss to mixed-group ListNet top-one cross-entropy over complete mixed-label groups; retain the same features, model, optimizer, batch budget, split, and evaluation.",
+    "expected_effect": {
+      "GAUC": "Small positive or flat change, approximately -0.001 to +0.004, because listwise normalization may improve within-group ordering but can sacrifice some pairwise comparisons.",
+      "nDCG@5": "Modest positive change, approximately +0.001 to +0.008, if the top-five weakness reflects insufficient emphasis on the highest-ranked candidates."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "training.group_complete_stratified_minibatching",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace pairwise RankNet with user-normalized pointwise BCE so every displayed impression contributes while each complete user candidate group receives equal objective weight.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "RankNet slightly reduced both official metrics relative to experiment 1, while the evaluation combines within-user ordering and macro top-five quality; equal group weighting offers a distinct low-variance objective that also retains homogeneous groups.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Change only the loss from within-user RankNet to user-normalized BCE averaged within each complete user candidate group; retain current features, additive scorer, optimizer, sampling, split, and early stopping.",
+    "expected_effect": {
+      "GAUC": "Flat to small positive change, approximately -0.001 to +0.004, if pairwise training is overfitting mixed groups or underusing homogeneous groups.",
+      "nDCG@5": "Flat or modest negative change, approximately -0.003 to +0.003, because pointwise BCE does not explicitly focus on the top five."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer with a compact embedding-plus-MLP ranker that can learn nonlinear interactions among user ID, video ID, and the already available impression context.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The request-context screen has positive primary lift, but the additive model can only add independent field effects; an interaction-capable scorer may personalize context effects to users and candidates, particularly where aggregate context performance is weak.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Change only the scoring architecture from the additive linear logit to a small embedding-concatenation MLP over user ID, video ID, tab, hour, and weekday; retain pointwise BCE, optimizer, feature values, split, and sampling.",
+    "expected_effect": {
+      "GAUC": "Small positive change, approximately +0.001 to +0.006, if user-context and video-context interactions resolve within-user ordering errors.",
+      "nDCG@5": "Small positive change, approximately 0 to +0.006, with upside concentrated in context segments where the additive context terms are insufficient."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a compact strictly causal recent-video sequence encoder to the current scorer, using only user events occurring before each impression.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 10,
+      "novelty": 10,
+      "feasibility": 4
+    },
+    "rationale": "The current model has no behavioral history and experiment 2 remains weak on top-five ordering; causal history can represent evolving intent that stable user/video additive terms cannot capture.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:user_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Add only a capped causal recent-video history representation with a one-block sequence encoder and concatenate it with the existing scorer input; retain the current features, RankNet loss, optimizer, split, and early stopping.",
+    "expected_effect": {
+      "GAUC": "Potential moderate positive change, approximately 0 to +0.010, mainly for users with sufficient prior activity; sparse users may be unchanged.",
+      "nDCG@5": "Potential moderate positive change, approximately 0 to +0.012, if recent intent helps select the most relevant candidates near rank five."
+    },
+    "expected_primary_gain": 0.006,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "features",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.causal_sequence_transformer_ranker",
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Use candidate-conditioned attention over each user's strictly pre-impression recent-video history so different candidate videos activate different historical interests.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 10,
+      "novelty": 10,
+      "feasibility": 4
+    },
+    "rationale": "A fixed user representation cannot distinguish multiple interests; candidate-conditioned pooling is a materially different history mechanism and could improve the severe top-five weakness without using any post-impression signal.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Add only a candidate-conditioned attention-pooled causal history vector to the existing scorer; retain current IDs, request context, RankNet loss, optimizer, split, and early stopping.",
+    "expected_effect": {
+      "GAUC": "Potential moderate positive change, approximately +0.001 to +0.012, especially for users with multiple positive candidates or heterogeneous histories.",
+      "nDCG@5": "Potential moderate positive change, approximately +0.002 to +0.015, because candidate-relative interest matching directly affects top-ranked candidates."
+    },
+    "expected_primary_gain": 0.007,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "features",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.candidate_conditioned_history_attention",
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a single impression-time interaction between tab and hour rather than adding another broad feature family.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "Request context is the only positively screened feature family, while tab 8 and tab 3 are the weakest validation slices; a tab-by-hour interaction tests whether context effects vary across surfaces and times.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:tab:8",
+      "experiment:2:segment:hour:3"
+    ],
+    "exact_ablation": "Add only a categorical tab-hour cross feature to the existing five-field additive scorer; retain all existing fields, RankNet loss, optimizer, sampling, split, and evaluation.",
+    "expected_effect": {
+      "GAUC": "Small positive change, approximately 0 to +0.005, if the cross feature distinguishes within-user candidate ordering by surface and time.",
+      "nDCG@5": "Small positive or flat change, approximately -0.001 to +0.006, with possible benefit in weak context slices but limited global coverage per cross value."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Train the current RankNet scorer with group-stratified minibatches that deliberately preserve a controlled mixture of mixed-label, zero-positive, and all-positive groups.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The current training code keeps groups intact but does not explicitly control their label-stratum mixture; a stratified sampler can reduce optimization variance and prevent mixed groups from dominating the pairwise objective.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:user_positive_count:zero"
+    ],
+    "exact_ablation": "Change only the train-group sampling policy to a fixed group-count mixture of 60% mixed, 20% zero-positive, and 20% all-positive groups, emitting complete groups; retain RankNet, features, model, optimizer, batch row budget, and evaluation.",
+    "expected_effect": {
+      "GAUC": "Small positive change, approximately 0 to +0.005, if more stable exposure to valid pair groups improves generalization.",
+      "nDCG@5": "Flat to small positive change, approximately -0.001 to +0.005, because better optimization may help top ranks but homogeneous groups provide no direct pairwise signal."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "training.group_complete_stratified_minibatching",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Use a hybrid loss that combines within-user RankNet with a small pointwise BCE anchor over the same displayed impressions.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "Experiment 2 improved neither official metric over experiment 1, and pure pairwise training may discard absolute propensity information needed for top-five selection; a small BCE anchor tests whether that trade-off is harmful.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Add only a pointwise BCE term with fixed weight 0.10 to the existing within-user RankNet loss; retain features, architecture, optimizer, group sampling, split, and early stopping.",
+    "expected_effect": {
+      "GAUC": "Small positive or flat change, approximately -0.001 to +0.005, if the anchor stabilizes score learning without overwhelming pairwise ordering.",
+      "nDCG@5": "Small positive change, approximately 0 to +0.006, if absolute relevance calibration helps identify top candidates among close pairwise scores."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Remove weekday while retaining tab and hour to test whether the observed context gain comes from intraday and surface effects rather than a weak calendar term.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "The full request-context screen is positive but unstable by day, and experiment 2 shows large hour and tab variation; isolating weekday removal is a clean diagnostic ablation that may reduce noise and overfitting.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:hour:3",
+      "experiment:2:segment:tab:8"
+    ],
+    "exact_ablation": "Remove only the weekday input from the current user/video/tab/hour/weekday scorer; retain tab, hour, model, BCE training, optimizer, split, and evaluation unchanged.",
+    "expected_effect": {
+      "GAUC": "Flat to small positive change, approximately -0.002 to +0.003, if weekday contributes little within-user discrimination and adds unstable parameters.",
+      "nDCG@5": "Flat to small negative change, approximately -0.003 to +0.002, because removing a weak field is unlikely to improve top-five ordering unless it reduces noise."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace the full request-context family with tab alone, testing whether the strongest surface-specific weakness can be addressed without the noisier hour and weekday terms.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 9
+    },
+    "rationale": "Tab slices are dramatically weaker than the aggregate score, while the screen only establishes a bundled context gain; this isolates the surface signal and reduces context dimensionality for a clean confirmation.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:tab:8",
+      "experiment:2:segment:tab:3"
+    ],
+    "exact_ablation": "Keep only tab from the request-context family and remove hour and weekday; retain user/video IDs, additive architecture, BCE, optimizer, sampling, split, and evaluation.",
+    "expected_effect": {
+      "GAUC": "Small negative or flat change, approximately -0.004 to +0.002, because hour contributed potentially useful variation and tab alone may not resolve weak surfaces.",
+      "nDCG@5": "Small negative or flat change, approximately -0.005 to +0.002, with downside if hour helps rank candidates within a surface."
+    },
+    "expected_primary_gain": -0.001,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Train the current scorer with a top-one listwise loss over intact groups while retaining a small pointwise BCE anchor, rather than using pairwise RankNet.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 6
+    },
+    "rationale": "This combines direct top-of-list competition with a calibration anchor and targets the observed mismatch between acceptable aggregate ordering and severe top-five failures in weak tabs.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:3",
+      "experiment:2:segment:tab:8"
+    ],
+    "exact_ablation": "Replace RankNet with mixed-group ListNet plus a fixed 0.10-weight pointwise BCE anchor; retain the same scorer, features, optimizer, complete-group batching, split, and early stopping.",
+    "expected_effect": {
+      "GAUC": "Flat to small positive change, approximately -0.001 to +0.005, because the BCE anchor may preserve broad ordering while ListNet changes within-group emphasis.",
+      "nDCG@5": "Moderate positive potential, approximately +0.001 to +0.010, if top-five failures arise from the pairwise loss treating all valid pairs too uniformly."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "objective.user_normalized_binary_cross_entropy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a shared-trunk auxiliary head for an impression-level engagement behavior while using only the long-view head for ranking.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "Long-view is sparse and experiment 1 shows a measurable context-driven baseline; auxiliary supervision could shape representations without changing serving features, provided auxiliary labels use the same mature impression rows and are not fed as inputs.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Add exactly one auxiliary engagement prediction head and a fixed 0.10-weight auxiliary BCE term to the existing pointwise model; retain long-view as the serving score, current features, optimizer, split, and evaluation.",
+    "expected_effect": {
+      "GAUC": "Small positive or negative change, approximately -0.003 to +0.006, because shared supervision may improve sparse representation learning but can cause negative transfer.",
+      "nDCG@5": "Small positive, flat, or negative change, approximately -0.004 to +0.006, depending on whether the auxiliary behavior aligns with top-five long-view relevance."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "objective.shared_trunk_auxiliary_behavior_multitask_loss",
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  }
+]

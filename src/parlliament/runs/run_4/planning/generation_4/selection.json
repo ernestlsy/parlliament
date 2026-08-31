@@ -1,0 +1,36 @@
+{
+  "winner": {
+    "text": "Use context-conditioned linear interactions between each context field and the video identity.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The request-context screen has full coverage and positive primary lift, but the additive parent cannot express that a video may perform differently by tab or hour. Severe tab 8 and tab 3 failures provide a specific motivation for targeted interactions.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:3:segment:tab:8",
+      "experiment:3:segment:tab:3"
+    ],
+    "exact_ablation": "Add only video-by-tab, video-by-hour, and video-by-weekday interaction parameters to the existing additive scorer; keep user/video/context main effects, BCE, optimizer, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected +0.002 to +0.007 if context-specific video preferences improve within-user ordering; risk is -0.004 on sparse videos or tabs from memorization.",
+      "nDCG@5": "Expected +0.002 to +0.009 because candidate scores can adapt to the active context; risk is volatile top-five rankings for rare combinations."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  "selection_rationale": "Select c07 because it is the consultant's top-ranked candidate and directly targets the strongest measured evidence: request context is the only positively screened feature family (+0.00221 primary lift), while tab 8 and tab 3 show severe ranking failures. It offers the highest expected primary gain tied with the riskier alternatives (+0.004), comparatively stronger confidence (6), low leakage risk, and medium runtime, making it a more reliable improvement than a broader nonlinear or loss-based change after two recent experiments produced small negative primary gains.",
+  "counted_experiments_consumed": 0
+}

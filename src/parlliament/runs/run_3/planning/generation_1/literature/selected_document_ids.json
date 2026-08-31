@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "objective.user_normalized_binary_cross_entropy",
+      "training.group_complete_stratified_minibatching",
+      "training.within_group_hard_pair_curriculum",
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1,
+    "selected_document_ids": [
+      "architecture.candidate_conditioned_history_attention",
+      "features.causal_behavior_history_features"
+    ]
+  }
+]

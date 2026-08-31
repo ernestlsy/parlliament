@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Leakage-safe causal user behavior history features available at impression time for logged short-video recommendation, using bounded sequence truncation and candidate-aware pooling or attention; evaluate within-user GAUC and nDCG@5 on KuaiRand or comparable datasets.",
+      "Sequential recommendation architectures for impression-time user-history encoding in short-video feeds: causal temporal feature construction, history truncation, candidate-conditioned attention or pooling, and ranking performance measured by GAUC and nDCG@5 on KuaiRand-like logged datasets.",
+      "How to construct bounded, temporally causal user interaction histories for logged-video recommendation without future-information leakage, including impression-time availability, user-item or user-author affinity, candidate-aware aggregation, and evidence for within-user GAUC and nDCG@5.",
+      "Short-video recommendation with causal sequential user representations from prior impressions, clicks, watch or engagement responses: leakage-safe training and feature engineering, truncated histories, candidate-aware sequence models, and segment-level ranking results for GAUC and nDCG@5 on KuaiRand or related datasets.",
+      "Impact of impression-time sequential user-history features on within-user ranking in logged short-video recommendation, comparing causal truncated-history pooling, attention, and candidate-aware architectures under strict temporal protocols, with GAUC and nDCG@5 evidence and analysis of weak request-context tabs."
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "multitask learning for long-view prediction in recommender systems using logged implicit feedback, auxiliary watch-time or engagement objectives, binary long_view as the fixed non-leaky target, excluding current-impression outcomes; compare pointwise BCE, pairwise RankNet, listwise ranking, and report GAUC and nDCG@5",
+      "censored watch-time and survival-analysis objectives for recommendation ranking with implicit feedback, competing risks or partial-duration labels, multitask engagement prediction, leakage-safe impression-time features only, effects on binary long_view top-k ranking and within-user GAUC or AUC",
+      "learning-to-rank for long-duration video engagement under exposure and censoring: pointwise, pairwise, listwise, multitask watch-time, survival and censored-regression objectives compared on logged recommendation data, with nDCG@5 and within-user AUC or GAUC",
+      "auxiliary-task modeling of video watch time, completion, retention, and long-view engagement in recommender systems; multitask learning versus RankNet and listwise losses under implicit-feedback and selection-bias conditions, using only pre-impression or impression-time covariates and evaluating binary long_view with GAUC and nDCG@5",
+      "recommendation ranking with censored duration labels and multitask engagement objectives after negative pairwise-ranking results: survival modeling, inverse propensity or exposure bias correction, calibration and robustness on logged implicit feedback, measured by top-5 nDCG and within-user GAUC for binary long_view"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

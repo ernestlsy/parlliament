@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "memory_hit"
+  ],
+  "catalog_sha256": "eb030055201365acb904ac9b27d001b5bba21490632d5c4fc96d5e7fbe6f3ab3",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.causal_sequence_transformer_ranker",
+      "path": "20_architectures/causal_sequence_transformer_ranker.md",
+      "sha256": "7263a238ebec15e080520b17b2b5f3dffab4f16d94495b1acc604a923fbb6c80",
+      "source_characters": 9350,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.candidate_conditioned_history_attention",
+      "path": "20_architectures/candidate_conditioned_history_attention.md",
+      "sha256": "8af9df6ddd83a2541965a247a7f0bd0fcae609e2e632217224d1ab96efa324b6",
+      "source_characters": 8227,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "features.train_prefix_smoothed_popularity_features",
+      "path": "10_features/train_prefix_smoothed_popularity_features.md",
+      "sha256": "4c8be8da5fbd5e1b9000ff9de21fea884786dc48a661937a61781b5f554bfc36",
+      "source_characters": 8936,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.group_complete_stratified_minibatching",
+      "path": "40_training/group_complete_stratified_minibatching.md",
+      "sha256": "ac4067495282d7b9958b561801403db5a3d02efd526f51595e93589f3edfb471",
+      "source_characters": 10073,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.embedding_mlp_ranker",
+      "path": "20_architectures/embedding_mlp_ranker.md",
+      "sha256": "c81739cefc5d550399a927013519688953b21ea274c3211bcfc5316593a569be",
+      "source_characters": 8364,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.user_normalized_binary_cross_entropy",
+      "path": "30_objectives/user_normalized_binary_cross_entropy.md",
+      "sha256": "c366a83c3c5da5d8076ea1d3d8b00acc3006b64c9a45f2f8d7959e346defe485",
+      "source_characters": 9126,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.shared_trunk_auxiliary_behavior_multitask_loss",
+      "path": "30_objectives/shared_trunk_auxiliary_behavior_multitask_loss.md",
+      "sha256": "51b2a46f7115e7b3f133c3ebc5cf66e86d7ad69f4e2d1658afaea195f27ad169",
+      "source_characters": 7817,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.mixed_group_listnet_top1_loss",
+      "path": "30_objectives/mixed_group_listnet_top1_loss.md",
+      "sha256": "35f46aa8c8e1061fe7b968980537bb4a9d2a7a01aea803ffa38bb0c69cb14c27",
+      "source_characters": 6286,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "architecture.causal_sequence_transformer_ranker",
+    "architecture.candidate_conditioned_history_attention",
+    "features.train_prefix_smoothed_popularity_features",
+    "training.group_complete_stratified_minibatching",
+    "architecture.embedding_mlp_ranker",
+    "objective.user_normalized_binary_cross_entropy",
+    "objective.shared_trunk_auxiliary_behavior_multitask_loss",
+    "objective.mixed_group_listnet_top1_loss"
+  ],
+  "total_fetched_characters": 40000
+}

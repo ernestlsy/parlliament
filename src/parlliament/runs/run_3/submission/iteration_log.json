@@ -1,0 +1,329 @@
+{
+  "manual_interventions": 0,
+  "attempts": [
+    {
+      "attempt_id": "08ac0b2ed6c6",
+      "experiment_id": 1,
+      "generation": 1,
+      "status": "scored",
+      "parent_experiment_id": 0,
+      "hypothesis": "Add the predeclared request-context family of tab, hour, and weekday to the seed scorer.",
+      "hypothesis_rationale": {
+        "candidate_id": "c04",
+        "confidence": 7,
+        "evidence_ids": [
+          "screen:request_context",
+          "feature:request_context"
+        ],
+        "exact_ablation": "Append exactly tab, hour, and weekday as categorical fields to the seed feature matrix, with all vocabularies fitted on training only; retain the additive scorer and BCE objective unchanged.",
+        "expected_effect": {
+          "GAUC": "+0.002 to +0.004, expected to be the dominant component of the screened primary lift.",
+          "nDCG@5": "+0.001 to +0.003, but explicitly gate on this metric because the screen evidence is primary-level rather than top-five-specific."
+        },
+        "expected_primary_gain": 0.0022,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "task.leakage_policy",
+          "task.kuairand_ranking",
+          "evaluation.within_user_metrics"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -1,7 +1,9 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Seed data contract with training-only categorical request-context vocabularies.\"\"\"\n \n import csv\n+import math\n import os\n+from datetime import datetime\n \n import numpy as np\n \n@@ -12,20 +14,47 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n+\n+\n+def _hour_from_hourmin(hourmin):\n+    hour = math.floor(float(hourmin) / 100)\n+    if not 0 <= hour <= 23:\n+        raise ValueError(\"derived hour must be in 0..23\")\n+    return hour\n+\n+\n+def _weekday_from_date(date):\n+    return datetime.strptime(str(date), \"%Y%m%d\").weekday()\n+\n+\n+def raw(row):\n+    return [row[1], row[2], row[3], row[4], row[5]]\n \n \n def load(data_dir, max_rows_per_split=None):\n     rows = []\n+    test_low, test_high = SPLITS[\"test\"]\n     for filename in (\n         \"log_standard_4_08_to_4_21_pure.csv\",\n         \"log_standard_4_22_to_5_08_pure.csv\",\n     ):\n         with open(os.path.join(data_dir, filename), encoding=\"utf-8\") as handle:\n             for row in csv.DictReader(handle):\n+                date = int(row[\"date\"])\n+                hour = _hour_from_hourmin(row[\"hourmin\"])\n+                weekday = _weekday_from_date(date)\n+                label = None\n+                if not test_low <= date <= test_high:\n+                    label = 1 if row[LABEL] != \"0\" else 0\n                 rows.append((\n-                    int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n-                    1 if row[LABEL] != \"0\" else 0,\n+                    date,\n+                    row[\"user_id\"],\n+                    row[\"video_id\"],\n+                    row[\"tab\"],\n+                    hour,\n+                    weekday,\n+                    label,\n                 ))\n     result = {}\n     for name, (low, high) in SPLITS.items():\n@@ -38,8 +67,6 @@\n     train = splits[\"train\"]\n     if not train:\n         raise ValueError(\"training split is empty\")\n-    def raw(row):\n-        return [row[1], row[2]]\n \n     vocabs = [dict() for _ in FIELDS]\n     for row in train:\n@@ -52,14 +79,15 @@\n     encoded = {}\n     for name, rows in splits.items():\n         features = np.empty((len(rows), len(FIELDS)), dtype=np.int32)\n-        labels = np.empty(len(rows), dtype=np.float32)\n+        labels = None if name == \"test\" else np.empty(len(rows), dtype=np.float32)\n         users = np.empty(len(rows), dtype=\"U32\")\n         for row_index, row in enumerate(rows):\n             for field_index, value in enumerate(raw(row)):\n                 features[row_index, field_index] = (\n                     vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n                 )\n-            labels[row_index] = row[3]\n+            if labels is not None:\n+                labels[row_index] = row[6]\n             users[row_index] = row[1]\n         encoded[name] = (features, labels, users)\n     return encoded, int(sum(dimensions))\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -1,4 +1,4 @@\n-\"\"\"Train the neutral seed scaffold and emit validation scores for fixed evaluation.\"\"\"\n+\"\"\"Train the neutral seed scaffold and emit validation and test prediction artifacts.\"\"\"\n \n import argparse\n import json\n@@ -48,7 +48,7 @@\n     encoded, dimension = encode(splits)\n     train_features, train_labels, _ = encoded[\"train\"]\n     valid_features, valid_labels, valid_users = encoded[\"valid\"]\n-    test_features, test_labels, _ = encoded[\"test\"]\n+    test_features, _, _ = encoded[\"test\"]\n     model = Model(\n         dimension,\n         learning_rate=config[\"learning_rate\"],\n@@ -86,14 +86,15 @@\n     if best_state is None:\n         raise RuntimeError(\"training produced no checkpoint\")\n     model.load_state(best_state)\n+    output_dir = Path(args.output).parent\n     np.savez(\n-        args.output,\n-        row_ids=np.arange(len(valid_labels), dtype=np.int64),\n+        output_dir / \"predictions_valid.npz\",\n+        row_ids=np.arange(len(valid_features), dtype=np.int64),\n         scores=model.predict(valid_features),\n     )\n     np.savez(\n-        Path(args.output).with_name(\"predictions_test.npz\"),\n-        row_ids=np.arange(len(test_labels), dtype=np.int64),\n+        output_dir / \"predictions_test.npz\",\n+        row_ids=np.arange(len(test_features), dtype=np.int64),\n         scores=model.predict(test_features),\n     )\n \n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6689116170510226,
+        "classification": {
+          "accuracy": 0.6704560920350014,
+          "balanced_accuracy": 0.6945295994593694,
+          "confusion_matrix": {
+            "false_negative": 9431,
+            "false_positive": 31732,
+            "true_negative": 54045,
+            "true_positive": 29701
+          },
+          "f1": 0.5906826430666733,
+          "matthews_correlation": 0.36096201255412097,
+          "precision": 0.483469796363518,
+          "predicted_positive_rate": 0.4918220464498155,
+          "recall": 0.7589951957477257,
+          "specificity": 0.6300640031710132,
+          "threshold": -0.697097897529602,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.845848321914673,
+          "score_mean": -0.9800092612058329,
+          "score_min": -7.238213539123535,
+          "score_std": 1.4085754551020575
+        },
+        "nDCG@5": 0.5369580777053825,
+        "primary": 0.6029348473782026,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6772578987353086,
+          "MAP@5": 0.48565604315939687,
+          "MRR@5": 0.542483353443273,
+          "Precision@5": 0.375364585660858,
+          "Recall@5": 0.6002686181792386,
+          "average_precision": 0.5714958062082477,
+          "global_AUC": 0.7650263756079765
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 95.86245930800214,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_3/experiment_1"
+    },
+    {
+      "attempt_id": "9e0740b66e40",
+      "experiment_id": 2,
+      "generation": 2,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Replace row-averaged BCE with user-normalized BCE so each user's training impressions contribute equal total loss mass.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 5,
+        "evidence_ids": [
+          "experiment:1:metrics",
+          "experiment:1:segment:user_frequency:warm_20_plus",
+          "experiment:1:segment:user_frequency:medium_5_19"
+        ],
+        "exact_ablation": "Change only the BCE reduction: weight each training row by the inverse number of training impressions for its user, normalized to mean weight one; keep features, additive scorer, optimizer, batch size, and early stopping unchanged.",
+        "expected_effect": {
+          "GAUC": "+0.001 to +0.004 from closer within-user objective alignment.",
+          "nDCG@5": "-0.001 to +0.002; equal-user weighting may reduce emphasis on high-volume users that supply many top-five examples."
+        },
+        "expected_primary_gain": 0.0015,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "objective.user_normalized_binary_cross_entropy",
+          "evaluation.within_user_metrics",
+          "task.kuairand_ranking"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "model.py": "--- model.py\n+++ model.py\n@@ -20,11 +20,25 @@\n     def logits(self, features):\n         return self.bias + self.weights[features].sum(1)\n \n-    def step(self, features, labels):\n+    def step(self, features, labels, sample_weights):\n+        sample_weights = np.asarray(sample_weights)\n+        if sample_weights.ndim != 1:\n+            raise ValueError(\"sample_weights must be one-dimensional\")\n+        if len(sample_weights) != len(labels):\n+            raise ValueError(\"sample_weights must have the same length as labels\")\n+        try:\n+            finite_weights = np.isfinite(sample_weights)\n+        except TypeError as error:\n+            raise ValueError(\"sample_weights must be finite\") from error\n+        if not np.all(finite_weights):\n+            raise ValueError(\"sample_weights must be finite\")\n+\n         size = len(labels)\n         logits = self.logits(features)\n         probabilities = sigmoid(logits)\n-        gradient = ((probabilities - labels) / size).astype(np.float32)\n+        gradient = (\n+            (probabilities - labels) * sample_weights / size\n+        ).astype(np.float32)\n         grad_weights = np.zeros_like(self.weights)\n         np.add.at(grad_weights, features, gradient[:, None])\n         grad_weights += self.l2 * self.weights\n@@ -38,10 +52,10 @@\n         second_hat = self.second_moment / (1 - beta2 ** self.step_number)\n         self.weights -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n         self.bias -= self.learning_rate * gradient.sum()\n-        return float(-np.mean(\n+        return float(np.mean(sample_weights * -(\n             labels * np.log(probabilities + 1e-9)\n             + (1 - labels) * np.log(1 - probabilities + 1e-9)\n-        ))\n+        )))\n \n     def predict(self, features, batch_size=200_000):\n         return np.concatenate([\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -46,7 +46,20 @@\n         config = json.load(handle)\n     splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n     encoded, dimension = encode(splits)\n-    train_features, train_labels, _ = encoded[\"train\"]\n+    train_features, train_labels, train_users = encoded[\"train\"]\n+    if len(train_users) == 0:\n+        raise ValueError(\"training split must be non-empty\")\n+    _, user_inverse, user_counts = np.unique(\n+        train_users, return_inverse=True, return_counts=True\n+    )\n+    preliminary_weights = (1.0 / user_counts[user_inverse]).astype(np.float32)\n+    train_weights = (\n+        preliminary_weights * (len(train_users) / preliminary_weights.sum())\n+    ).astype(np.float32)\n+    if len(train_weights) != len(train_labels):\n+        raise ValueError(\"training weights must align with training labels\")\n+    if not np.all(np.isfinite(train_weights)):\n+        raise ValueError(\"training weights must be finite\")\n     valid_features, valid_labels, valid_users = encoded[\"valid\"]\n     test_features, _, _ = encoded[\"test\"]\n     model = Model(\n@@ -58,7 +71,11 @@\n         probe_size = min(8, len(train_labels))\n         if probe_size == 0 or len(valid_labels) == 0:\n             raise ValueError(\"contract probe requires non-empty train and validation slices\")\n-        loss = model.step(train_features[:probe_size], train_labels[:probe_size])\n+        loss = model.step(\n+            train_features[:probe_size],\n+            train_labels[:probe_size],\n+            train_weights[:probe_size],\n+        )\n         probe_scores = model.predict(valid_features[:probe_size])\n         if probe_scores.ndim != 1 or len(probe_scores) != min(probe_size, len(valid_features)):\n             raise ValueError(\"model prediction shape violates the interface contract\")\n@@ -73,7 +90,13 @@\n         losses = []\n         for index in range(0, len(order), config[\"batch_size\"]):\n             batch = order[index:index + config[\"batch_size\"]]\n-            losses.append(model.step(train_features[batch], train_labels[batch]))\n+            losses.append(\n+                model.step(\n+                    train_features[batch],\n+                    train_labels[batch],\n+                    train_weights[batch],\n+                )\n+            )\n         predictions = model.predict(valid_features)\n         proxy = within_user_auc(valid_users, valid_labels, predictions)\n         print(f\"epoch={epoch} loss={np.mean(losses):.6f} valid_gauc_proxy={proxy:.6f}\")\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.663056132708663,
+        "classification": {
+          "accuracy": 0.6651962628793762,
+          "balanced_accuracy": 0.6917699240581724,
+          "confusion_matrix": {
+            "false_negative": 9277,
+            "false_positive": 32543,
+            "true_negative": 53234,
+            "true_positive": 29855
+          },
+          "f1": 0.5881020388062642,
+          "matthews_correlation": 0.35579380562340585,
+          "precision": 0.4784608481041059,
+          "predicted_positive_rate": 0.4995476707042727,
+          "recall": 0.7629305938873556,
+          "specificity": 0.6206092542289892,
+          "threshold": -0.6728668212890625,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 3.1990392208099365,
+          "score_mean": -0.9088974895504084,
+          "score_min": -6.720895290374756,
+          "score_std": 1.4196116692722798
+        },
+        "nDCG@5": 0.533770726157447,
+        "primary": 0.598413429433055,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6760959914197614,
+          "MAP@5": 0.4820301847631275,
+          "MRR@5": 0.5381031118261369,
+          "Precision@5": 0.37450656179707004,
+          "Recall@5": 0.598524494132363,
+          "average_precision": 0.5681540732606007,
+          "global_AUC": 0.7613935666254135
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 78.37567002599826,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_3/experiment_2"
+    },
+    {
+      "attempt_id": "2403aaf83bb5",
+      "experiment_id": 3,
+      "generation": 3,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Add a video-by-tab categorical interaction to learn surface-specific item appeal.",
+      "hypothesis_rationale": {
+        "candidate_id": "c02",
+        "confidence": 6,
+        "evidence_ids": [
+          "screen:request_context",
+          "experiment:2:segment:tab:0",
+          "experiment:2:segment:tab:6"
+        ],
+        "exact_ablation": "Append exactly one hashed categorical feature representing the pair (video_id, tab) to experiment 1's additive feature matrix; keep the existing individual fields, BCE objective, optimizer, and stopping rule unchanged.",
+        "expected_effect": {
+          "GAUC": "+0.001 to +0.003 through context-dependent item ordering.",
+          "nDCG@5": "+0.001 to +0.004 because the ablation directly targets surface-specific top-rank errors."
+        },
+        "expected_primary_gain": 0.002,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "task.kuairand_ranking",
+          "task.leakage_policy",
+          "task.starter_kit_empirical_priors"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -14,7 +14,12 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n+BASE_FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n+FIELDS = BASE_FIELDS + [\"hashed_video_id_tab\"]\n+INTERACTION_DIMENSION = 262144\n+_FNV_OFFSET_BASIS_64 = 14695981039346656037\n+_FNV_PRIME_64 = 1099511628211\n+_FNV_MASK_64 = (1 << 64) - 1\n \n \n def _hour_from_hourmin(hourmin):\n@@ -28,8 +33,24 @@\n     return datetime.strptime(str(date), \"%Y%m%d\").weekday()\n \n \n+def _video_tab_bucket(video_id, tab):\n+    value = (str(video_id) + \"\\x1f\" + str(tab)).encode(\"utf-8\")\n+    hashed = _FNV_OFFSET_BASIS_64\n+    for byte in value:\n+        hashed ^= byte\n+        hashed = (hashed * _FNV_PRIME_64) & _FNV_MASK_64\n+    return hashed % INTERACTION_DIMENSION\n+\n+\n def raw(row):\n-    return [row[1], row[2], row[3], row[4], row[5]]\n+    return [\n+        row[1],\n+        row[2],\n+        row[3],\n+        row[4],\n+        row[5],\n+        _video_tab_bucket(row[2], row[3]),\n+    ]\n \n \n def load(data_dir, max_rows_per_split=None):\n@@ -68,13 +89,13 @@\n     if not train:\n         raise ValueError(\"training split is empty\")\n \n-    vocabs = [dict() for _ in FIELDS]\n+    vocabs = [dict() for _ in BASE_FIELDS]\n     for row in train:\n-        for index, value in enumerate(raw(row)):\n+        for index, value in enumerate(raw(row)[:len(BASE_FIELDS)]):\n             if value not in vocabs[index]:\n                 vocabs[index][value] = len(vocabs[index])\n     unknown = [len(vocab) for vocab in vocabs]\n-    dimensions = [len(vocab) + 1 for vocab in vocabs]\n+    dimensions = [len(vocab) + 1 for vocab in vocabs] + [INTERACTION_DIMENSION]\n     offsets = np.cumsum([0] + dimensions[:-1]).astype(np.int32)\n     encoded = {}\n     for name, rows in splits.items():\n@@ -82,10 +103,14 @@\n         labels = None if name == \"test\" else np.empty(len(rows), dtype=np.float32)\n         users = np.empty(len(rows), dtype=\"U32\")\n         for row_index, row in enumerate(rows):\n-            for field_index, value in enumerate(raw(row)):\n+            values = raw(row)\n+            for field_index, value in enumerate(values[:len(BASE_FIELDS)]):\n                 features[row_index, field_index] = (\n                     vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n                 )\n+            features[row_index, len(BASE_FIELDS)] = (\n+                values[len(BASE_FIELDS)] + offsets[len(BASE_FIELDS)]\n+            )\n             if labels is not None:\n                 labels[row_index] = row[6]\n             users[row_index] = row[1]\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6680981874521777,
+        "classification": {
+          "accuracy": 0.6628025202347309,
+          "balanced_accuracy": 0.692841052914057,
+          "confusion_matrix": {
+            "false_negative": 8872,
+            "false_positive": 33247,
+            "true_negative": 52530,
+            "true_positive": 30260
+          },
+          "f1": 0.5896394158165998,
+          "matthews_correlation": 0.3578317572369765,
+          "precision": 0.4764829073960351,
+          "predicted_positive_rate": 0.5084261342257164,
+          "recall": 0.773280179903915,
+          "specificity": 0.6124019259241988,
+          "threshold": -0.739406943321228,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 3.232001781463623,
+          "score_mean": -0.9692043479344291,
+          "score_min": -7.190486907958984,
+          "score_std": 1.4315963498891715
+        },
+        "nDCG@5": 0.535791111677589,
+        "primary": 0.6019446495648834,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6758278589623274,
+          "MAP@5": 0.48454720372605087,
+          "MRR@5": 0.540867110574852,
+          "Precision@5": 0.37517689294065354,
+          "Recall@5": 0.5993756475578045,
+          "average_precision": 0.5697418148966942,
+          "global_AUC": 0.7634550664466071
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 90.55434077399696,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_3/experiment_3"
+    },
+    {
+      "attempt_id": "139ae2db57eb",
+      "experiment_id": 4,
+      "generation": 4,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Change early stopping from a GAUC-only proxy to the official primary proxy computed as the mean of GAUC and nDCG@5.",
+      "hypothesis_rationale": {
+        "candidate_id": "c05",
+        "confidence": 7,
+        "evidence_ids": [
+          "experiment:1:metrics",
+          "experiment:3:metrics"
+        ],
+        "exact_ablation": "From experiment 1, change only checkpoint selection and patience monitoring from validation within-user GAUC proxy to validation primary proxy equal to 0.5 times within-user GAUC plus 0.5 times nDCG@5; retain data, features, BCE, optimizer, epoch limit, and patience unchanged.",
+        "expected_effect": {
+          "GAUC": "-0.001 to +0.001 because the selected epoch may sacrifice some broad ordering.",
+          "nDCG@5": "0.000 to +0.003 through selection of a more top-five-effective checkpoint."
+        },
+        "expected_primary_gain": 0.0008,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "evaluation.within_user_metrics",
+          "task.kuairand_ranking",
+          "task.experiment_protocol"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "train.py": "--- train.py\n+++ train.py\n@@ -33,6 +33,29 @@\n         numerator += positives * wins / (positives * negatives)\n         denominator += positives\n     return numerator / denominator if denominator else 0.5\n+\n+\n+def within_user_ndcg_at_5(user_ids, labels, scores):\n+    \"\"\"Compute mean within-user nDCG@5 in canonical validation row order.\"\"\"\n+    grouped = {}\n+    for index, (user, label, score) in enumerate(zip(user_ids, labels, scores)):\n+        grouped.setdefault(str(user), []).append((float(score), int(label), index))\n+\n+    ndcgs = []\n+    for rows in grouped.values():\n+        ranked_rows = sorted(rows, key=lambda row: (-row[0], row[2]))\n+        dcg = sum(\n+            (2 ** label - 1) / np.log2(rank + 1)\n+            for rank, (_, label, _) in enumerate(ranked_rows[:5], start=1)\n+        )\n+        ideal_labels = sorted((label for _, label, _ in rows), reverse=True)\n+        idcg = sum(\n+            (2 ** label - 1) / np.log2(rank + 1)\n+            for rank, label in enumerate(ideal_labels[:5], start=1)\n+        )\n+        if idcg > 0:\n+            ndcgs.append(dcg / idcg)\n+    return float(np.mean(ndcgs)) if ndcgs else 0.0\n \n \n def main():\n@@ -75,10 +98,17 @@\n             batch = order[index:index + config[\"batch_size\"]]\n             losses.append(model.step(train_features[batch], train_labels[batch]))\n         predictions = model.predict(valid_features)\n-        proxy = within_user_auc(valid_users, valid_labels, predictions)\n-        print(f\"epoch={epoch} loss={np.mean(losses):.6f} valid_gauc_proxy={proxy:.6f}\")\n-        if proxy > best_score + 1e-5:\n-            best_score, best_state, stale = proxy, model.state(), 0\n+        gauc_proxy = within_user_auc(valid_users, valid_labels, predictions)\n+        ndcg5_proxy = within_user_ndcg_at_5(valid_users, valid_labels, predictions)\n+        primary_proxy = 0.5 * gauc_proxy + 0.5 * ndcg5_proxy\n+        print(\n+            f\"epoch={epoch} loss={np.mean(losses):.6f} \"\n+            f\"valid_gauc_proxy={gauc_proxy:.6f} \"\n+            f\"valid_ndcg5_proxy={ndcg5_proxy:.6f} \"\n+            f\"valid_primary_proxy={primary_proxy:.6f}\"\n+        )\n+        if primary_proxy > best_score + 1e-5:\n+            best_score, best_state, stale = primary_proxy, model.state(), 0\n         else:\n             stale += 1\n             if stale >= config[\"patience\"]:\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6689116170510226,
+        "classification": {
+          "accuracy": 0.6704560920350014,
+          "balanced_accuracy": 0.6945295994593694,
+          "confusion_matrix": {
+            "false_negative": 9431,
+            "false_positive": 31732,
+            "true_negative": 54045,
+            "true_positive": 29701
+          },
+          "f1": 0.5906826430666733,
+          "matthews_correlation": 0.36096201255412097,
+          "precision": 0.483469796363518,
+          "predicted_positive_rate": 0.4918220464498155,
+          "recall": 0.7589951957477257,
+          "specificity": 0.6300640031710132,
+          "threshold": -0.697097897529602,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.845848321914673,
+          "score_mean": -0.9800092612058329,
+          "score_min": -7.238213539123535,
+          "score_std": 1.4085754551020575
+        },
+        "nDCG@5": 0.5369580777053825,
+        "primary": 0.6029348473782026,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6772578987353086,
+          "MAP@5": 0.48565604315939687,
+          "MRR@5": 0.542483353443273,
+          "Precision@5": 0.375364585660858,
+          "Recall@5": 0.6002686181792386,
+          "average_precision": 0.5714958062082477,
+          "global_AUC": 0.7650263756079765
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 64.25338646599994,
+      "sandbox": "/mnt/d/parlliament/src/parlliament/runs/run_3/experiment_4"
+    }
+  ]
+}

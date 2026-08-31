@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "data.py remains unchanged and encode(splits) supplies each split as (features, labels, user_ids, row_ids), where features retain shape (n, 5) for the exact existing encoded user_id, video_id, tab, hour, and weekday fields. train.py must preserve source row order and must not use test labels."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model.step receives train features of shape (n, 5), binary long_view labels, and exact user_ids for an intact group-complete minibatch; it optimizes all positive-negative RankNet pairs within each user only. Model.predict receives features and returns one finite score per row in input order."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

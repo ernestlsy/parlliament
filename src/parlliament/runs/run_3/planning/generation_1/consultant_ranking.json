@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c04",
+      "rank": 1,
+      "utility_score": 0.84,
+      "rationale": "Best scarce-experiment choice: it exactly tests the only positively screened, full-coverage feature family, with a +0.002213 internal temporal lift and positive lift on all four screen days. It is leakage-safe, low-runtime, and keeps the model and optimization fixed. The main penalty is modest validation-selection risk and inability to attribute gains to individual fields, but the direct evidence outweighs that risk."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 2,
+      "utility_score": 0.66,
+      "rationale": "A user-item interaction scorer addresses a fundamental limitation of the additive seed and is well aligned with within-user ranking. It has materially higher upside than single-field additions and remains leakage-safe, but it lacks direct experimental support, introduces architecture and tuning sensitivity, and may be limited by sparse IDs."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 3,
+      "utility_score": 0.63,
+      "rationale": "A narrow, cheap, interpretable confirmation of the validated request-context direction. Tab is available at impression time and avoids the broader-scope attribution issue of c04. It is ranked below c04 because the evidence supports the family rather than tab independently, so its expected gain is smaller and partially duplicates c04."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 4,
+      "utility_score": 0.61,
+      "rationale": "Low-risk request-time feature with full-coverage family evidence and a clean isolated ablation. Hour-of-week is plausible for preference variation, but its individual contribution was not established and it substantially overlaps the same request-context hypothesis as c01 and c04."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 5,
+      "utility_score": 0.53,
+      "rationale": "The pairwise loss is directionally aligned with GAUC and could improve within-user ordering without leakage. However, there is no direct loss-comparison evidence, pair construction increases runtime and implementation risk, and uniform pair sampling may not improve nDCG@5."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 6,
+      "utility_score": 0.49,
+      "rationale": "Targets the stated top-five weakness more directly than standard pairwise loss and has plausible nDCG@5 upside. It is nevertheless weakly evidenced, more complex than c07, sensitive to detached rank/swap-weight implementation details, and exposed to objective and validation overfitting risk."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 7,
+      "utility_score": 0.47,
+      "rationale": "A simple, low-runtime objective ablation with reasonable alignment to within-user evaluation. Evidence is conceptual rather than measured, and inverse activity weighting can sacrifice ranking quality for active users or diverge from the official positive-count-weighted GAUC aggregation."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 8,
+      "utility_score": 0.43,
+      "rationale": "Low-risk optimization-stability test with an importance-corrected design, but its expected effect is small and no evidence establishes that positive scarcity or batch instability is the seed bottleneck. It is less directly tied to the validated feature signal than the higher-ranked candidates."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 9,
+      "utility_score": 0.36,
+      "rationale": "Causal sequence history has meaningful personalization upside, but it has medium leakage risk because strict event ordering, duplicate timestamps, and feature generation must be handled perfectly. It also expands both features and architecture, has no direct positive evidence, and its relation to rejected historical-item-response evidence increases uncertainty."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 10,
+      "utility_score": 0.35,
+      "rationale": "Very safe and cheap, but weekday is the coarsest and lowest-upside subset of the already selected request-context family. It is strongly duplicative of c01, c02, and especially c04, while having no independent evidence of benefit."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 11,
+      "utility_score": 0.29,
+      "rationale": "Temporal recency weighting is leakage-safe and easy to run, but support is speculative, the expected gain is very small with downside risk, and the decay constant is an unvalidated hyperparameter that invites temporal-holdout overfitting."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 12,
+      "utility_score": 0.18,
+      "rationale": "Most exploratory option: it compounds unsupported pairwise-loss changes with hard-negative mining, checkpoint-dependent curriculum behavior, and medium runtime. It has substantial optimization and validation-overfitting risk, no direct evidence, and overlaps c07/c08 while being less feasible and less diagnostic."
+    }
+  ]
+}

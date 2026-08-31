@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Compare pointwise, pairwise, and listwise learning-to-rank losses for implicit-feedback recommender systems using fixed candidate impressions, focusing on within-user GAUC and nDCG@5; discuss negative sampling, impression-aware sampling, minibatch construction, and training stability.",
+      "Empirical studies of pointwise logistic loss versus Bayesian personalized ranking, hinge loss, LambdaRank, ListNet, and ListMLE for implicit-feedback recommendation, with evaluation under fixed candidate sets and reported within-user GAUC and top-five nDCG; include objective-specific sampling and optimization trade-offs.",
+      "Learning-to-rank objective alignment for recommendation: how pointwise, pairwise, and listwise losses affect within-user ordering, GAUC, and nDCG@5 when candidate impressions and the evaluation protocol are fixed; identify risks from sampled negatives, popularity bias, and mismatched training lists without using unavailable impression outcomes.",
+      "Literature comparing pointwise, pairwise, and listwise objectives in implicit-feedback ranking, emphasizing whether improvements in GAUC correspond to improvements in nDCG@5 under fixed candidate impressions; summarize practical choices for negative sampling, list formation, batch design, hard negatives, and loss optimization.",
+      "Pointwise versus pairwise versus listwise recommendation training for implicit binary feedback: evidence on within-user GAUC and nDCG@5 with fixed impression candidates, including reproducible training considerations, sampling assumptions, exposure constraints, computational cost, and objective-specific evaluation trade-offs."
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "Causal truncated user-history features for recommendation from impression logs: impression-time sequence construction, strict temporal leakage prevention, cold-start users, and evaluation with GAUC and nDCG@5 across user-activity and context segments",
+      "Candidate-aware attention or target-conditioned pooling over bounded causal behavior sequences for recommender systems trained on impression logs, excluding current-impression and future outcomes; assess within-user ranking using GAUC and nDCG@5, including cold-start robustness",
+      "Sequential recommendation with timestamped impression histories and causal feature availability: bounded user-item and user-author interaction sequences, candidate-aware sequence modeling, temporal holdouts, leakage controls, and GAUC-based evaluation with nDCG@5 by context and activity segment",
+      "Research on impression-time behavior-history modeling for ranking: causal truncation, per-impression historical aggregates, candidate-conditioned attention, sparse or cold-start users, and robustness across tabs, request context, and user-activity levels; report GAUC as primary metric and nDCG@5 as secondary",
+      "Architecture and feature-design comparisons for causal user-history encoders in recommender systems, including truncated sequential models, candidate-aware pooling, interaction affinity histories, temporal leakage prevention, and segment-aware validation on impression logs using GAUC and nDCG@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

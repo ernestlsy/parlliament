@@ -1,0 +1,22 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:1:metrics",
+        "experiment:1:segment:tab:8",
+        "experiment:1:segment:tab:0",
+        "experiment:1:segment:item_frequency:rare_1_4"
+      ],
+      "finding": "Request context is the only screened family supported for continuation: its training-only temporal-holdout primary lift is +0.00221 with complete coverage, and all four reported daily lifts are positive. The official validation scorer has GAUC 0.6689 and nDCG@5 0.5370, but top-five performance is materially weak in tab 8 (GAUC 0.3519, nDCG@5 0.0263), tab 0 (GAUC 0.5501, nDCG@5 0.0622), and rare items (GAUC 0.6000, nDCG@5 0.1717). These are ranking and retrieval weaknesses, not evidence that another screened feature family should be added.",
+      "recommended_action": "Keep tab, hour, and weekday as the sole approved incremental family. Apply the strict early stop: do not fund another feature-family experiment from the current screen. Use the next budget only for a constrained robustness review of request-context behavior, emphasizing tab 8, tab 0, and rare-item slices; judge any remediation by within-user GAUC together with nDCG@5/MRR@5, rather than GAUC alone."
+    }
+  ],
+  "avoid": [
+    "Do not add user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response: each had non-positive training-only screening lift and was rejected.",
+    "Do not use current-impression outcome fields, including clicks, likes, follows, long_view, play time, or dwell-time fields; they are forbidden because unavailable at ranking time.",
+    "Do not use aggregate video-statistics snapshot fields without per-impression availability timestamps; they remain quarantined for leakage risk.",
+    "Do not treat user_positive_count=zero as a model-ranking failure or use it as a training feature: its validation labels make it retrospective-only and its zero positives make top-five metrics structurally zero."
+  ],
+  "metric_diagnosis": "The available evidence supports stable but small train-only incremental value for request context, followed by an official-validation global primary of 0.6029 with GAUC 0.6689 and nDCG@5 0.5370. Segment diagnostics show that GAUC is not sufficient: tab 8 has both severe within-user discrimination failure and top-five failure, whereas several other low-primary slices are dominated by weak nDCG@5 despite moderate GAUC (for example tab 0 and rare items). The highest-priority diagnosis is therefore context-specific top-five retrieval/ranking degradation, especially by tab, not a broad feature-capacity deficit. Segment outputs are diagnostic rather than independent test estimates, so they should constrain analysis but not justify feature expansion without a new leakage-safe, predeclared evaluation."
+}

@@ -1,0 +1,129 @@
+{
+  "active_agents": [
+    "feature_engineer",
+    "model_designer",
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.py loads the existing date-partitioned logs and returns train, valid, and test encoded splits in canonical source-row order. Each split contains a five-column int32 feature matrix ordered user_id, video_id, tab, hour, weekday; float32 long_view labels; user IDs for validation grouping; and positional int64 row_ids for canonical output. Vocabularies and unknown buckets are fit from training rows only. hour is floor(numeric hourmin / 100) constrained to 0..23, and weekday is the YYYYMMDD calendar weekday Monday=0 through Sunday=6."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "model.py receives a shared integer feature dimension and an int32 matrix with exactly five columns per row: user_id, video_id, tab, hour, weekday. It returns one additive logit per row using a scalar bias plus the sum of the corresponding shared-vector weights, with the existing Adam-style optimizer, binary cross-entropy loss, l2 regularization, and prediction/state interfaces unchanged."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Add exactly the request_context feature family to the encoded training, validation, and test inputs while preserving the neutral user/video ID inputs and canonical source row order.",
+      "required_changes": [
+        "Modify data.py only.",
+        "Read the exact raw columns tab, hourmin, and date from each log_standard_*.csv input; do not use aliases or any forbidden, excluded, or quarantined fields.",
+        "Derive hour exactly as integer floor(numeric hourmin / 100), constrained to 0..23.",
+        "Derive weekday exactly as the calendar weekday of YYYYMMDD date, with Monday=0 through Sunday=6.",
+        "Extend FIELDS or the equivalent encoding specification to contain user_id, video_id, tab, hour, and weekday in that order, with the first two fields retaining their existing semantics.",
+        "Fit all five categorical vocabularies on the training split only. Assign one unknown bucket per field for validation and test values absent from training, and offset each field into one shared integer feature space.",
+        "Preserve the existing train/valid/test date partitions, labels, user IDs, and canonical row order. Expose per-split row_ids as positional int64 IDs from 0 through len(split)-1 if row IDs are returned by the data interface; never sort or reshuffle rows during loading or encoding.",
+        "Return feature matrices with one integer column per field and a shared embedding/vector dimension compatible with model.py. Keep the existing max_rows_per_split contract behavior."
+      ],
+      "preserve": [
+        "Keep LABEL equal to long_view and retain the existing exact split boundaries.",
+        "Keep labels sourced only from long_view and do not expose test labels to model selection or prediction generation.",
+        "Keep the existing user_id values used by within-user validation scoring.",
+        "Do not add any other feature family, interaction, normalization, aggregate, or profile feature."
+      ],
+      "coordination_notes": [
+        "model_designer will receive the expanded shared dimension and exactly five integer feature columns; its logits must remain the additive sum over these columns.",
+        "trainer must consume the encoded validation and test row order without reordering and emit the corresponding canonical row_ids."
+      ]
+    },
+    "model_designer": {
+      "objective": "Make the neutral additive scorer accept the five encoded ID/context fields without changing its architecture, optimizer, or loss.",
+      "required_changes": [
+        "Modify model.py only.",
+        "Keep Model as a single shared additive weight vector plus scalar bias; compute each logit as bias plus the sum of weights indexed by every input feature column.",
+        "Allow the dimension supplied by data.py to reflect user_id, video_id, tab, hour, and weekday buckets.",
+        "Preserve the current sigmoid, binary cross-entropy loss, Adam-style first and second moments, learning-rate handling, l2 handling, batching semantics, prediction batching, and state checkpoint format.",
+        "Do not add hidden layers, feature interactions, crosses, embeddings beyond the existing scalar additive weights, context-specific defaults, or any new hyperparameters."
+      ],
+      "preserve": [
+        "Leave architecture, optimizer, loss, initialization, and numerical clipping unchanged except for supporting the expanded feature matrix.",
+        "Keep logits and predictions one-dimensional and aligned exactly with the input row order.",
+        "Do not read labels, validation statistics, test data, or configuration from model.py."
+      ],
+      "coordination_notes": [
+        "feature_engineer owns the feature-column order and shared integer offsets; model.py must remain agnostic to field names and sum all columns supplied by data.py.",
+        "trainer will use validation-only checkpoint selection and must be able to save and restore the existing weights-and-bias state."
+      ]
+    },
+    "trainer": {
+      "objective": "Train the context-augmented additive scorer with validation-only checkpoint selection and emit both required prediction archives in canonical split order.",
+      "required_changes": [
+        "Modify train.py only; leave config.json unchanged because the requested experiment does not change configured hyperparameters.",
+        "Load the five-column encoded features from data.py and pass them unchanged to Model.",
+        "Retain the fixed command-line interface --config, --data-dir, --output, and --contract-check.",
+        "Use only train labels for optimization. Use only validation labels, validation user IDs, and validation predictions for within_user_auc checkpoint selection and early stopping. Never read or use test labels for training, checkpoint selection, early stopping, or any other decision.",
+        "After restoring the best validation checkpoint, write the validation archive at the exact --output path as an npz containing exactly two arrays named row_ids and scores. Set row_ids to int64 IDs in canonical validation source-row order and scores to one score per validation row in that same order.",
+        "Write predictions_test.npz beside --output as an npz containing exactly two arrays named row_ids and scores. Set row_ids to int64 IDs in canonical test source-row order and scores to one score per test row in that same order.",
+        "Ensure neither archive contains labels, user IDs, feature arrays, metadata, or any additional keys. Ensure score arrays are one-dimensional and have lengths exactly matching their split row_ids arrays.",
+        "Preserve the contract-check path, including finite prediction checks and feature-shape reporting, while updating expected feature width from two to five where applicable."
+      ],
+      "preserve": [
+        "Keep seed, learning_rate, l2, batch_size, max_epochs, patience, and split values read from config.json.",
+        "Keep the existing train permutation and minibatch training procedure.",
+        "Keep validation-only early stopping and best-state restoration semantics; do not select a checkpoint based on training loss or test metrics.",
+        "Do not alter model.py defaults to implement a configuration change, and do not modify config.json for this ablation."
+      ],
+      "coordination_notes": [
+        "feature_engineer provides canonical encoded row order and five-column features; trainer must not sort, concatenate, or independently reload rows before writing predictions.",
+        "The fixed evaluator alone loads ground truth. The test_labels variable must not be used beyond data-interface compatibility and should not participate in any training or selection logic.",
+        "The output contract is strict: predictions_valid.npz and predictions_test.npz each contain exactly row_ids and scores, in canonical validation and test order respectively."
+      ]
+    }
+  },
+  "reasoning": "All three owned files require coordinated changes: data.py must implement the exact tab/hour/weekday schema recipes, model.py must accept the expanded additive input without architectural or optimization changes, and train.py must preserve validation-only selection while producing both strict prediction archives. config.json requires no edit because all configured training values remain unchanged."
+}

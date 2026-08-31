@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c08",
+      "rank": 1,
+      "utility_score": 0.78,
+      "rationale": "Clean, low-runtime loss-only ablation directly tests whether RankNet caused the observed decline versus experiment 1. The small BCE anchor is minimally scoped and has low leakage risk, though expected gains are modest."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 2,
+      "utility_score": 0.75,
+      "rationale": "Best direct response to the severe top-five weakness and a stronger objective-level intervention than pointwise alternatives. It is closely related to c11 but is simpler, with lower duplication and less scope than adding an auxiliary anchor."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 3,
+      "utility_score": 0.69,
+      "rationale": "Low-risk, tightly scoped feature interaction builds on the only positively screened feature family and tests a concrete context hypothesis. Evidence is indirect and sparse cross-values may limit global impact."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 4,
+      "utility_score": 0.66,
+      "rationale": "Interaction-capable modeling could address limitations of the additive scorer and has plausible upside, but it changes architecture and introduces more runtime and overfitting risk than the leading loss ablations."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 5,
+      "utility_score": 0.63,
+      "rationale": "Strong alignment with top-five failures and potentially more robust than ListNet alone, but it duplicates c01 while adding another loss component, increasing validation overfitting and runtime risk without stronger evidence."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 6,
+      "utility_score": 0.56,
+      "rationale": "A controlled sampler is feasible and low leakage, but its proposed mixture is arbitrary, homogeneous groups provide little RankNet signal, and the intervention may alter exposure rather than fix the objective."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 7,
+      "utility_score": 0.51,
+      "rationale": "Clean and cheap, but largely retreats toward experiment 1 and does not target top-five ranking. Its expected gain is minimal and the pointwise objective has already been outperformed conceptually by the stronger targeted alternatives."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 8,
+      "utility_score": 0.43,
+      "rationale": "Excellent diagnostic ablation with minimal risk, but it is expected to be flat or negative and would mainly clarify feature redundancy rather than provide a compelling improvement."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 9,
+      "utility_score": 0.41,
+      "rationale": "Candidate-conditioned history is conceptually well matched to personalization and top-rank selection, but it requires a high-risk feature and architecture expansion with medium leakage risk and no direct measured history evidence."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 10,
+      "utility_score": 0.38,
+      "rationale": "Causal history could capture evolving intent, but the sequence encoder has high runtime and implementation risk, medium leakage risk, and overlaps substantially with the more expressive c05."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 11,
+      "utility_score": 0.29,
+      "rationale": "Auxiliary supervision is weakly supported, may cause negative transfer, and carries medium leakage risk because label availability and temporal maturity must be carefully established. Its expected gain is small."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 12,
+      "utility_score": 0.18,
+      "rationale": "Although very feasible and clean, the candidate explicitly expects a negative or flat effect and removes potentially useful hour information. It is a poor use of the scarce experiment."
+    }
+  ]
+}

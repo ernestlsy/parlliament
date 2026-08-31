@@ -1,4 +1,8 @@
-"""Immutable scoring implementation matching the KuaiRand starter kit."""
+"""Implement immutable KuaiRand scoring and prediction-artifact validation.
+
+This host-owned module calculates official GAUC, nDCG@5, and primary scores plus classification and
+ranking diagnostics; generated experiments cannot replace or redefine it.
+"""
 
 from __future__ import annotations
 

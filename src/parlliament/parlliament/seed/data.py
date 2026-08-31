@@ -1,4 +1,8 @@
-"""Neutral seed data contract using only the task's user and item identifiers."""
+"""Load and encode canonical splits for the neutral user/item seed.
+
+The loader preserves source row order, applies organizer date boundaries, and fits categorical
+vocabularies on training data before encoding validation and test rows with unknown handling.
+"""
 
 import csv
 import os

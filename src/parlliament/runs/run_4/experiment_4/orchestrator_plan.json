@@ -1,0 +1,118 @@
+{
+  "active_agents": [
+    "feature_engineer",
+    "model_designer",
+    "trainer"
+  ],
+  "contract": {
+    "data_output": "data.load() preserves the existing train/valid/test split order and data.encode() returns (features, labels, user_ids, row_ids) for each split. features has exactly eight columns in this order: user_id, video_id, tab, hour, weekday, video_id-tab, video_id-hour, video_id-weekday. All vocabularies, including interaction vocabularies, are fit on training rows only.",
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": "Model(dimension, learning_rate, l2) receives an integer feature matrix of shape (n, 8). It computes bias plus one learned weight per encoded feature index, thereby preserving all five main effects and adding exactly the three video-by-context interaction parameter groups.",
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Extend data.py with leakage-safe categorical features for video-by-tab, video-by-hour, and video-by-weekday interactions.",
+      "required_changes": [
+        "Keep the existing five main-effect fields in their current order: user_id, video_id, tab, hour, weekday.",
+        "Add exactly three interaction feature columns after the five main effects, using the exact raw/derived fields video_id, tab, hour, and weekday.",
+        "Derive hour only with integer hour = floor(numeric hourmin / 100), constrained to 0..23, and derive weekday only as the calendar weekday from YYYYMMDD date, Monday=0 through Sunday=6.",
+        "Construct interaction keys only as video_id-tab, video_id-hour, and video_id-weekday categorical pairs; do not add any other interactions or source fields.",
+        "Fit each interaction vocabulary on the training split only, assign one unknown index per interaction vocabulary, and preserve validation and test row order.",
+        "Return the expanded feature matrix with shape (n, 8) while preserving labels, user_ids, and row_ids tuple semantics."
+      ],
+      "preserve": [
+        "Use only eligible fields from dataset_feature_schema; do not use forbidden, excluded, or quarantined columns.",
+        "Preserve the existing CSV filenames, split date boundaries, long_view label handling, five main-effect vocabularies, unknown handling, and offset-based categorical encoding.",
+        "Do not use validation or test labels or statistics when fitting vocabularies."
+      ],
+      "coordination_notes": [
+        "model_designer will treat columns 0 through 4 as main effects and columns 5 through 7 as the three interaction parameter blocks.",
+        "trainer will consume the expanded eight-column matrix and must retain canonical validation/test row order."
+      ]
+    },
+    "model_designer": {
+      "objective": "Implement the context-conditioned linear interaction scorer in model.py over the expanded feature representation.",
+      "required_changes": [
+        "Keep the scorer linear and additive over all encoded columns: bias plus the sum of one learned weight for each supplied categorical feature index.",
+        "Support the eight-column representation from data.py, consisting of user_id, video_id, tab, hour, weekday, video_id-tab, video_id-hour, and video_id-weekday.",
+        "Preserve BCE loss, the existing Adam-style optimizer state updates, learning_rate, l2 regularization, prediction batching, state checkpointing, and state restoration.",
+        "Do not introduce embeddings, nonlinear layers, feature crosses beyond the three supplied interaction columns, or any new configurable hyperparameters."
+      ],
+      "preserve": [
+        "The existing user, video, and request-context main effects must remain active.",
+        "Training must receive labels only through step(), and predict() must depend only on encoded features and learned parameters.",
+        "The model must not access test labels or perform checkpoint selection."
+      ],
+      "coordination_notes": [
+        "feature_engineer owns the interaction construction and guarantees the eight feature columns; model.py must not reinterpret raw source columns or invent aliases.",
+        "trainer will update its shape validation to the exact eight-column interface while leaving the configured training schedule unchanged."
+      ]
+    },
+    "trainer": {
+      "objective": "Adapt train.py to the expanded interaction feature interface and enforce the prediction and validation-only selection contract.",
+      "required_changes": [
+        "Change feature-shape validation from exactly five columns to exactly eight columns, with the column order supplied by data.py.",
+        "Keep the existing config keys and values in config.json unchanged: seed, learning_rate, l2, batch_size, max_epochs, patience, and split.",
+        "Continue selecting the best checkpoint and applying early stopping exclusively from valid_users, valid_labels, and validation predictions; never read or use test labels for training, checkpointing, or stopping.",
+        "Emit predictions_valid.npz at the requested validation output path and predictions_test.npz beside it, with each archive containing exactly the two keys row_ids and scores.",
+        "Write validation row_ids and scores in canonical validation source-row order and test row_ids and scores in canonical test source-row order, preserving int64 row_ids and one-dimensional float32 scores.",
+        "Add output-contract checks that both archives contain exactly row_ids and scores, have matching lengths, and contain no additional arrays."
+      ],
+      "preserve": [
+        "Preserve the fixed command-line interface, contract-check behavior, batch training loop, seeded permutation order, BCE training, configured optimizer settings, and configured max_epochs/patience schedule.",
+        "Preserve validation-only within-user AUC checkpoint selection.",
+        "Do not modify a configured behavior by changing a default in model.py; config.json remains unchanged."
+      ],
+      "coordination_notes": [
+        "feature_engineer will return four-tuples (features, labels, user_ids, row_ids) with eight feature columns for every split.",
+        "model_designer will consume the eight encoded columns as a linear scorer.",
+        "The fixed evaluator alone loads ground truth; train.py must not load evaluator labels beyond the training and validation labels already returned by data.py."
+      ]
+    }
+  },
+  "reasoning": "All three owners are required because the ablation needs new interaction encoding in data.py, linear interaction parameters in model.py, and train.py must be updated from the parent five-column interface to the exact eight-column interface while enforcing the required prediction archive contract. config.json does not need to change because the hypothesis explicitly preserves the optimizer and schedule."
+}

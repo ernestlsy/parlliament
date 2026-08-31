@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "objective.mixed_group_listnet_top1_loss",
+      "training.group_complete_stratified_minibatching",
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "efficiency.successive_halving_experiment_promotion"
+    ]
+  },
+  {
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1,
+    "selected_document_ids": [
+      "architecture.causal_sequence_transformer_ranker",
+      "architecture.candidate_conditioned_history_attention",
+      "efficiency.candidate_group_shared_representation_scoring"
+    ]
+  }
+]

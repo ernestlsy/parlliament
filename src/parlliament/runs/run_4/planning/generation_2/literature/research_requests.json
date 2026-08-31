@@ -1,0 +1,50 @@
+[
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "evaluation",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "learning_to_rank",
+      "pairwise_loss",
+      "listwise_loss",
+      "implicit_feedback"
+    ],
+    "purpose": "Resolve whether the next scarce experiment should replace the current pointwise loss with a ranking-aligned objective, and identify objective-specific risks or evaluation trade-offs without changing the fixed evaluation protocol.",
+    "query": "Literature comparing pointwise, pairwise, and listwise learning-to-rank objectives for implicit-feedback recommendation, especially effects on within-user GAUC and top-k nDCG under fixed candidate impressions; include practical sampling and training considerations.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "features",
+      "architectures",
+      "training",
+      "bias_and_robustness",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "causal_history",
+      "sequential_recommendation",
+      "candidate_aware_attention",
+      "temporal_leakage",
+      "cold_start"
+    ],
+    "purpose": "Resolve the architecture and feature-design choices for a bounded causal history experiment, including how to construct history at impression time and whether candidate-aware pooling is likely to improve within-user ranking without using future or current-impression outcomes.",
+    "query": "Literature on causally truncated user-behavior history features and candidate-aware sequence modeling for recommendation from impression logs, including temporal leakage prevention, cold-start behavior, and robustness across context or user-activity segments.",
+    "request_index": 2,
+    "round": 1
+  }
+]

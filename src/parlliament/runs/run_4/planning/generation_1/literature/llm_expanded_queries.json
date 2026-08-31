@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "implicit-feedback recommendation learning-to-rank comparison of pointwise logistic loss versus pairwise RankNet or BPR, evaluated with temporal train-validation splits using GAUC or per-user AUC and nDCG@5",
+      "RankNet BPR ListNet ListMLE variants for implicit-feedback recommender systems: evidence on within-user GAUC or per-user AUC versus nDCG@5 under time-based evaluation",
+      "pairwise versus listwise objective functions for learning to rank in recommendation with binary implicit labels, including BPR RankNet ListNet and ListMLE, reporting GAUC and nDCG@5 on temporally held-out interactions",
+      "ranking-aligned loss versus pointwise binary cross-entropy for implicit-feedback recommendation, focusing on training-only temporal validation, leakage-safe evaluation, GAUC or per-user AUC, and nDCG@5 trade-offs",
+      "empirical studies of pairwise and listwise recommendation losses for implicit feedback, especially RankNet/BPR and ListNet/ListMLE, with per-user ranking metrics such as GAUC and nDCG@5 under chronological evaluation"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "How do sequential recommendation models construct causally truncated user behavior histories from impression logs using only information available at impression time, and how do candidate-conditioned attention or compact history pooling affect within-user ranking measured by GAUC and nDCG@5, including cold-user GAUC and warm-user GAUC, under an official temporal holdout?",
+      "What evidence supports bounded causal history representations for sequential recommendation, including truncated event sequences, recency-aware pooling, and candidate-conditioned attention, while excluding current-impression outcomes and untimestamped aggregate snapshots to prevent future-information leakage; report effects on GAUC, nDCG@5, cold-user GAUC, and warm-user GAUC?",
+      "In sequential recommendation from impression logs, how should user histories be filtered, timestamped, and pooled to preserve impression-time availability and avoid label or future leakage, and which compact-history or candidate-aware architectures improve within-user GAUC versus top-five quality, especially for cold-start and warm users under temporal evaluation?",
+      "Compare causal truncated-history encoders, candidate-conditioned sequence attention, and fixed-size user-history pooling for recommendation systems, focusing on implementation from impression logs, leakage-safe training and temporal holdouts, cold-start robustness, and reported GAUC, nDCG@5, cold-user GAUC, and warm-user GAUC metrics.",
+      "Literature on leakage-preventing sequential recommendation with bounded user behavior histories: construction using prior interactions only, safeguards for impression-time feature availability, candidate-conditioned attention or compact pooling, and evidence for cold-user and warm-user within-user ranking performance using GAUC alongside nDCG@5 on official temporal holdouts"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

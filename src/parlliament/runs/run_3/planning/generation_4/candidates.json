@@ -1,0 +1,410 @@
+[
+  {
+    "text": "Add a small within-user RankNet term to the experiment 1 pointwise BCE objective so positive impressions are explicitly promoted above negatives for the same user.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "Experiment 1 has strong GAUC but still materially lower nDCG@5, while experiment 3's tab interaction did not improve primary. A ranking-loss change tests objective alignment without expanding feature scope.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:tab:6"
+    ],
+    "exact_ablation": "From experiment 1, retain the identical five categorical fields, additive scorer, optimizer, and BCE reduction, and add exactly one auxiliary within-user positive-negative RankNet logistic loss with coefficient 0.10, using only training rows and deterministic same-user pair sampling.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.004 from direct same-user ordering pressure.",
+      "nDCG@5": "+0.001 to +0.004 if promoted positives cross the top-five boundary."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace experiment 1 BCE with a bounded same-user RankNet objective to optimize within-user positive-negative ordering directly.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The official GAUC is within-user AUC, and experiment 1's pointwise objective may leave ordering signal underused. This is materially distinct from adding a small ranking auxiliary term.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:hour:3"
+    ],
+    "exact_ablation": "From experiment 1, replace only row-averaged BCE with mean deterministic same-user positive-negative RankNet logistic loss, capped at four sampled negatives per positive; retain features, additive scorer, optimizer, learning rate, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.005 if same-user mixed-label training histories are sufficiently common.",
+      "nDCG@5": "-0.001 to +0.003 because pairwise ordering may not concentrate enough weight on top-five errors."
+    },
+    "expected_primary_gain": 0.0018,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add an nDCG@5-swap-weighted pairwise ranking auxiliary to target top-five errors while retaining pointwise BCE stability.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 10,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "Large supported tab slices have very poor nDCG@5 despite usable within-user discrimination, indicating that a top-rank-focused objective is more informative than another broad feature interaction.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:tab:6"
+    ],
+    "exact_ablation": "From experiment 1, retain all model and data settings and add exactly one LambdaRank-style same-user positive-negative logistic loss weighted by detached absolute nDCG@5 swap change, with coefficient 0.10.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.003 because top-five weighting can trade broad pairwise ordering for head ordering.",
+      "nDCG@5": "+0.002 to +0.006 by concentrating gradients on positive-negative swaps affecting ranks one through five."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Use a mixed BCE-plus-ListNet objective over complete same-user training lists to train direct within-list competition.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 4
+    },
+    "rationale": "The observed gap between GAUC and nDCG@5 motivates a listwise alternative. This tests list-normalized competition rather than pairwise margin weighting.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:tab:0"
+    ],
+    "exact_ablation": "From experiment 1, replace only the training objective with group-mean ListNet top-one cross-entropy on mixed-label same-user training lists plus an item-mean BCE anchor weighted 0.10; retain the five fields, additive scorer, optimizer, and temporal split.",
+    "expected_effect": {
+      "GAUC": "-0.002 to +0.002 because listwise normalization can weaken broad within-user calibration.",
+      "nDCG@5": "+0.001 to +0.005 if same-user lists provide meaningful candidate competition."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "training.group_complete_stratified_minibatching",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Change early stopping from a GAUC-only proxy to the official primary proxy computed as the mean of GAUC and nDCG@5.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 9
+    },
+    "rationale": "Experiment 1 was selected by a GAUC-only training proxy although official selection averages GAUC and nDCG@5. This is a cheap alignment correction with no feature or scorer change.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics"
+    ],
+    "exact_ablation": "From experiment 1, change only checkpoint selection and patience monitoring from validation within-user GAUC proxy to validation primary proxy equal to 0.5 times within-user GAUC plus 0.5 times nDCG@5; retain data, features, BCE, optimizer, epoch limit, and patience unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.001 because the selected epoch may sacrifice some broad ordering.",
+      "nDCG@5": "0.000 to +0.003 through selection of a more top-five-effective checkpoint."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking",
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Add a video-by-hour interaction to allow item appeal to vary by time of day.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Request context was the only positively screened family, and many hour slices have low primary scores. Unlike the failed video-by-tab interaction, this tests temporal context specificity.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:3:metrics",
+      "experiment:3:segment:hour:3",
+      "experiment:3:segment:hour:4"
+    ],
+    "exact_ablation": "From experiment 1, append exactly one hashed categorical feature for the pair (video_id, hour), fitted by deterministic hashing with a fixed training-independent bucket space; retain all original fields, BCE, scorer, optimizer, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.002 because sparse item-hour cells may not generalize temporally.",
+      "nDCG@5": "0.000 to +0.003 if time-specific item appeal improves head ordering."
+    },
+    "expected_primary_gain": 0.0009,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.starter_kit_empirical_priors",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a video-by-weekday interaction to model stable day-of-week variation in item appeal.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Weekday is part of the sole positive train-only context family, while this lower-cardinality interaction should be less sparse than the video-by-tab feature that failed in experiment 3.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:3:metrics",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "From experiment 1, append exactly one hashed categorical feature for the pair (video_id, weekday), using a fixed hash space and no held-out fitting; retain all original fields, BCE, scorer, optimizer, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.002 from context-specific item ordering.",
+      "nDCG@5": "0.000 to +0.003 if weekday effects are stable through validation."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.starter_kit_empirical_priors",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a tab-by-hour interaction to model time-dependent request-surface effects without expanding item-specific interaction capacity.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "Tab 0 and tab 6 exhibit severe top-five weakness, and request context screened positively. This compact interaction isolates whether time changes surface-level preference patterns.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:tab:6",
+      "experiment:3:segment:hour:3"
+    ],
+    "exact_ablation": "From experiment 1, append exactly one categorical feature equal to the pair (tab, hour), with vocabulary fitted on training rows only and an unknown bucket; retain the remaining model, BCE objective, optimizer, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "0.000 to +0.002 through context-specific score offsets that vary within users.",
+      "nDCG@5": "0.000 to +0.003 if the interaction corrects surface-specific head ranking."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics",
+      "task.starter_kit_empirical_priors"
+    ]
+  },
+  {
+    "text": "Add a causal recent-item-repeat indicator that marks whether the candidate video appeared earlier for the user.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "Item IDs work strongly for warm items, while medium-frequency items have very poor nDCG@5. A strictly prior user-item exposure signal tests repeat-consumption behavior without using outcomes or future events.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:segment:item_frequency:medium_5_19",
+      "experiment:3:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "From experiment 1, append exactly one binary causal feature indicating whether the same user_id-video_id pair occurred strictly earlier in timestamp order in the standard log, emitting the feature before updating history for each row; retain all other features, BCE, scorer, optimizer, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.003 if repeat exposure is predictive of long-view preference.",
+      "nDCG@5": "-0.001 to +0.003 because repeated exposures may be fatigue signals rather than preference signals."
+    },
+    "expected_primary_gain": 0.0012,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "architecture.candidate_conditioned_history_attention",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a causal bucketed user history-length feature to condition item scores on the amount of prior exposure.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Performance varies across user activity segments, including stronger results for middle-active users and weaker full-active users. A causal history-size state is a small test before spending on sequence architecture.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:segment:user_active_degree:full_active",
+      "experiment:3:segment:user_active_degree:middle_active"
+    ],
+    "exact_ablation": "From experiment 1, append exactly one categorical feature containing a log-bucketed count of strictly earlier standard-log impressions for the user, computed before each row is incorporated into that user's history; retain original fields, BCE, scorer, optimizer, and stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.002 because a user-only term cannot directly reorder a fixed user list unless temporal history differs within that user's rows.",
+      "nDCG@5": "-0.001 to +0.001 for the same limited within-user-variation reason."
+    },
+    "expected_primary_gain": 0.0002,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking",
+      "architecture.causal_sequence_transformer_ranker"
+    ]
+  },
+  {
+    "text": "Use a compact causal sequence encoder over prior displayed video IDs to provide dynamic user-interest state to the ranker.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 10,
+      "novelty": 10,
+      "feasibility": 4
+    },
+    "rationale": "The poor head ranking in supported context slices may reflect missing changing user intent rather than insufficient static interactions. This tests a causal dynamic-interest mechanism that is distinct from all prior experiments.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:user_active_degree:full_active",
+      "experiment:3:segment:user_active_degree:high_active"
+    ],
+    "exact_ablation": "From experiment 1, add exactly one causal history representation: a mean-pooled embedding of the last 20 strictly earlier displayed video_ids for each row, concatenated to the existing additive logit through a learned linear projection; retain the existing fields, BCE objective, optimizer, and early-stopping rule.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.004 if recent displayed-item sequences encode evolving preference.",
+      "nDCG@5": "+0.001 to +0.005 if candidate ranking benefits from dynamic user state."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "features",
+      "architecture",
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.causal_sequence_transformer_ranker",
+      "task.leakage_policy",
+      "task.starter_kit_empirical_priors"
+    ]
+  },
+  {
+    "text": "Reduce additive-model L2 regularization to test whether the validated request-context model is overly shrunk.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "This is a low-cost calibration experiment after two more complex changes underperformed. It adds no features and cleanly distinguishes underfitting from interaction-mechanism failure.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:3:metrics"
+    ],
+    "exact_ablation": "From experiment 1, change only the L2 coefficient from 1e-6 to 1e-7; retain the identical data, five features, additive scorer, BCE loss, optimizer, learning rate, batching, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.001 because lower shrinkage can either preserve useful sparse effects or overfit them.",
+      "nDCG@5": "-0.001 to +0.002 because head rankings may benefit modestly from less-shrunk context and item weights."
+    },
+    "expected_primary_gain": 0.0004,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol",
+      "evaluation.within_user_metrics",
+      "task.starter_kit_empirical_priors"
+    ]
+  }
+]

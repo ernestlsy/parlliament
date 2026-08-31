@@ -1,3 +1,9 @@
+"""Load bounded, read-only fixed research context for planning agents.
+
+``KnowledgeBase`` prefers the validated catalog interface and supplies always-included task and
+dataset cards to the Evolution Judge without allowing literature to override host rules.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path

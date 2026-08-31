@@ -1,0 +1,111 @@
+{
+  "active_agents": [
+    "model_designer",
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.py remains unchanged and encode(splits) supplies each split as (features, labels, user_ids, row_ids), where features retain shape (n, 5) for the exact existing encoded user_id, video_id, tab, hour, and weekday fields. train.py must preserve source row order and must not use test labels."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model.step receives train features of shape (n, 5), binary long_view labels, and exact user_ids for an intact group-complete minibatch; it optimizes all positive-negative RankNet pairs within each user only. Model.predict receives features and returns one finite score per row in input order."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "model_designer": {
+      "objective": "Replace the model's row-wise BCE optimization with within-user RankNet pairwise optimization while retaining the existing additive encoded-feature scorer and Adam-style optimizer.",
+      "required_changes": [
+        "Modify only model.py.",
+        "Change the training-step interface to accept features, binary labels, and user_ids.",
+        "Within each supplied intact user group, form every positive-negative pair using long_view labels; do not form cross-user pairs and do not introduce sampling beyond the existing full-batch behavior.",
+        "For each pair, compute RankNet loss softplus(-(positive_logit-negative_logit)); accumulate gradients with positive gradient sigmoid(positive_logit-negative_logit)-1 and negative gradient 1-sigmoid(positive_logit-negative_logit), normalized by the number of pairs.",
+        "Apply the existing l2 regularization and existing Adam moments, learning_rate, and optimizer constants to the pairwise weight gradient.",
+        "Keep the additive logits implementation, feature dimensionality, prediction batching, state checkpointing, and load_state behavior compatible with train.py.",
+        "When a batch contains no valid positive-negative pair, return finite zero loss and perform no optimizer update."
+      ],
+      "preserve": [
+        "The existing user, video, and request-context encoded inputs with five feature columns.",
+        "The current model capacity: one shared additive weight vector plus bias, with no interactions or new features.",
+        "The existing optimizer family and configured learning_rate and l2 values.",
+        "Prediction output as one score per input row in the input order.",
+        "No use of validation or test labels inside model.py."
+      ],
+      "coordination_notes": [
+        "trainer will pass group-complete training batches and their exact train user_ids to Model.step(features, labels, user_ids).",
+        "trainer will update the contract probe to use the new step signature; do not add a default objective or hide the RankNet behavior behind a model.py default.",
+        "Do not change data.py, train.py, config.json, feature names, or data-source handling."
+      ]
+    },
+    "trainer": {
+      "objective": "Integrate the within-user RankNet step into training using intact user candidate groups, while preserving validation-only checkpoint selection and the canonical prediction artifact contract.",
+      "required_changes": [
+        "Modify only train.py; config.json requires no change because seed, learning_rate, l2, batch_size, max_epochs, patience, and split remain unchanged.",
+        "Read train users from the encoded train split and construct each epoch's minibatches by grouping rows by exact user_id, shuffling the group order with the configured seeded RNG, and appending whole groups until batch_size would be exceeded; never split a user group across batches. If one group exceeds batch_size, process that group as one batch.",
+        "Call Model.step(train_features[batch], train_labels[batch], train_users[batch]) for every group-complete batch. Keep every training row and do not add pair sampling or alter the configured sampling limits.",
+        "Keep validation scoring with within_user_auc(valid_users, valid_labels, validation_scores), and use only that validation metric for best-state checkpointing and patience-based early stopping.",
+        "Do not use test labels for training, checkpoint selection, early stopping, logging, or any other decision. Extract only test_features and test_row_ids from the encoded test split for final prediction.",
+        "Keep the fixed command-line interface and output behavior. Write predictions_valid.npz at args.output and predictions_test.npz beside it, each with exactly the keys row_ids and scores, with no additional arrays.",
+        "Ensure predictions_valid.npz row_ids and scores follow encoded validation source row order exactly, and predictions_test.npz row_ids and scores follow encoded test source row order exactly; cast row_ids to int64 and scores to float32.",
+        "Add artifact assertions before writing or immediately after writing that each NPZ key set is exactly {row_ids, scores}, both arrays are one-dimensional, and row_ids and scores have equal lengths.",
+        "Update the contract probe to pass user_ids to Model.step and retain finite-loss and finite-prediction checks without using test labels."
+      ],
+      "preserve": [
+        "The existing data loading, encoding, five-column feature-shape checks, model construction, configured hyperparameters, random seed, epoch limit, patience threshold, validation metric, and checkpoint restoration.",
+        "Canonical validation and test row order from data.py; do not sort, deduplicate, or regenerate row_ids.",
+        "The existing output filename convention, including predictions_test.npz derived from args.output.",
+        "The existing contract-check behavior and fixed evaluator interface."
+      ],
+      "coordination_notes": [
+        "model_designer will implement Model.step(features, labels, user_ids); use that exact three-argument call and do not infer user groups inside train.py from row positions.",
+        "data.py remains unchanged and its encoded split tuple is (features, labels, users, row_ids); for test, bind only encoded[\"test\"][0] and encoded[\"test\"][3], never the test-label element.",
+        "No config.json edit is needed; do not implement any configured change by modifying a model.py default."
+      ]
+    }
+  },
+  "reasoning": "The requested ablation changes the objective and necessarily requires coordinated edits in both model.py and train.py: the model needs user-aware pairwise gradients, while the trainer must preserve intact within-user groups in minibatches and pass user_ids. data.py owns the canonical five-field representation and therefore remains unchanged. Validation remains the sole checkpoint and early-stopping source, and test labels are excluded from all training and selection logic. The prediction artifact contract is made explicit so both NPZ files contain exactly row_ids and scores in canonical split order."
+}

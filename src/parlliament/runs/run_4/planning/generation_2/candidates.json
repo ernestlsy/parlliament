@@ -1,0 +1,390 @@
+[
+  {
+    "text": "Replace pointwise BCE with within-user RankNet pairwise loss while retaining the current user, video, and request-context inputs, optimizer family, and canonical displayed-candidate evaluation.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The current scorer reaches GAUC 0.6689 and nDCG@5 0.5370, but its pointwise objective is not directly aligned with within-user ordering. Pairwise training is a focused objective ablation with plausible GAUC upside.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Change only the training objective from row-wise BCE to within-user RankNet loss using positive-negative pairs from the same intact user candidate group; keep features, model capacity, optimizer, sampling limits, and evaluation unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected small positive gain of +0.001 to +0.006 because the loss directly optimizes positive-over-negative ordering within users.",
+      "nDCG@5": "Expected flat to modestly positive change of -0.001 to +0.004; top-five gains depend on whether sampled pairs include high-scoring negatives."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "training.group_complete_stratified_minibatching",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with mixed-group ListNet top-one loss over intact within-user candidate groups, preserving the existing feature inputs and model scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 6
+    },
+    "rationale": "nDCG@5 is only 0.5370 despite respectable overall GAUC, motivating a listwise objective that explicitly concentrates probability mass near the top of each displayed group.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:five_plus"
+    ],
+    "exact_ablation": "Change only the loss from row-wise BCE to group-mean ListNet top-one cross-entropy on mixed-label groups, with fixed temperatures and no auxiliary BCE; retain the same inputs, architecture, optimizer, and group population.",
+    "expected_effect": {
+      "GAUC": "Expected flat to modestly positive change of -0.001 to +0.004 because group normalization may improve local ordering but can discard absolute propensity information.",
+      "nDCG@5": "Expected modest positive gain of +0.001 to +0.008 because the objective emphasizes competition among candidates at the top of each group."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "evaluation.within_user_metrics",
+      "evaluation.frozen_candidate_group_integrity_audit"
+    ]
+  },
+  {
+    "text": "Use user-normalized pointwise BCE so each user contributes equal total training weight, while keeping the current additive model, request-context features, optimizer, and evaluation unchanged.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The objective is positive-count-weighted GAUC, while ordinary row-wise BCE can overrepresent users with many impressions. Equal user weighting is a low-complexity objective alternative that retains all-negative and all-positive groups.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:zero"
+    ],
+    "exact_ablation": "Change only the BCE reduction from unweighted row mean to exact inverse-user-candidate-count weighting computed from complete training groups; retain all rows, features, architecture, optimizer, and early-stopping rule.",
+    "expected_effect": {
+      "GAUC": "Expected small positive or flat change of 0.000 to +0.004 if long candidate lists currently dominate training; a small decline remains possible from noisier gradients.",
+      "nDCG@5": "Expected flat to small positive change of -0.002 to +0.003 because the loss remains pointwise and does not explicitly target the top five."
+    },
+    "expected_primary_gain": 0.0012,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Keep the current pointwise BCE and scorer but train with group-complete, label-stratified minibatches so mixed, zero-positive, and all-positive user groups are sampled by group count.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The zero-positive validation slice contains 21,807 rows and has nDCG@5 of zero by definition, while the current random row minibatches may provide inconsistent exposure to useful mixed groups. This changes optimization exposure without changing labels or features.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:1:segment:user_positive_count:zero",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Change only minibatch construction to complete-group sampling with a fixed 60% mixed, 20% zero-positive, and 20% all-positive group mixture; retain pointwise BCE, features, model, optimizer hyperparameters, and number of optimization steps.",
+    "expected_effect": {
+      "GAUC": "Expected small positive gain of +0.0005 to +0.004 by supplying more stable within-user contrasts, with risk of decline if group reweighting mismatches the official population.",
+      "nDCG@5": "Expected flat to modestly positive change of -0.001 to +0.005 because mixed groups become more consistently represented during training."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "training.group_complete_stratified_minibatching",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a single multiplicative tab-by-hour interaction to the existing user/video/request-context scorer, leaving all original fields and training settings unchanged.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "Request context was the only screened feature family with positive train-only primary lift (+0.00221), while official diagnostics show large variation by tab and hour. A targeted interaction tests whether context effects are non-additive rather than adding a broad static bundle.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Add only one learned interaction feature representing the pair (tab, hour); retain the existing user, video, tab, hour, and weekday inputs, additive scorer, loss, optimizer, and training schedule.",
+    "expected_effect": {
+      "GAUC": "Expected modest positive gain of +0.001 to +0.005 because context-dependent candidate ordering may address heterogeneous tab and hour behavior.",
+      "nDCG@5": "Expected small positive or flat change of -0.001 to +0.004; interaction sparsity may limit top-five benefit."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.starter_kit_empirical_priors"
+    ]
+  },
+  {
+    "text": "Replace categorical hour with a compact cyclic hour representation while retaining tab, weekday, user, and video inputs and the same additive scorer and training procedure.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "Several hour segments are weak, including hour 3 with GAUC 0.5318 and hour 4 with GAUC 0.6041. A cyclic representation shares statistical strength between adjacent hours without introducing any unavailable data.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:4",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the categorical hour feature with two impression-time numeric features sin(2\u03c0hour/24) and cos(2\u03c0hour/24); keep tab, weekday, IDs, architecture, loss, optimizer, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected flat to modestly positive change of -0.001 to +0.003 by smoothing sparse hour estimates, though categorical effects that are non-smooth may be lost.",
+      "nDCG@5": "Expected flat to small positive change of -0.002 to +0.003 because the representation may improve generalization but does not directly emphasize top ranks."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.starter_kit_empirical_priors"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer with a shallow cross network over the existing user, video, tab, hour, and weekday fields, testing explicit low-order feature interactions without adding new data sources.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The current additive model can only sum independent field effects. The positive request-context screen and severe tab-specific weaknesses suggest that user-item-context interactions may be more useful than additional first-order terms.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Replace only the additive linear scorer with a one-layer cross network plus linear output over the same five encoded fields; keep the input fields, loss, optimizer, training schedule, and evaluation fixed.",
+    "expected_effect": {
+      "GAUC": "Expected small positive gain of +0.001 to +0.006 if context changes candidate ordering conditionally on user or video identity; overfitting could make it flat or negative.",
+      "nDCG@5": "Expected small positive gain of 0.000 to +0.005, with less confidence because added interactions may not focus on the highest-ranked errors."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.starter_kit_empirical_priors",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a causally truncated recent-video history representation to the current scorer, using only prior events strictly before each impression and retaining the existing request-context inputs.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "The official model has GAUC 0.6689 but weak top-five performance, leaving room for immediate-intent personalization. A bounded prior-history representation is a materially different feature family and can vary scores among the same user's candidate videos.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:one",
+      "experiment:1:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Add only a bounded causal history feature consisting of the last 20 prior video IDs plus a missing-history indicator; emit features before updating state, and keep the existing additive scorer, loss, optimizer, and request-context fields unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected modest positive gain of +0.001 to +0.007 for users with repeatable preferences, with little effect for users lacking prior events.",
+      "nDCG@5": "Expected modest positive gain of +0.002 to +0.008 if recent intent identifies which candidates should occupy the top five; sparse-history cohorts may remain flat."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "features.causal_behavior_history_features",
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer with a candidate-conditioned attention module over a strictly causal recent-video history, while preserving the request-context fields and official displayed-candidate evaluation.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 10,
+      "feasibility": 4
+    },
+    "rationale": "A fixed history representation can blur multiple interests. Candidate-conditioned attention could selectively activate different prior videos for different candidates, potentially improving both within-user ordering and top-five placement beyond first-order context effects.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:five_plus",
+      "experiment:1:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Replace only the additive scorer with a candidate-conditioned attention scorer over the last 20 prior video IDs, using strict pre-impression cutoffs and masked attention; retain the same request-context fields, target, official split, and evaluation.",
+    "expected_effect": {
+      "GAUC": "Expected positive but uncertain change of +0.001 to +0.008 when users have multiple relevant interests; cold or sparse-history users may regress.",
+      "nDCG@5": "Expected modest positive gain of +0.002 to +0.010 because candidate-relative history matching can promote the most relevant items into the top five."
+    },
+    "expected_primary_gain": 0.0035,
+    "confidence": 3,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.candidate_conditioned_history_attention",
+      "features.causal_behavior_history_features",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Use a hybrid objective combining the existing pointwise BCE with a bounded within-user pairwise RankNet term, testing whether ranking alignment improves ordering without discarding row-level supervision.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The current model's respectable GAUC and lower nDCG@5 suggest a trade-off between preserving broad supervision and emphasizing ranking. A small pairwise auxiliary term is distinct from a full loss replacement and offers a safer fallback for homogeneous groups.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:zero",
+      "experiment:1:segment:user_positive_count:five_plus"
+    ],
+    "exact_ablation": "Add only a RankNet pairwise loss weighted at 0.25 to the existing pointwise BCE, with pairs formed only within intact mixed user groups; retain the existing scorer, features, optimizer, and evaluation.",
+    "expected_effect": {
+      "GAUC": "Expected small positive gain of +0.001 to +0.005 because pairwise gradients target within-user ordering while BCE preserves broad supervision.",
+      "nDCG@5": "Expected flat to modestly positive change of -0.001 to +0.006; the auxiliary term may improve top ranks without destabilizing sparse groups."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Retain pointwise BCE but use a deterministic mixture of uniform and current-model hard-negative sampling within each user's displayed candidate group, without changing the scorer or feature set.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 6
+    },
+    "rationale": "The current validation has GAUC 0.6689 but only 0.5370 nDCG@5, consistent with a need to focus training on confusing high-scoring negatives. Within-group hard-negative sampling remains compatible with the displayed-candidate task and avoids synthetic catalog negatives.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:five_plus",
+      "experiment:1:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Change only negative minibatch sampling to 50% uniform and 50% highest-current-score negatives within the same user's training candidate group, refreshed between epochs; retain pointwise BCE, features, architecture, optimizer, and total pair/example budget.",
+    "expected_effect": {
+      "GAUC": "Expected modest positive gain of +0.001 to +0.005 by emphasizing difficult positive-negative orderings, with risk of overfitting repeated hard negatives.",
+      "nDCG@5": "Expected modest positive gain of +0.001 to +0.007 because high-scoring false positives receive more corrective updates."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "training.group_complete_stratified_minibatching",
+      "evaluation.frozen_candidate_group_integrity_audit"
+    ]
+  },
+  {
+    "text": "Add a shallow nonlinear MLP over the existing encoded fields while keeping the same user, video, tab, hour, and weekday inputs, pointwise BCE, optimizer, and temporal split.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The additive model provides a strong low-cost reference but cannot represent nonlinear combinations among the positive request-context fields. This is a bounded architecture ablation rather than a broad static-feature expansion or capacity sweep.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Replace only the additive score computation with a fixed two-layer MLP of widths 64 and 32 over the same five field embeddings; retain feature inputs, pointwise BCE, optimizer settings, training schedule, and evaluation unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected small positive or flat change of -0.002 to +0.005 because nonlinear interactions may repair context-specific ordering but may overfit sparse tab combinations.",
+      "nDCG@5": "Expected small positive gain of 0.000 to +0.005 if nonlinear interactions improve candidate separation near the top; a slight decline is possible from unstable score fitting."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.starter_kit_empirical_priors",
+      "task.kuairand_ranking"
+    ]
+  }
+]

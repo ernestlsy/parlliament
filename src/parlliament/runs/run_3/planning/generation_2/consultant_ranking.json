@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 8.2,
+      "rationale": "Best scarce-experiment choice: a tightly isolated, low-runtime correction to the clear mismatch between row-mean training loss and within-user evaluation. It uses all users rather than chasing unstable small slices, has low leakage risk, and is less validation-overfit-prone than rank-specific alternatives. Evidence for a large gain is limited, but the objective alignment is mechanistically strong."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 2,
+      "utility_score": 7.5,
+      "rationale": "Directly targets the official within-user ranking criterion with a simpler and less hyperparameter-dependent ranking formulation than c03. It is a larger training-mechanism change and has medium runtime risk from pair construction, but its scope is still disciplined and the expected GAUC gain is plausibly meaningful."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 3,
+      "utility_score": 7.1,
+      "rationale": "Strong alignment to weak global nDCG@5 and preserves the established BCE objective, but its fixed 0.25 coefficient and swap weighting create meaningful validation-overfitting risk. The cited tab failures are largely low-prevalence or inherently low-positive-rate slices, so they are weak evidence that a global nDCG@5 surrogate is the best next intervention. More complex than c02 for one trial."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 4,
+      "utility_score": 6.8,
+      "rationale": "The additive scorer cannot represent user-item or context-item interactions, so an FM tests a material and broadly relevant capacity limitation using only approved fields. However, it changes the entire scorer, substantially expands interaction scope, and risks fitting sparse ID combinations; it is less interpretable and more runtime-risky than loss-focused candidates."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 5,
+      "utility_score": 6.5,
+      "rationale": "Tab is the most credible context dimension because the request-context family was supported by a training-only temporal screen and large tab-0 validation weakness exists. Still, that screen supports main-effect context fields already present in the parent, not a sparse tab-video cross; the proposed interaction therefore has incremental evidence gaps and potential sparse-pair overfitting."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 6,
+      "utility_score": 6.0,
+      "rationale": "A narrow, low-runtime context-item interaction with substantial weak hour slices, but the supporting evidence is diagnostic rather than causal and the request-context screen did not isolate hour-video interactions. It is less directly supported than c04 and offers a smaller expected gain."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 7,
+      "utility_score": 5.7,
+      "rationale": "Tests nonlinear interactions over approved fields and can capture effects missed by the additive model, but it is a comparatively broad capacity expansion with medium runtime and overfitting risk. It is dominated by the more parameter-efficient and more diagnosable FM test in c07."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 8,
+      "utility_score": 5.0,
+      "rationale": "A contained training-procedure test, but complete-user batches do not alter the row-mean BCE objective and have no demonstrated mechanism for improving either GAUC or nDCG@5. Grouping may reduce useful gradient mixing while adding medium runtime and batching complexity."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 9,
+      "utility_score": 4.6,
+      "rationale": "Very safe and cheap, with a plausible sparse-ID stabilization hypothesis, but evidence for actual overfitting is indirect: frequency-slice quality differences also reflect intrinsic cold-item difficulty and prevalence. The tiny single-value L2 change has low upside for the scarce experiment."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 10,
+      "utility_score": 4.2,
+      "rationale": "Low-risk and narrow, but weekday-video has the weakest contextual rationale and no specific weekday slice evidence. It duplicates the same sparse context-video-interaction family explored more credibly by c04 and c05, while offering lower expected gain."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 11,
+      "utility_score": 3.4,
+      "rationale": "Operationally safe but almost entirely speculative: there is no optimization-instability evidence, the expected interval is directionally uncertain, and a learning-rate-only change is unlikely to resolve the observed within-user ranking limitation. It is a weak use of the sole experiment."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 12,
+      "utility_score": 2.8,
+      "rationale": "Lowest priority because it increases runtime without changing the mechanism and retains a GAUC-only checkpoint proxy despite nDCG@5 being a stated concern. A longer horizon can amplify temporal ID overfitting, and there is no evidence that the ten-epoch cap caused undertraining."
+    }
+  ]
+}

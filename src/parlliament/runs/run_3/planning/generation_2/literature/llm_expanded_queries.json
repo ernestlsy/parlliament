@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "(\"Bayesian Personalized Ranking\" OR BPR OR RankNet) implicit feedback recommendation within-user pairwise positive negative sampling GAUC nDCG@5",
+      "pairwise ranking loss versus pointwise binary cross entropy implicit-feedback recommender systems within-user ranking nDCG@5 MRR@5",
+      "temporal recommendation leakage-safe training BPR RankNet pair construction positive-negative items same user timestamp split evaluation GAUC",
+      "implicit-feedback recommender pairwise objective hard negative sampling within-user positive negative pairs RankNet BPR top-K ranking nDCG@5",
+      "learning-to-rank recommender systems pairwise logistic loss BPR pointwise BCE GAUC group AUC within-user ordering temporal interaction logs"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "(\"sequential recommendation\" OR \"next-item recommendation\") AND (\"causal user history\" OR \"time-aware user behavior sequence\" OR \"timestamp-truncated history\") AND (\"temporal leakage\" OR \"strictly prior interactions\" OR \"point-in-time features\") AND (\"rare item\" OR \"cold item\" OR long-tail) AND (GAUC OR \"group AUC\" OR \"nDCG@5\" OR \"MRR@5\")",
+      "(\"candidate-aware attention\" OR \"target-aware attention\" OR \"DIN\" OR \"Deep Interest Network\") AND recommendation AND (\"behavior sequence\" OR \"user interaction history\") AND (causal OR chronological OR timestamped) AND (\"no future information\" OR \"temporal holdout\" OR \"data leakage\") AND (cold-start OR \"rare items\" OR long-tail)",
+      "(\"compact sequence model\" OR GRU4Rec OR SASRec OR \"session-based recommendation\" OR \"sequential recommender\") AND (\"bounded history\" OR \"truncated sequence\" OR \"recent interaction window\") AND (\"impression logs\" OR \"exposure logs\" OR \"timestamped interactions\") AND (\"strict prior-event\" OR causal OR chronological) AND (GAUC OR \"nDCG@5\" OR \"MRR@5\")",
+      "(\"impression-aware recommendation\" OR \"exposure-aware recommendation\" OR \"logged impressions\") AND (\"user behavior history\" OR \"interaction sequence\") AND (\"point-in-time correctness\" OR \"as-of join\" OR \"time cutoff\" OR \"temporal leakage\") AND (\"within-user ranking\" OR \"group AUC\") AND (\"cold item\" OR \"item sparsity\" OR \"long-tail recommendation\")",
+      "(\"temporal holdout\" OR \"forward-chaining evaluation\" OR \"time-based split\") AND \"sequential recommendation\" AND (\"candidate-aware pooling\" OR \"attention pooling\" OR \"history representation\") AND (\"prior events only\" OR \"causal masking\" OR \"timestamp cutoff\") AND (\"rare-item robustness\" OR \"cold-start items\") AND (GAUC OR \"nDCG at 5\" OR \"MRR at 5\")"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

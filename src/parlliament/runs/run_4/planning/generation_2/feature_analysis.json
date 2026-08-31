@@ -1,0 +1,31 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:1:metrics"
+      ],
+      "finding": "Request-context features (tab, hour, weekday) are the only screened group with positive primary lift (+0.00221) and positive lift on all but the first of four days. The official validation shows GAUC 0.6689 and nDCG@5 0.5370, supporting useful within-user ordering, but the observed gain over the parent is not established because no parent primary or observed gain is available.",
+      "recommended_action": "Prioritize request_context for one tightly controlled confirmatory evaluation, preserving the same architecture, optimizer, loss, and temporal availability rules. Apply early stopping if the confirmatory within-user GAUC or primary result does not improve."
+    },
+    {
+      "evidence_ids": [
+        "experiment:1:segment:tab:8",
+        "experiment:1:segment:tab:3",
+        "experiment:1:segment:user_positive_count:zero"
+      ],
+      "finding": "Post-score diagnostics identify severe weak segments. Tab 8 has GAUC 0.3519 and primary 0.1891, while tab 3 has GAUC 0.5000 and primary 0.2531. The zero-positive-count slice has GAUC 0.5000 and all top-five metrics equal to zero, but it is a retrospective label-defined diagnostic rather than a usable feature segment.",
+      "recommended_action": "Prioritize diagnostic investigation and segment-specific evaluation for tabs 8 and 3. Do not use user_positive_count as a ranking feature or interpret its zero slice as evidence of deployable feature value."
+    }
+  ],
+  "avoid": [
+    "screen:user_profile",
+    "screen:historical_user_author_affinity",
+    "screen:upload_recency",
+    "screen:content_duration",
+    "screen:item_metadata",
+    "screen:historical_author_response",
+    "screen:historical_item_response"
+  ],
+  "metric_diagnosis": "Use GAUC as the primary evidence for stable within-user ranking. Request_context has positive training-only temporal-holdout screening evidence, whereas the other screened groups are negative and should be rejected. The official experiment has respectable GAUC (0.6689), but top-five performance is materially weaker than overall ranking evidence (nDCG@5 0.5370, Precision@5 0.3754), so GAUC improvement must not be inferred from top-five metrics alone. Segment weakness is concentrated in several tabs, especially tab 8, and should be treated as a robustness problem rather than evidence to add rejected feature families. Exclude all forbidden current-impression outcomes and quarantined aggregate snapshots; they are unavailable at ranking time or lack per-impression availability timestamps and would create leakage."
+}

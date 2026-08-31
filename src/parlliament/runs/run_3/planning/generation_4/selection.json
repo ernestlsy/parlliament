@@ -1,0 +1,36 @@
+{
+  "winner": {
+    "text": "Change early stopping from a GAUC-only proxy to the official primary proxy computed as the mean of GAUC and nDCG@5.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 9
+    },
+    "rationale": "Experiment 1 was selected by a GAUC-only training proxy although official selection averages GAUC and nDCG@5. This is a cheap alignment correction with no feature or scorer change.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics"
+    ],
+    "exact_ablation": "From experiment 1, change only checkpoint selection and patience monitoring from validation within-user GAUC proxy to validation primary proxy equal to 0.5 times within-user GAUC plus 0.5 times nDCG@5; retain data, features, BCE, optimizer, epoch limit, and patience unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.001 because the selected epoch may sacrifice some broad ordering.",
+      "nDCG@5": "0.000 to +0.003 through selection of a more top-five-effective checkpoint."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking",
+      "task.experiment_protocol"
+    ]
+  },
+  "selection_rationale": "Select c05. It is the consultant's top-ranked scarce-run option and makes a single low-risk, low-runtime correction: checkpoint selection becomes aligned with the official primary metric rather than GAUC alone. This preserves the validated experiment 1 model and avoids the implementation, pairing, and tuning uncertainty of ranking-loss alternatives. Although its expected gain is modest (+0.0008), its higher confidence (7), low downside risk, and direct evaluation alignment make it the most reliable next experiment.",
+  "counted_experiments_consumed": 0
+}

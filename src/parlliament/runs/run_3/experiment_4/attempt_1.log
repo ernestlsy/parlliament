@@ -1,0 +1,16 @@
+command: ['/home/user/anaconda3/envs/evo/bin/python', 'train.py', '--config', 'config.json', '--data-dir', '/mnt/d/parlliament/src/kuairand-starter-kit/KuaiRand-Pure/data', '--output', '/mnt/d/parlliament/src/parlliament/runs/run_3/attempts/attempt_139ae2db57eb/predictions_valid.npz']
+elapsed_seconds: 20.792
+return_code: 0
+--- stdout ---
+epoch=1 loss=0.579350 valid_gauc_proxy=0.658621 valid_ndcg5_proxy=0.764140 valid_primary_proxy=0.711380
+epoch=2 loss=0.525785 valid_gauc_proxy=0.662588 valid_ndcg5_proxy=0.767098 valid_primary_proxy=0.714843
+epoch=3 loss=0.512381 valid_gauc_proxy=0.665808 valid_ndcg5_proxy=0.768634 valid_primary_proxy=0.717221
+epoch=4 loss=0.506331 valid_gauc_proxy=0.666581 valid_ndcg5_proxy=0.768715 valid_primary_proxy=0.717648
+epoch=5 loss=0.503059 valid_gauc_proxy=0.668098 valid_ndcg5_proxy=0.769221 valid_primary_proxy=0.718660
+epoch=6 loss=0.501031 valid_gauc_proxy=0.667986 valid_ndcg5_proxy=0.769710 valid_primary_proxy=0.718848
+epoch=7 loss=0.499860 valid_gauc_proxy=0.668487 valid_ndcg5_proxy=0.770004 valid_primary_proxy=0.719245
+epoch=8 loss=0.498989 valid_gauc_proxy=0.668912 valid_ndcg5_proxy=0.770620 valid_primary_proxy=0.719766
+epoch=9 loss=0.498469 valid_gauc_proxy=0.668843 valid_ndcg5_proxy=0.769783 valid_primary_proxy=0.719313
+epoch=10 loss=0.498013 valid_gauc_proxy=0.668895 valid_ndcg5_proxy=0.770356 valid_primary_proxy=0.719626
+
+--- stderr ---

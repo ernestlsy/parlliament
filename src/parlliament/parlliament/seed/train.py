@@ -1,4 +1,8 @@
-"""Train the neutral seed scaffold and emit validation scores for fixed evaluation."""
+"""Train, select, and export predictions from the neutral seed scaffold.
+
+The script parses the fixed contract, supports a small contract probe, selects checkpoints only on
+validation, and emits aligned validation and test NPZ artifacts from the selected model state.
+"""
 
 import argparse
 import json

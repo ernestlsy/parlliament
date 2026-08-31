@@ -1,0 +1,394 @@
+[
+  {
+    "text": "Add request tab as one categorical scoring feature alongside user_id and video_id.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "Tab is an impression-time request-context value and is the narrowest confirmation of the only feature family with a positive, full-coverage train-only temporal screen.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:tab"
+    ],
+    "exact_ablation": "In data.py, append only tab to FIELDS, fit its vocabulary on training rows only, and leave the additive model, optimizer, loss, and all other settings unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.003, because tab varies across a user's scored impressions and may improve context-conditional ordering.",
+      "nDCG@5": "+0.000 to +0.002, with a smaller expected effect because the screen did not separately establish top-five improvement."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add hour-of-week request timing as one categorical scoring feature alongside user_id and video_id.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "The completed request-context screen includes hour and weekday, has full coverage, and was positive on each of four internal temporal-holdout days; a single timing encoding isolates that mechanism.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "profile:hour",
+      "profile:weekday"
+    ],
+    "exact_ablation": "Append only a training-vocabulary categorical hour_of_week derived from request-time hour and weekday to FIELDS; retain the additive scorer, BCE training, and seed hyperparameters unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.003 from time-specific user/item preference ordering.",
+      "nDCG@5": "0.000 to +0.002 if temporal preference promotes positives into the top five; it may be flatter than GAUC."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add weekday as one categorical scoring feature alongside user_id and video_id.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "Weekday is a low-cardinality request-time signal inside the sole prioritized feature group, making it a cheap, interpretable test of recurring consumption context.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context",
+      "profile:weekday"
+    ],
+    "exact_ablation": "Append only weekday to FIELDS with a seven-value training-fitted vocabulary; make no model, loss, sampling, or optimization change.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.002, expected to be weaker than tab or hour-of-week because weekday is coarse.",
+      "nDCG@5": "0.000 to +0.001, with risk of no detectable change at rank five."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add the predeclared request-context family of tab, hour, and weekday to the seed scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 5,
+      "feasibility": 9
+    },
+    "rationale": "This is the strongest directly measured direction: request_context produced a +0.002213 primary lift in the train-only temporal screen with 1.0 coverage and positive lift on all four screen days.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:request_context"
+    ],
+    "exact_ablation": "Append exactly tab, hour, and weekday as categorical fields to the seed feature matrix, with all vocabularies fitted on training only; retain the additive scorer and BCE objective unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.002 to +0.004, expected to be the dominant component of the screened primary lift.",
+      "nDCG@5": "+0.001 to +0.003, but explicitly gate on this metric because the screen evidence is primary-level rather than top-five-specific."
+    },
+    "expected_primary_gain": 0.0022,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace the additive user-plus-video scorer with a two-field factorization-machine interaction scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The seed's additive ID terms cannot represent user-video compatibility, whereas official metrics require score variation among a user's candidate items. This changes the interaction mechanism rather than merely increasing width.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Replace Model.logits with bias plus linear user/video terms plus one learned dot product between user_id and video_id embeddings; keep the same input fields, pointwise BCE target, optimizer type, and early-stop proxy.",
+    "expected_effect": {
+      "GAUC": "+0.003 to +0.008 because personalized user-video interactions directly alter within-user item order.",
+      "nDCG@5": "+0.002 to +0.006 if interaction scores elevate relevant videos near the top; sparse IDs may limit this."
+    },
+    "expected_primary_gain": 0.0048,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "task.starter_kit_empirical_priors",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace unweighted row-level BCE with per-user normalized BCE.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "The official GAUC is within-user and positive-count weighted, while the seed's row-mean BCE can be dominated by highly active users. This objective-only change tests whether more balanced user influence improves ranking.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id"
+    ],
+    "exact_ablation": "Keep the seed model and features unchanged, but weight each training row's BCE by the inverse number of that user's training rows and normalize by total weight.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.004 if prolific users currently dominate the pointwise objective.",
+      "nDCG@5": "-0.001 to +0.002 because equal-user weighting is not explicitly top-five optimized and can trade off head-user ranking."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with within-user positive-negative RankNet loss using only training impressions.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "GAUC measures positive-versus-negative ordering within user, so a user-local pairwise objective is more aligned than independent row calibration. No direct current loss comparison exists; screen evidence establishes only the measured ID-based starting representation.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id",
+      "feature:video_id"
+    ],
+    "exact_ablation": "Keep seed features and scorer unchanged, replace BCE with a deterministic RankNet logistic loss over sampled positive-negative pairs from the same training user, cap at four negatives per positive, and never form cross-user pairs.",
+    "expected_effect": {
+      "GAUC": "+0.002 to +0.006 from direct positive-negative ordering pressure.",
+      "nDCG@5": "0.000 to +0.003; it can remain flat or decline because uniform pair sampling does not prioritize top-five inversions."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "training.group_complete_stratified_minibatching",
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add an nDCG@5-swap-weighted pairwise term to the seed BCE objective.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "The supplied diagnostic assessment says GAUC is stronger than top-five ordering, particularly for cold users. A top-five-weighted pairwise term is a targeted objective mechanism, though the available measured feature screen does not directly validate it.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context",
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Keep the seed representation and BCE loss, and add one detached within-user positive-negative RankNet term weighted by each pair's absolute nDCG@5 swap delta, using lambda=0.25 and train rows only.",
+    "expected_effect": {
+      "GAUC": "0.000 to +0.003; top-rank emphasis may leave broad pair ordering mostly unchanged.",
+      "nDCG@5": "+0.002 to +0.006 if positives near rank five are promoted; this is the primary intended effect."
+    },
+    "expected_primary_gain": 0.0028,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a causally constructed recent-prior-video-ID mean-pooling history feature.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "A history representation can personalize candidate scores beyond static user ID while using only previous impressions. It deliberately excludes all engagement outcomes, and it does not reuse the screened-negative historical author or item response rates.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:base_ids",
+      "screen:historical_item_response",
+      "feature:video_id"
+    ],
+    "exact_ablation": "For every row, construct from only strictly earlier impressions of the same user a padded sequence of the latest 20 video IDs, mean-pool their embeddings, and add the pooled-vector dot product with the candidate video embedding to the seed logit; use no current or prior outcome labels in the history.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.005 if prior exposure sequence encodes repeatable preference.",
+      "nDCG@5": "+0.001 to +0.004 if recent exposures identify immediate intent; sparse-history users may see no benefit."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "features",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "features.causal_behavior_history_features",
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace uniform row minibatches with a deterministic positive-stratified minibatch sampler for BCE.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The seed trains on a binary long-view target and may produce low-positive batches. This sampling-only ablation tests optimization stability without altering features, labels, or the official evaluation population.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:base_ids",
+      "feature:user_id"
+    ],
+    "exact_ablation": "Keep model, BCE definition, and all examples unchanged, but construct each training minibatch with a fixed 1:3 positive-to-negative row ratio through deterministic oversampling of training positives, with importance weights restoring the original row-level BCE expectation.",
+    "expected_effect": {
+      "GAUC": "0.000 to +0.003 if rare-positive gradients are presently underrepresented.",
+      "nDCG@5": "0.000 to +0.002; increased score separation can help top five, but importance-weight variance may erase the gain."
+    },
+    "expected_primary_gain": 0.0012,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Apply exponential recency weighting to training BCE using only the training-row date.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The official split is temporal, so emphasizing recent training observations is a concrete distribution-shift adaptation. The request-context screen's day-to-day lift variability supports treating temporal robustness as uncertain rather than assuming stationarity.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context",
+      "feature:date"
+    ],
+    "exact_ablation": "Keep seed features and model unchanged, but multiply each training BCE contribution by exp(-age_days/7), where age is measured relative to the final training date, and normalize the weights to mean one.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.003 depending on whether late-training preferences better match validation.",
+      "nDCG@5": "-0.001 to +0.002; recency can improve freshness alignment but reduce effective sample size."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "dataset.inventory_and_splits",
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use a warm-started within-user hard-pair curriculum instead of uniform pair selection.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 9,
+      "feasibility": 4
+    },
+    "rationale": "This targets residual local ordering errors and is intended to improve top-five quality more than broad GAUC. It is explicitly exploratory because there is no scored pairwise parent and the only measured positive signal is request context.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context",
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Keep seed features and scorer unchanged; train RankNet pairs within each training user with two uniform-pair warm-start epochs, followed by 50% uniform and 50% lowest-margin pairs refreshed from the prior epoch's train-only checkpoint.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.003 because concentrating on difficult pairs can reduce broad ordering coverage.",
+      "nDCG@5": "+0.001 to +0.005 if hard pairs correspond to local high-rank inversions; noisy implicit labels are a substantial failure mode."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training",
+      "loss"
+    ],
+    "literature_document_ids": [
+      "training.within_group_hard_pair_curriculum",
+      "objective.within_user_ranknet_pairwise_loss",
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

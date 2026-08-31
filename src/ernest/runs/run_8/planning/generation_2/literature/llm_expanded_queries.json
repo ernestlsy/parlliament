@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Context-aware recommender systems for impression-time features such as tab, hour, and weekday: compare additive user/item scoring with factorization machines, field-aware factorization machines, and deep feature-interaction models for within-user ranking; address overfitting, temporal leakage prevention, fixed evaluation, and effects on GAUC and nDCG@5.",
+      "Feature-interaction architectures for recommender-system ranking using user, item, and request-context signals: literature comparing additive ID models, factorization machines, field-aware interactions, and Deep & Cross Networks, with emphasis on bounded changes, regularization, temporal leakage-safe training, and improvements in within-user GAUC and nDCG@5.",
+      "Context-gated and mixture-of-experts ranking models for recommendation impressions, including tab-, hour-, and weekday-conditioned user/item scoring: evaluate whether interactions beyond an additive scorer improve within-user ordering while preserving temporal causality, controlling overfitting, using only impression-time available features, and reporting GAUC and nDCG@5 under a fixed evaluation protocol.",
+      "Deep recommender architectures for categorical feature crosses and contextual ranking: compare factorization machines, field-aware factorization machines, Deep & Cross Networks, and context-gated or mixture-of-experts rankers against an additive user/video baseline using request context such as tab, hour, and weekday; focus on leakage-safe temporal features, bounded architecture modifications, overfitting controls, GAUC, and nDCG@5.",
+      "Literature on improving within-user recommendation ranking when additive ID scorers underuse impression-time context: interactions between user, item, author, and request-context features through factorization machines, field-aware models, cross networks, or lightweight context gating; require temporal leakage-safe feature construction, no unavailable future outcomes, fixed evaluation, overfitting safeguards, and comparisons using GAUC and nDCG@5."
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "robust recommender-system ranking under severe segment heterogeneity sparse-feedback and zero-positive evaluation groups, with within-user ranking metrics such as GAUC versus prevalence- and support-sensitive nDCG@5 MAP@5 and MRR@5",
+      "context-aware calibration and fallback ranking models for low-volume recommendation tabs, cold-start or rare items, and users with limited history, evaluated by GAUC nDCG@5 MAP@5 and MRR@5 without optimizing mechanically zero-positive segments",
+      "long-tail and cold-start recommendation robustness under sparse or absent positive labels, including segment-specific models, hierarchical or shrinkage approaches, fallback rankers, and methods separating true within-user ordering errors from label-prevalence and sample-size artifacts",
+      "recommender evaluation for heterogeneous user and item segments with zero-positive or tiny-support groups: GAUC for within-user ordering, top-k ranking metrics nDCG@5 MAP@5 MRR@5, calibration, confidence intervals, pooling, and safeguards against misleading mechanically zero slices",
+      "targeted tab treatment and fallback-model strategies for severe ranking failures in low-volume contexts, rare items, and low-history users, including context-specific calibration, mixture-of-experts, long-tail robustness, and principled evaluation of sparse segments using GAUC nDCG@5 MAP@5 and MRR@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

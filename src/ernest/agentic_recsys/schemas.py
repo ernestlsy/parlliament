@@ -64,6 +64,7 @@ class Hypothesis:
     leakage_risk: str = ""
     runtime_risk: str = ""
     active_components: List[str] = field(default_factory=list)
+    literature_document_ids: List[str] = field(default_factory=list)
 
     def validate(self) -> None:
         if not self.text.strip():
@@ -140,6 +141,7 @@ class InterfaceContract:
 class ExperimentPlan:
     active_agents: List[str]
     contract: InterfaceContract
+    agent_instructions: Dict[str, Dict[str, Any]]
     reasoning: str = ""
 
     def validate(self) -> None:
@@ -150,6 +152,31 @@ class ExperimentPlan:
             raise ValueError("at least one sub-agent must be active")
         if len(self.active_agents) != len(set(self.active_agents)):
             raise ValueError("active_agents cannot contain duplicates")
+        if not isinstance(self.agent_instructions, dict):
+            raise ValueError("agent_instructions must be an object")
+        instructed = set(self.agent_instructions)
+        active = set(self.active_agents)
+        if instructed != active:
+            raise ValueError(
+                "agent_instructions must contain exactly the active agents; "
+                f"missing={sorted(active-instructed)}, inactive={sorted(instructed-active)}"
+            )
+        for agent, instruction in self.agent_instructions.items():
+            if not isinstance(instruction, dict):
+                raise ValueError(f"instruction for {agent} must be an object")
+            objective = instruction.get("objective")
+            if not isinstance(objective, str) or not objective.strip():
+                raise ValueError(f"instruction for {agent} requires a non-empty objective")
+            for field_name in ("required_changes", "preserve", "coordination_notes"):
+                values = instruction.get(field_name, [])
+                if not isinstance(values, list) or not all(
+                    isinstance(value, str) and value.strip() for value in values
+                ):
+                    raise ValueError(
+                        f"instruction for {agent} field {field_name} must be a string list"
+                    )
+            if not instruction.get("required_changes"):
+                raise ValueError(f"instruction for {agent} requires required_changes")
         self.contract.validate()
 
 
@@ -230,6 +257,9 @@ def hypothesis_from_dict(value: Dict[str, Any]) -> Hypothesis:
         leakage_risk=str(value.get("leakage_risk", "")),
         runtime_risk=str(value.get("runtime_risk", "")),
         active_components=[str(item) for item in value.get("active_components", [])],
+        literature_document_ids=[
+            str(item) for item in value.get("literature_document_ids", [])
+        ],
     )
     item.validate()
     return item

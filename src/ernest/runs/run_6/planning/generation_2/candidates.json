@@ -1,0 +1,371 @@
+[
+  {
+    "text": "Retain the measured request-context feature group but replace the additive scorer with a compact embedding-plus-MLP ranker so nonlinear combinations of user, video, tab, hour, and weekday can be learned.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 3
+    },
+    "rationale": "The parent reaches GAUC 0.6694 and nDCG@5 0.5367, while the train-only request-context screen shows a positive primary lift of 0.00221 with full coverage. A nonlinear scorer is a materially different architecture that may convert context signal into candidate-specific ordering rather than independent additive offsets.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Change only the additive user/video/context scorer to a compact embedding-plus-MLP scorer; keep the five input fields, labels, optimizer family, learning-rate schedule, batch size, stopping rule, and evaluation artifact contract unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase modestly, approximately +0.001 to +0.004, if nonlinear user-video-context combinations improve within-user ordering.",
+      "nDCG@5": "Likely increase approximately +0.000 to +0.004, but it could be flat if additional nonlinear capacity improves broad separation without correcting the top five."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Add an explicit low-rank cross branch over the existing request-context representation while preserving the parent scorer's deep or additive branch.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 2
+    },
+    "rationale": "The parent has substantial weakness in several tab segments, including tab 8 with GAUC 0.3519 and nDCG@5 0.0263. Explicit bounded-order crosses may model context-dependent candidate preference more directly than independent feature weights, though the implementation cost is significant.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:tab:0"
+    ],
+    "exact_ablation": "Add one low-rank two-layer cross branch over the existing encoded user, video, tab, hour, and weekday representation, concatenate it with the unchanged parent scorer representation, and change nothing else in data, loss, optimizer, or schedule.",
+    "expected_effect": {
+      "GAUC": "Potential increase of approximately +0.001 to +0.005 from better context-conditioned ordering, with medium uncertainty because tab weaknesses may reflect sparse-label regimes.",
+      "nDCG@5": "Potential increase of approximately +0.001 to +0.006 if crosses fix top-five ordering in weak tabs; downside is a small decrease from rare-combination overfitting."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Use a pairwise within-user ranking loss instead of pointwise binary cross-entropy while retaining the parent architecture and features.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 7,
+      "feasibility": 5
+    },
+    "rationale": "The official objective is entirely ranking-based, with GAUC 0.6694 and nDCG@5 0.5367, but the parent is trained with pointwise BCE. A pairwise objective directly trains positive-over-negative ordering and is especially relevant when classification improvements do not translate to top-k ranking.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only pointwise BCE optimization with a within-user pairwise logistic loss formed from positive-negative impression pairs; keep the same five features, additive scorer, optimizer settings, batch budget, checkpoint rule, and validation evaluator unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase approximately +0.002 to +0.006 because the loss directly targets positive-negative ordering within users.",
+      "nDCG@5": "Likely increase approximately +0.001 to +0.005, though it may trade off against GAUC if pair sampling underrepresents the few items that belong in the top five."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Remove tab from the parent request-context group while retaining hour and weekday to test whether the weakest context field is harming ranking.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 6,
+      "feasibility": 7
+    },
+    "rationale": "The full request-context group was positive in train-only screening, but official diagnostics show severe tab-specific weakness: tab 8 has GAUC 0.3519 and nDCG@5 0.0263, while tab 0 has GAUC 0.5412. Removing only tab isolates whether its noisy or sparse offsets are reducing overall ordering quality.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:tab:0"
+    ],
+    "exact_ablation": "Remove only the tab feature from the parent input; retain user_id, video_id, hour, and weekday and keep the additive model, optimizer, loss, schedule, and all other data handling unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely flat to a small increase, approximately -0.001 to +0.002, if tab-specific noise dominates; it may decrease if tab carries useful broad signal.",
+      "nDCG@5": "Likely flat to a small increase, approximately -0.001 to +0.003, with the best chance of improvement in low-quality tab slices."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Remove hour from the parent request-context group while retaining tab and weekday to test whether hour-specific sparse estimates destabilize ranking.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 7
+    },
+    "rationale": "The parent has full context coverage, but hour-level diagnostics are weak in several supported slices, including hour 3 with GAUC 0.5121 and nDCG@5 0.3860 and hour 4 with GAUC 0.5913 and nDCG@5 0.3745. A single-field removal can determine whether hour offsets generalize or mostly add noise.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:4"
+    ],
+    "exact_ablation": "Remove only the hour feature from the parent input; retain user_id, video_id, tab, and weekday and keep the additive model, optimizer, loss, schedule, and all other data handling unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely flat or slightly positive, approximately -0.001 to +0.002, because hour is weak in low-performing slices but may still explain some within-user variation.",
+      "nDCG@5": "Likely flat to slightly positive, approximately -0.001 to +0.002, with risk of losing useful temporal ordering in better-supported hours."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Remove weekday from the parent request-context group while retaining tab and hour to test whether the low-cardinality calendar field contributes beyond the stronger context fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 7
+    },
+    "rationale": "The request-context screen supports the combined group but does not isolate weekday. Since the parent already uses three independently additive context fields, removing weekday is a clean low-cost test of redundancy and possible overfitting while preserving the fields with richer observed segment diagnostics.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Remove only the weekday feature from the parent input; retain user_id, video_id, tab, and hour and keep the additive model, optimizer, loss, schedule, and all other data handling unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely near-zero to slightly negative, approximately -0.001 to +0.001, because weekday may provide limited candidate-specific discrimination beyond tab and hour.",
+      "nDCG@5": "Likely near-zero, approximately -0.001 to +0.001, with a small possibility of improvement from reduced redundant context fitting."
+    },
+    "expected_primary_gain": 0.0002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Replace the additive user/video/context scorer with a latent-factor user-video interaction model while retaining the request-context fields as additive side terms.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 4
+    },
+    "rationale": "The parent score is additive, so user and video effects cannot express personalized user-video affinity. The identity evidence is strong enough to justify an interaction test: the parent achieves GAUC 0.6694 and nDCG@5 0.5367, while the task requires candidate-specific variation within user.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:warm_20_plus",
+      "experiment:1:segment:user_frequency:warm_20_plus"
+    ],
+    "exact_ablation": "Replace only the additive user_id plus video_id terms with learned 32-dimensional user-video dot-product interactions, retaining additive tab, hour, weekday, and global terms; keep the loss, optimizer, schedule, and feature availability unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase approximately +0.002 to +0.007 on warm users and videos, but overall gain may be smaller because rare and cold items have little interaction evidence.",
+      "nDCG@5": "Likely increase approximately +0.001 to +0.006 if personalized affinity improves the top candidates; it may decrease for sparse users or rare items due to overfitting."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings"
+    ]
+  },
+  {
+    "text": "Apply count-aware stronger regularization only to rare user and video identity parameters while leaving common-entity regularization unchanged.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 5
+    },
+    "rationale": "The official parent is weak on rare videos, with item-frequency rare_1_4 at GAUC 0.6000 and nDCG@5 0.1717 versus warm_20_plus at GAUC 0.6686 and nDCG@5 0.5366. Shrinking sparse identity weights may improve generalization without removing the measured request-context signal.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:1:segment:item_frequency:rare_1_4",
+      "experiment:1:segment:item_frequency:warm_20_plus",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Change only identity-parameter regularization from uniform L2 to count-aware L2 that applies stronger shrinkage to user_id and video_id rows with fewer training occurrences; keep all features, architecture, loss, optimizer, schedule, and regularization of context fields unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase approximately +0.0005 to +0.003 overall, with the clearest benefit in rare-item slices; warm performance should remain near flat.",
+      "nDCG@5": "Likely increase approximately +0.0005 to +0.004 if rare-item misordering is reduced, though excessive shrinkage could lower top-five personalization."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings"
+    ]
+  },
+  {
+    "text": "Increase the additive model's L2 regularization strength to reduce unstable context and identity offsets without changing its feature set.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 8
+    },
+    "rationale": "The overall parent is positive but several context slices are extremely weak, especially tab 8 and hour 3. A single global regularization increase is a conservative test for whether sparse field weights are overfitting, with low implementation risk and a clear fallback to the current parent.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Multiply only the model L2 coefficient by 10, from 1e-6 to 1e-5; keep the five input fields, additive architecture, optimizer, learning rate, batch size, epochs, stopping rule, and evaluator unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely flat to slightly positive, approximately -0.001 to +0.002, if noisy rare-field weights are overfit; excessive shrinkage could reduce identity discrimination.",
+      "nDCG@5": "Likely flat to slightly positive, approximately -0.001 to +0.002, with risk of lowering top-five separation if the current model is under-regularized only in a few fields."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Train the existing parent scorer with a long-view-dominant multitask objective using one permitted auxiliary engagement label and a separate auxiliary head.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 2
+    },
+    "rationale": "The parent has stable overall ranking metrics but severe variation across tabs, suggesting additional supervision could help learn robust context representations. A multitask change is materially distinct, but its value is uncertain because auxiliary labels may have different temporal semantics and can cause negative transfer.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:tab:0"
+    ],
+    "exact_ablation": "Add exactly one separate auxiliary binary behavior head and a masked auxiliary BCE term with fixed weight 0.1 while keeping the parent long-view head, valid impression-time features, primary loss coefficient, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Potential increase of approximately +0.001 to +0.004 if auxiliary supervision improves shared representation, but a decrease of up to 0.002 is plausible from negative transfer.",
+      "nDCG@5": "Potential increase of approximately +0.000 to +0.004, with higher downside risk than GAUC because auxiliary gradients may misorder the top five."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "paper.mmoe_auxiliary_behavior_ranker"
+    ]
+  },
+  {
+    "text": "Replace the parent pointwise BCE with a top-five-oriented listwise loss computed within each user's displayed impression group.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 3
+    },
+    "rationale": "The parent has strong GAUC but only moderate nDCG@5, 0.5367, and the official objective averages both metrics. A listwise objective emphasizes relative probability mass near the top of each user's candidate set and could address the top-k gap without introducing forbidden outcomes as features.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:one",
+      "experiment:1:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Replace only pointwise BCE with a within-user listwise softmax loss over each displayed user's candidates, using the same long_view labels and parent five-feature additive scorer; keep optimizer, batch budget, feature pipeline, and checkpoint rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely flat to a small increase, approximately -0.001 to +0.003, because listwise emphasis may sacrifice some broad pair ordering.",
+      "nDCG@5": "Likely increase approximately +0.002 to +0.007, especially for users with one to four positives where top-five quality is the central ranking concern."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Use a fixed five-seed paired training confirmation of the parent configuration with deterministic data order and select the checkpoint by a combined GAUC and nDCG@5 proxy rather than GAUC alone.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 6
+    },
+    "rationale": "The parent reports a single official score and has a modest screen lift of 0.00221 relative to daily primary variability of 0.00580. A training-procedure ablation that changes checkpoint selection to protect both official metrics can test whether GAUC-only early stopping is leaving nDCG@5 on the table, while paired multi-seed measurement reduces run-specific risk.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Change only checkpoint selection from the current within-user GAUC proxy to the arithmetic mean of the same validation GAUC proxy and a validation nDCG@5 proxy; keep the parent features, additive architecture, BCE loss, optimizer, seed set, and maximum training budget unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely flat to slightly negative, approximately -0.001 to +0.001, because protecting nDCG@5 may select a checkpoint with marginally less broad separation.",
+      "nDCG@5": "Likely increase approximately +0.001 to +0.005 if the current GAUC-only checkpoint under-trains top-five ordering; it may be flat if both metrics peak together."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "experiment.paired_group_bootstrap_confirmation"
+    ]
+  }
+]

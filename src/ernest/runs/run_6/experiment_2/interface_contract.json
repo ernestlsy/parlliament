@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "The fixed training command must write predictions_valid.npz containing exactly two arrays: row_ids and scores. row_ids must be int64 identifiers in canonical validation row order, and scores must be one-dimensional finite predictions aligned positionally with row_ids. No labels, user IDs, auxiliary arrays, or metadata may be written; validation ground truth is loaded only by the fixed evaluator."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "Training receives encoded feature indices shaped [batch_size, 5] for user_id, video_id, tab, hour, and weekday, plus binary training labels shaped [batch_size]. Pair construction must use only positive-negative examples belonging to the same user within the training batch, preferably identified from the user_id feature index. The model remains the existing additive scorer with the same learning rate, L2 regularization, optimizer, batch budget, checkpoint rule, and prediction API. Validation inference receives only encoded features and must not require validation labels."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

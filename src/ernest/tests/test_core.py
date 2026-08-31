@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
 
-from agentic_recsys.agents import EvolutionJudge, FeatureAnalyst
+from agentic_recsys.agents import EvolutionJudge, FeatureAnalyst, Orchestrator
 from agentic_recsys.evaluation import METRIC_CATALOG, evaluate
 from agentic_recsys.experimentor import Experimentor
 from agentic_recsys.journal import Journal
@@ -403,6 +403,105 @@ class ResearchPlanningTests(unittest.TestCase):
         self.assertEqual(len(result), 2)
         self.assertIn("high leakage risk", llm.calls[1]["payload"]["validation_feedback"])
 
+    def test_orchestrator_instructions_and_schema_reach_feature_engineer(self):
+        instruction = {
+            "objective": "Derive cyclic hour from the raw request-time field",
+            "required_changes": [
+                "Read hourmin and derive hour as floor(hourmin / 100)",
+                "Add hour_sin and hour_cos to data.py",
+            ],
+            "preserve": ["Canonical validation row order"],
+            "coordination_notes": ["Expose the two numeric columns to model.py"],
+        }
+        contract = {
+            "data_output": {"description": "categorical fields plus cyclic hour"},
+            "config_keys": ["seed"],
+            "model_input": {"description": "encoded feature rows"},
+        }
+        seed_dir = Path(__file__).parents[1] / "agentic_recsys" / "seed"
+        schema = {
+            "raw_sources": {
+                "log_standard_4_08_to_4_21_pure.csv": [{
+                    "name": "hourmin", "status": "eligible", "reason": "available",
+                }]
+            },
+            "derived_features": {
+                "hour": {
+                    "source_columns": ["hourmin"],
+                    "recipe": "integer hour = floor(numeric hourmin / 100)",
+                }
+            },
+        }
+        llm = ScriptedLLMClient([{
+            "active_agents": ["feature_engineer"],
+            "agent_instructions": {"feature_engineer": instruction},
+            "reasoning": "data-only change",
+            "contract": contract,
+        }, {
+            "files": {"data.py": (seed_dir / "data.py").read_text(encoding="utf-8")},
+        }])
+        orchestrator = Orchestrator(llm)
+        hypothesis = Hypothesis(
+            text="Replace categorical hour with cyclic hour",
+            parent_experiment_id=0,
+            scores=HypothesisScores(7, 7, 8),
+        )
+        plan = orchestrator.plan(hypothesis, seed_dir, dataset_feature_schema=schema)
+        orchestrator.generate_file_replacements(
+            agent="feature_engineer",
+            hypothesis=hypothesis,
+            plan=plan,
+            sandbox=seed_dir,
+            dataset_feature_schema=schema,
+        )
+        self.assertEqual(plan.agent_instructions["feature_engineer"], instruction)
+        self.assertEqual(llm.calls[0]["payload"]["dataset_feature_schema"], schema)
+        self.assertEqual(llm.calls[1]["payload"]["dataset_feature_schema"], schema)
+        self.assertEqual(llm.calls[1]["payload"]["agent_instruction"], instruction)
+
+    def test_candidate_knowledge_id_is_reclassified_as_literature(self):
+        llm = ScriptedLLMClient([{"candidates": [{
+            "candidate_id": "c1",
+            "text": "Change only the ranking loss",
+            "parent_experiment_id": 0,
+            "scores": {"interestingness": 7, "novelty": 6, "feasibility": 8},
+            "rationale": "Measured screening and metric guidance support the test",
+            "evidence_ids": [
+                "screen:item_metadata", "evaluation.within_user_metrics",
+            ],
+            "exact_ablation": "replace BCE with one fixed pairwise ranking loss",
+            "expected_effect": {"GAUC": "small gain", "nDCG@5": "possible gain"},
+            "expected_primary_gain": 0.002,
+            "confidence": 6,
+            "leakage_risk": "low",
+            "runtime_risk": "low",
+            "active_components": ["trainer"],
+            "literature_document_ids": [],
+        }]}])
+        judge = EvolutionJudge(llm, knowledge_documents=[{
+            "id": "evaluation.within_user_metrics",
+            "title": "Within-user metrics",
+            "content": "Metric guidance",
+        }])
+        result = judge.generate_candidates(
+            mode=Mode.DRAFT,
+            generation=1,
+            archive=[],
+            reference_snapshots=[{"experiment_id": 0, "files": {}, "metrics": {}}],
+            candidate_count=1,
+            research_brief={},
+            analyst_assessment={},
+            available_evidence_ids=["screen:item_metadata"],
+        )
+        self.assertEqual(result[0].evidence_ids, ["screen:item_metadata"])
+        self.assertEqual(
+            result[0].literature_document_ids, ["evaluation.within_user_metrics"]
+        )
+        self.assertEqual(
+            llm.calls[0]["payload"]["available_literature_document_ids"],
+            ["evaluation.within_user_metrics"],
+        )
+
 
 class ReferenceRefreshTests(unittest.TestCase):
     def test_newly_scored_experiment_becomes_replacement_parent(self):
@@ -466,6 +565,59 @@ class HTTPClientTests(unittest.TestCase):
         self.assertIn("JSON", body["input"])
         self.assertIn('"x": 1', body["input"])
         self.assertNotIn("temperature", body)
+
+    @mock.patch("agentic_recsys.llm.urllib.request.urlopen")
+    def test_builder_web_search_request_is_required_and_captures_citations(self, urlopen):
+        response = mock.MagicMock()
+        response.__enter__.return_value = response
+        response.read.return_value = json.dumps({
+            "output": [{
+                "type": "web_search_call",
+                "id": "ws_test",
+                "status": "completed",
+                "action": {
+                    "type": "search",
+                    "query": "recommender ranking paper",
+                    "sources": [{"url": "https://example.org/paper"}],
+                },
+            }, {
+                "type": "message",
+                "content": [{
+                    "type": "output_text",
+                    "text": '{"ok": true}',
+                    "annotations": [{
+                        "type": "url_citation",
+                        "url": "https://example.org/paper",
+                        "title": "Primary paper",
+                    }],
+                }],
+            }],
+        }).encode("utf-8")
+        urlopen.return_value = response
+        client = OpenAICompatibleClient(
+            "test-model", api_key="secret", web_search=True,
+            web_search_context_size="high",
+        )
+        result = client.complete_json(role="knowledge_card_writer", system="research", payload={})
+        request = urlopen.call_args.args[0]
+        body = json.loads(request.data)
+        self.assertEqual(
+            body["tools"], [{"type": "web_search", "search_context_size": "high"}]
+        )
+        self.assertEqual(body["tool_choice"], "required")
+        self.assertEqual(body["include"], ["web_search_call.action.sources"])
+        self.assertNotIn("text", body)
+        self.assertIn("valid JSON object", body["input"])
+        self.assertEqual(result["_web_search"]["calls"][0]["id"], "ws_test")
+        self.assertEqual(result["_web_search"]["citations"], [{
+            "title": "Primary paper", "url": "https://example.org/paper",
+        }])
+
+    def test_hosted_web_search_rejects_chat_completions_mode(self):
+        with self.assertRaisesRegex(ValueError, "requires the Responses API"):
+            OpenAICompatibleClient(
+                "test-model", api_key="secret", api_mode="chat", web_search=True,
+            )
 
     @mock.patch("agentic_recsys.llm.urllib.request.urlopen")
     def test_chat_mode_omits_unsupported_temperature(self, urlopen):

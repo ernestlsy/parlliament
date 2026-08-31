@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List
 
+from .librarian import KnowledgeCatalog
+
 
 class KnowledgeBase:
     """Read-only local literature/research context supplied to the Evolution Judge."""
@@ -16,6 +18,17 @@ class KnowledgeBase:
     def documents(self) -> List[Dict[str, str]]:
         if not self.root.is_dir():
             return []
+        if (self.root / "catalog.jsonl").is_file() and (self.root / "manifest.json").is_file():
+            documents = KnowledgeCatalog(self.root).fixed_documents()
+            remaining = self.max_characters
+            result = []
+            for document in documents:
+                content = document["content"][:remaining]
+                result.append({**document, "content": content})
+                remaining -= len(content)
+                if remaining <= 0:
+                    break
+            return result
         documents = []
         remaining = self.max_characters
         for path in sorted(self.root.rglob("*")):
@@ -32,4 +45,3 @@ class KnowledgeBase:
             if remaining <= 0:
                 break
         return documents
-

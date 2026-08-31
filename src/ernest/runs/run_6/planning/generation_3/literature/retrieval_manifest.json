@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "memory_hit"
+  ],
+  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "evaluation.random_exposure_generalization_audit",
+      "path": "50_evaluation/random_exposure_generalization_audit.md",
+      "sha256": "e7ffcc1e706d83176bafdd833bfc272b2177da8a236da900b0b259252b456418",
+      "source_characters": 7972,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 1273,
+      "id": "evaluation.within_user_metrics",
+      "path": "50_evaluation/within_user_metrics.md",
+      "sha256": "d51c53af38a3d738934f2cd6d5e7e15b728aef0d5c1cf5a17f04f55ba5d3ad52",
+      "source_characters": 1273,
+      "truncated": false
+    },
+    {
+      "fetched_characters": 5621,
+      "id": "evaluation.frozen_candidate_group_integrity_audit",
+      "path": "50_evaluation/frozen_candidate_group_integrity_audit.md",
+      "sha256": "1841e0eaea615303278e54285a2deb2d53d834834948d2bd21ee21f139e9483c",
+      "source_characters": 8716,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5621,
+      "id": "robustness.clipped_ips_within_group_rank_loss",
+      "path": "60_bias_and_robustness/clipped_ips_within_group_rank_loss.md",
+      "sha256": "5dbff2e7c750a7bca686849b56ce56fef6791aefe746fbd22c3169014794cfbc",
+      "source_characters": 9210,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5621,
+      "id": "robustness.doubly_robust_exposure_debiased_ranking",
+      "path": "60_bias_and_robustness/doubly_robust_exposure_debiased_ranking.md",
+      "sha256": "03e759d88dfb19b84cb1d8e2a90f65a17c01ace44b794d104f13cd348eec5da0",
+      "source_characters": 6885,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5621,
+      "id": "evaluation.stratified_temporal_population_evaluation",
+      "path": "50_evaluation/stratified_temporal_population_evaluation.md",
+      "sha256": "e4df7be674e589b5c88253f7965f273f7db10aae686d8278f51698e65a7d9fed",
+      "source_characters": 7645,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5621,
+      "id": "features.train_prefix_smoothed_popularity_features",
+      "path": "10_features/train_prefix_smoothed_popularity_features.md",
+      "sha256": "4c8be8da5fbd5e1b9000ff9de21fea884786dc48a661937a61781b5f554bfc36",
+      "source_characters": 8878,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5622,
+      "id": "paper.group_dro_within_user_ranking",
+      "path": "90_papers/group_dro_within_user_ranking.md",
+      "sha256": "4cf07fb8ed80114172821d7ef36480545e9423a61f12e86b046cb832dd045571",
+      "source_characters": 10000,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "evaluation.random_exposure_generalization_audit",
+    "evaluation.within_user_metrics",
+    "evaluation.frozen_candidate_group_integrity_audit",
+    "robustness.clipped_ips_within_group_rank_loss",
+    "robustness.doubly_robust_exposure_debiased_ranking",
+    "evaluation.stratified_temporal_population_evaluation",
+    "features.train_prefix_smoothed_popularity_features",
+    "paper.group_dro_within_user_ranking"
+  ],
+  "total_fetched_characters": 40000
+}

@@ -1,0 +1,25 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context"
+      ],
+      "finding": "Prioritize request_context (tab, hour, weekday) for the next controlled allocation. It is the only screened group with positive overall primary lift (+0.00221) and positive daily lift on all four training-only temporal holdout dates, although variability is material. Its evidence supports modest within-user ranking value rather than a broad top-five fix.",
+      "recommended_action": "Allocate a small follow-up budget to request_context only, with temporal validation and explicit monitoring of GAUC and nDCG@5 by tab and hour."
+    }
+  ],
+  "avoid": [
+    "Reject screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, and screen:historical_item_response for this cycle because their training-only primary lifts are negative; do not spend additional feature-engineering budget on them without new causal or temporally clean evidence.",
+    "Do not use current-impression outcomes or aggregate snapshot fields lacking per-impression availability timestamps; they are leakage risks and must remain excluded or quarantined.",
+    "Stop further expansion of the pairwise-loss experiment: experiment:2:metrics reports GAUC 0.66592 but primary 0.60045, below experiment 1's observed primary 0.60293, with an observed gain of -0.00248 versus a predicted +0.0035."
+  ],
+  "metric_diagnosis": "The global GAUC of 0.66592 indicates useful within-user ordering, but top-five quality is uneven: global nDCG@5 is 0.53498 and primary is 0.60045. The main weaknesses are concentrated in rare items and low-volume tabs: item_frequency=rare_1_4 has GAUC 0.30 and primary 0.23467, while tab 8 has GAUC 0.46296 and primary 0.24519. These are genuine ranking-risk diagnostics, but should not be overinterpreted as independent test estimates. The user_positive_count=zero slice has GAUC 0.50 and zero top-five metrics because it contains no positives, so it is a label-availability diagnostic rather than evidence of rank discrimination failure. The request_context signal should therefore be tested primarily against within-user GAUC, with nDCG@5 and primary monitored separately for rare-item and weak-tab slices.",
+  "evidence_ids": [
+    "experiment:2:metrics",
+    "experiment:1:metrics",
+    "experiment:2:segment:item_frequency:rare_1_4",
+    "experiment:2:segment:tab:8",
+    "experiment:2:segment:user_positive_count:zero",
+    "screen:request_context"
+  ]
+}

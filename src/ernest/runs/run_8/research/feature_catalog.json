@@ -1,0 +1,1389 @@
+{
+  "policy": [
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:user_id",
+      "feature": "user_id",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:video_id",
+      "feature": "video_id",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:date",
+      "feature": "date",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:hourmin",
+      "feature": "hourmin",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:time_ms",
+      "feature": "time_ms",
+      "reason": "raw timestamp replaced by bounded calendar features",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "excluded"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:is_click",
+      "feature": "is_click",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:is_like",
+      "feature": "is_like",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:is_follow",
+      "feature": "is_follow",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:is_comment",
+      "feature": "is_comment",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:is_forward",
+      "feature": "is_forward",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:is_hate",
+      "feature": "is_hate",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:long_view",
+      "feature": "long_view",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:play_time_ms",
+      "feature": "play_time_ms",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:duration_ms",
+      "feature": "duration_ms",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:profile_stay_time",
+      "feature": "profile_stay_time",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:comment_stay_time",
+      "feature": "comment_stay_time",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:is_profile_enter",
+      "feature": "is_profile_enter",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:is_rand",
+      "feature": "is_rand",
+      "reason": "exposure-policy marker, constant in the standard log",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "excluded"
+    },
+    {
+      "evidence_id": "feature:log_random_4_22_to_5_08_pure.csv:tab",
+      "feature": "tab",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_random_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:user_id",
+      "feature": "user_id",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:video_id",
+      "feature": "video_id",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:date",
+      "feature": "date",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:hourmin",
+      "feature": "hourmin",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:time_ms",
+      "feature": "time_ms",
+      "reason": "raw timestamp replaced by bounded calendar features",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "excluded"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:is_click",
+      "feature": "is_click",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:is_like",
+      "feature": "is_like",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:is_follow",
+      "feature": "is_follow",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:is_comment",
+      "feature": "is_comment",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:is_forward",
+      "feature": "is_forward",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:is_hate",
+      "feature": "is_hate",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:long_view",
+      "feature": "long_view",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:play_time_ms",
+      "feature": "play_time_ms",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:duration_ms",
+      "feature": "duration_ms",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:profile_stay_time",
+      "feature": "profile_stay_time",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:comment_stay_time",
+      "feature": "comment_stay_time",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:is_profile_enter",
+      "feature": "is_profile_enter",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:is_rand",
+      "feature": "is_rand",
+      "reason": "exposure-policy marker, constant in the standard log",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "excluded"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_08_to_4_21_pure.csv:tab",
+      "feature": "tab",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_08_to_4_21_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:user_id",
+      "feature": "user_id",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:video_id",
+      "feature": "video_id",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:date",
+      "feature": "date",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:hourmin",
+      "feature": "hourmin",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:time_ms",
+      "feature": "time_ms",
+      "reason": "raw timestamp replaced by bounded calendar features",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "excluded"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:is_click",
+      "feature": "is_click",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:is_like",
+      "feature": "is_like",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:is_follow",
+      "feature": "is_follow",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:is_comment",
+      "feature": "is_comment",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:is_forward",
+      "feature": "is_forward",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:is_hate",
+      "feature": "is_hate",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:long_view",
+      "feature": "long_view",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:play_time_ms",
+      "feature": "play_time_ms",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:duration_ms",
+      "feature": "duration_ms",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:profile_stay_time",
+      "feature": "profile_stay_time",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:comment_stay_time",
+      "feature": "comment_stay_time",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:is_profile_enter",
+      "feature": "is_profile_enter",
+      "reason": "current-impression outcome unavailable when ranking",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "forbidden"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:is_rand",
+      "feature": "is_rand",
+      "reason": "exposure-policy marker, constant in the standard log",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "excluded"
+    },
+    {
+      "evidence_id": "feature:log_standard_4_22_to_5_08_pure.csv:tab",
+      "feature": "tab",
+      "reason": "available or derivable before the ranking decision",
+      "source": "log_standard_4_22_to_5_08_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:user_id",
+      "feature": "user_id",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:user_active_degree",
+      "feature": "user_active_degree",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:is_lowactive_period",
+      "feature": "is_lowactive_period",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:is_live_streamer",
+      "feature": "is_live_streamer",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:is_video_author",
+      "feature": "is_video_author",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:follow_user_num",
+      "feature": "follow_user_num",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:follow_user_num_range",
+      "feature": "follow_user_num_range",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:fans_user_num",
+      "feature": "fans_user_num",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:fans_user_num_range",
+      "feature": "fans_user_num_range",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:friend_user_num",
+      "feature": "friend_user_num",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:friend_user_num_range",
+      "feature": "friend_user_num_range",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:register_days",
+      "feature": "register_days",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:register_days_range",
+      "feature": "register_days_range",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat0",
+      "feature": "onehot_feat0",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat1",
+      "feature": "onehot_feat1",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat2",
+      "feature": "onehot_feat2",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat3",
+      "feature": "onehot_feat3",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat4",
+      "feature": "onehot_feat4",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat5",
+      "feature": "onehot_feat5",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat6",
+      "feature": "onehot_feat6",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat7",
+      "feature": "onehot_feat7",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat8",
+      "feature": "onehot_feat8",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat9",
+      "feature": "onehot_feat9",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat10",
+      "feature": "onehot_feat10",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat11",
+      "feature": "onehot_feat11",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat12",
+      "feature": "onehot_feat12",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat13",
+      "feature": "onehot_feat13",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat14",
+      "feature": "onehot_feat14",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat15",
+      "feature": "onehot_feat15",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat16",
+      "feature": "onehot_feat16",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:user_features_pure.csv:onehot_feat17",
+      "feature": "onehot_feat17",
+      "reason": "available or derivable before the ranking decision",
+      "source": "user_features_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:video_id",
+      "feature": "video_id",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:author_id",
+      "feature": "author_id",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:video_type",
+      "feature": "video_type",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:upload_dt",
+      "feature": "upload_dt",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:upload_type",
+      "feature": "upload_type",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:visible_status",
+      "feature": "visible_status",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:video_duration",
+      "feature": "video_duration",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:server_width",
+      "feature": "server_width",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:server_height",
+      "feature": "server_height",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:music_id",
+      "feature": "music_id",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:music_type",
+      "feature": "music_type",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_basic_pure.csv:tag",
+      "feature": "tag",
+      "reason": "available or derivable before the ranking decision",
+      "source": "video_features_basic_pure.csv",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:video_id",
+      "feature": "video_id",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:counts",
+      "feature": "counts",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:show_cnt",
+      "feature": "show_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:show_user_num",
+      "feature": "show_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:play_cnt",
+      "feature": "play_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:play_user_num",
+      "feature": "play_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:play_duration",
+      "feature": "play_duration",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:complete_play_cnt",
+      "feature": "complete_play_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:complete_play_user_num",
+      "feature": "complete_play_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:valid_play_cnt",
+      "feature": "valid_play_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:valid_play_user_num",
+      "feature": "valid_play_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:long_time_play_cnt",
+      "feature": "long_time_play_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:long_time_play_user_num",
+      "feature": "long_time_play_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:short_time_play_cnt",
+      "feature": "short_time_play_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:short_time_play_user_num",
+      "feature": "short_time_play_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:play_progress",
+      "feature": "play_progress",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:comment_stay_duration",
+      "feature": "comment_stay_duration",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:like_cnt",
+      "feature": "like_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:like_user_num",
+      "feature": "like_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:click_like_cnt",
+      "feature": "click_like_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:double_click_cnt",
+      "feature": "double_click_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:cancel_like_cnt",
+      "feature": "cancel_like_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:cancel_like_user_num",
+      "feature": "cancel_like_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:comment_cnt",
+      "feature": "comment_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:comment_user_num",
+      "feature": "comment_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:direct_comment_cnt",
+      "feature": "direct_comment_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:reply_comment_cnt",
+      "feature": "reply_comment_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:delete_comment_cnt",
+      "feature": "delete_comment_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:delete_comment_user_num",
+      "feature": "delete_comment_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:comment_like_cnt",
+      "feature": "comment_like_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:comment_like_user_num",
+      "feature": "comment_like_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:follow_cnt",
+      "feature": "follow_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:follow_user_num",
+      "feature": "follow_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:cancel_follow_cnt",
+      "feature": "cancel_follow_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:cancel_follow_user_num",
+      "feature": "cancel_follow_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:share_cnt",
+      "feature": "share_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:share_user_num",
+      "feature": "share_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:download_cnt",
+      "feature": "download_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:download_user_num",
+      "feature": "download_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:report_cnt",
+      "feature": "report_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:report_user_num",
+      "feature": "report_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:reduce_similar_cnt",
+      "feature": "reduce_similar_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:reduce_similar_user_num",
+      "feature": "reduce_similar_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:collect_cnt",
+      "feature": "collect_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:collect_user_num",
+      "feature": "collect_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:cancel_collect_cnt",
+      "feature": "cancel_collect_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:cancel_collect_user_num",
+      "feature": "cancel_collect_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:direct_comment_user_num",
+      "feature": "direct_comment_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:reply_comment_user_num",
+      "feature": "reply_comment_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:share_all_cnt",
+      "feature": "share_all_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:share_all_user_num",
+      "feature": "share_all_user_num",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "feature:video_features_statistic_pure.csv:outsite_share_all_cnt",
+      "feature": "outsite_share_all_cnt",
+      "reason": "aggregate snapshot has no per-impression availability timestamp",
+      "source": "video_features_statistic_pure.csv",
+      "status": "quarantined"
+    },
+    {
+      "evidence_id": "group:item_metadata",
+      "feature": "item_metadata",
+      "fields": [
+        "author_id",
+        "video_type",
+        "upload_type",
+        "music_id",
+        "music_type",
+        "tag"
+      ],
+      "reason": "predefined leakage-reviewed screening candidate",
+      "source": "derived_feature_group",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "group:content_duration",
+      "feature": "content_duration",
+      "fields": [
+        "duration_ms",
+        "video_duration"
+      ],
+      "reason": "predefined leakage-reviewed screening candidate",
+      "source": "derived_feature_group",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "group:request_context",
+      "feature": "request_context",
+      "fields": [
+        "tab",
+        "hour",
+        "weekday"
+      ],
+      "reason": "predefined leakage-reviewed screening candidate",
+      "source": "derived_feature_group",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "group:upload_recency",
+      "feature": "upload_recency",
+      "fields": [
+        "upload_age_days"
+      ],
+      "reason": "predefined leakage-reviewed screening candidate",
+      "source": "derived_feature_group",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "group:user_profile",
+      "feature": "user_profile",
+      "fields": [
+        "user_active_degree",
+        "is_lowactive_period",
+        "is_live_streamer",
+        "is_video_author",
+        "follow_user_num_range",
+        "fans_user_num_range",
+        "friend_user_num_range",
+        "register_days_range"
+      ],
+      "reason": "predefined leakage-reviewed screening candidate",
+      "source": "derived_feature_group",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "group:historical_item_response",
+      "feature": "historical_item_response",
+      "fields": [
+        "prior_item_impressions",
+        "prior_item_long_rate"
+      ],
+      "reason": "predefined leakage-reviewed screening candidate",
+      "source": "derived_feature_group",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "group:historical_author_response",
+      "feature": "historical_author_response",
+      "fields": [
+        "prior_author_impressions",
+        "prior_author_long_rate"
+      ],
+      "reason": "predefined leakage-reviewed screening candidate",
+      "source": "derived_feature_group",
+      "status": "eligible"
+    },
+    {
+      "evidence_id": "group:historical_user_author_affinity",
+      "feature": "historical_user_author_affinity",
+      "fields": [
+        "prior_user_author_impressions",
+        "prior_user_author_long_rate"
+      ],
+      "reason": "predefined leakage-reviewed screening candidate",
+      "source": "derived_feature_group",
+      "status": "eligible"
+    }
+  ],
+  "profiles": {
+    "author_id": {
+      "cardinality": 6482,
+      "development_positive_rate_range_top_values": [
+        0.03537906137184116,
+        0.6720321931589537
+      ],
+      "dtype": "int64",
+      "holdout_unseen_rate": 5.8224163027656476e-05,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.12587534380319318
+    },
+    "duration_ms": {
+      "cardinality": 5726,
+      "development_positive_rate_range_top_values": [
+        0.07223013893836837,
+        0.6720321931589537
+      ],
+      "dtype": "int64",
+      "holdout_unseen_rate": 4.657933042212518e-05,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.1246128332610378
+    },
+    "fans_user_num_range": {
+      "cardinality": 9,
+      "development_positive_rate_range_top_values": [
+        0.30686359973025873,
+        0.48148148148148145
+      ],
+      "dtype": "object",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.014721863472493601
+    },
+    "follow_user_num_range": {
+      "cardinality": 8,
+      "development_positive_rate_range_top_values": [
+        0.31497840596780524,
+        0.35259412502753595
+      ],
+      "dtype": "object",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.009016098964220757
+    },
+    "friend_user_num_range": {
+      "cardinality": 7,
+      "development_positive_rate_range_top_values": [
+        0.3193079770287965,
+        0.3557473924415788
+      ],
+      "dtype": "object",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.015560282856716894
+    },
+    "hour": {
+      "cardinality": 24,
+      "development_positive_rate_range_top_values": [
+        0.3189724013010537,
+        0.37998687664041997
+      ],
+      "dtype": "object",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.03694048729319649
+    },
+    "is_live_streamer": {
+      "cardinality": 2,
+      "development_positive_rate_range_top_values": [
+        0.3131004747722713,
+        0.34528109614605457
+      ],
+      "dtype": "int64",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.012716760603151758
+    },
+    "is_lowactive_period": {
+      "cardinality": 1,
+      "development_positive_rate_range_top_values": [
+        0.3379392496661887,
+        0.3379392496661887
+      ],
+      "dtype": "int64",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.0
+    },
+    "is_video_author": {
+      "cardinality": 2,
+      "development_positive_rate_range_top_values": [
+        0.33497869243323425,
+        0.3552763231414946
+      ],
+      "dtype": "int64",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.006375615302044238
+    },
+    "music_id": {
+      "cardinality": 7160,
+      "development_positive_rate_range_top_values": [
+        0.03706293706293706,
+        0.6720321931589537
+      ],
+      "dtype": "int64",
+      "holdout_unseen_rate": 8.151382823871907e-05,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.12905831080236696
+    },
+    "music_type": {
+      "cardinality": 5,
+      "development_positive_rate_range_top_values": [
+        0.11778290993071594,
+        0.34726087893149504
+      ],
+      "dtype": "float64",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.03705508311191189,
+      "temporal_distribution_total_variation_top_values": 0.01928469567821404
+    },
+    "register_days_range": {
+      "cardinality": 7,
+      "development_positive_rate_range_top_values": [
+        0.3244597090857702,
+        0.4112773691774453
+      ],
+      "dtype": "object",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.010870197585903744
+    },
+    "tab": {
+      "cardinality": 15,
+      "development_positive_rate_range_top_values": [
+        0.0,
+        0.6
+      ],
+      "dtype": "int64",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.019268487604071276
+    },
+    "tag": {
+      "cardinality": 110,
+      "development_positive_rate_range_top_values": [
+        0.0,
+        0.5664335664335665
+      ],
+      "dtype": "object",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.008939525655676218,
+      "temporal_distribution_total_variation_top_values": 0.09924811771866299
+    },
+    "upload_age_days": {
+      "cardinality": 13,
+      "development_positive_rate_range_top_values": [
+        0.31099315852893433,
+        0.37293455422686833
+      ],
+      "dtype": "int64",
+      "holdout_unseen_rate": 0.7484366812227075,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.9499344696973284
+    },
+    "upload_type": {
+      "cardinality": 14,
+      "development_positive_rate_range_top_values": [
+        0.0,
+        0.3750954568785288
+      ],
+      "dtype": "object",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.03324377996921733
+    },
+    "user_active_degree": {
+      "cardinality": 9,
+      "development_positive_rate_range_top_values": [
+        0.14213197969543148,
+        0.44320457796852647
+      ],
+      "dtype": "object",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.03207874609248252
+    },
+    "video_duration": {
+      "cardinality": 5725,
+      "development_positive_rate_range_top_values": [
+        0.07223013893836837,
+        0.6720321931589537
+      ],
+      "dtype": "float64",
+      "holdout_unseen_rate": 4.747492730401756e-05,
+      "missing_rate": 0.021098717741992023,
+      "temporal_distribution_total_variation_top_values": 0.12461283326103784
+    },
+    "video_type": {
+      "cardinality": 3,
+      "development_positive_rate_range_top_values": [
+        0.33752565748506674,
+        0.4398000908677874
+      ],
+      "dtype": "object",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.007249517449751781
+    },
+    "weekday": {
+      "cardinality": 7,
+      "development_positive_rate_range_top_values": [
+        0.31714373198466916,
+        0.3634279698431026
+      ],
+      "dtype": "object",
+      "holdout_unseen_rate": 0.0,
+      "missing_rate": 0.0,
+      "temporal_distribution_total_variation_top_values": 0.42110255800355745
+    }
+  },
+  "screening_version": "1"
+}

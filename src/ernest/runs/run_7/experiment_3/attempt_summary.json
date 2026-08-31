@@ -1,0 +1,23 @@
+{
+  "attempt_id": "5c21e00e3bdf",
+  "status": "scored",
+  "generation": 3,
+  "mode": "draft",
+  "parent_experiment_id": 2,
+  "hypothesis_text": "Increase only L2 regularization on the existing additive context model to reduce sparse-context overfitting.",
+  "active_sub_agents": [
+    "model_designer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 51.18424631800008,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Context-aware learning-to-rank for within-user recommendation ranking with categorical page or tab context, modeling user-item-context interactions; compare factorization machines, feature-crossing architectures, and context-gated additive models under training-only temporal evaluation using GAUC and nDCG@5.",
+      "Temporal evaluation of context-aware recommender ranking architectures for severe tab-specific weaknesses: user-item-tab interactions, categorical request context, factorization machines versus explicit feature-crossing models versus low-complexity context-gated additive scoring, evaluated with GAUC and nDCG@5.",
+      "Learning-to-rank recommendation models that condition user and item scores on categorical page, tab, or request context, with within-user ranking and temporal generalization; literature comparing factorization machines, neural or explicit feature interactions, and context-gated additive models using GAUC and nDCG@5.",
+      "Contextual recommendation and personalized ranking under impression-time categorical context: architectures for user-item-context interaction modeling, tab-specific performance, and context-dependent additive effects; compare factorization machines, feature-cross networks, and gated additive models with fixed temporal evaluation and GAUC/nDCG@5 metrics.",
+      "Low-complexity interaction modeling for context-aware recommender systems, focusing on categorical tab or page context and within-user learning-to-rank rather than additional time encodings; compare factorization machines, feature-crossing models, and context-gated additive architectures under temporal evaluation with GAUC and nDCG@5."
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "unbiased learning to rank from logged recommendation impressions with exposure bias, position bias, and selection bias; leakage-safe evaluation using fixed within-user ranking, GAUC, and nDCG@5",
+      "counterfactual learning to rank for recommender systems with impression exposure and position propensities; diagnosing tab- or surface-level performance disparities without using current-impression outcomes",
+      "robust recommendation ranking under candidate-population and exposure shift across recommendation tabs; methods for mitigating segment disparities while preserving within-user offline evaluation",
+      "debiasing implicit-feedback recommendation logs for learning to rank, including inverse propensity weighting, propensity scoring, doubly robust objectives, and exposure modeling; evaluate with GAUC and nDCG@5",
+      "fairness and robustness diagnostics for recommendation surfaces with unequal exposure, selection effects, and sparse positives; leakage-safe training and evaluation for tab-specific ranking quality using GAUC and nDCG@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "error": "knowledge card remained invalid for features.causal_historical_engagement_aggregates; Response validation failed: ValueError: markdown length must be 900-10000 characters; got 10110",
+  "error_type": "LLMError",
+  "failed_at": "2026-08-31T09:51:18.215533+00:00",
+  "llm_log": "/mnt/d/tehpengagent/src/ernest/agentic_recsys/knowledge_generation_llm_20260831T094425Z.jsonl",
+  "mode": "replace",
+  "model": "gpt-5.6-terra",
+  "output_dir": "/mnt/d/tehpengagent/src/ernest/agentic_recsys/knowledge",
+  "status": "failed"
+}

@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "data.py remains unchanged and encode(splits) returns each split as (features, labels, users), where features has five columns in canonical order user_id, video_id, tab, hour, weekday and uses the existing train-fitted offsets."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "model.py receives the existing integer feature matrix with shape (n_rows, 5); columns 0 and 1 index separate user and video embedding tables, and columns 2 through 4 index additive tab, hour, and weekday weights. It returns one finite raw logit per input row and preserves the existing step/state/load_state interfaces."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

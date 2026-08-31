@@ -1,0 +1,23 @@
+{
+  "attempt_id": "636214cfdcd1",
+  "status": "scored",
+  "generation": 2,
+  "mode": "improve",
+  "parent_experiment_id": 1,
+  "hypothesis_text": "Replace pointwise BCE with a within-user pairwise logistic ranking loss using the same rows and features.",
+  "active_sub_agents": [
+    "model_designer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 176.97098730599828,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

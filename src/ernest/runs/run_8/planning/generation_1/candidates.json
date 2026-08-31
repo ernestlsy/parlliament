@@ -1,0 +1,356 @@
+[
+  {
+    "text": "Add impression-time request-context features tab, hour, and weekday to the neutral user/video additive scorer while leaving model, loss, and training unchanged.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 5,
+      "feasibility": 9
+    },
+    "rationale": "The only screened feature group with positive overall primary lift and full coverage is request context, but its modest size and daily variability require confirmation.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only the request-context feature group {tab, hour, weekday}; keep the neutral additive architecture, BCE objective, optimizer, and schedule fixed.",
+    "expected_effect": {
+      "GAUC": "Likely small positive lift from improved broad within-user ordering, especially for warm users/items; expect approximately +0.001 to +0.004.",
+      "nDCG@5": "Possible small positive or neutral effect because screening showed weaker top-five concentration; expect approximately -0.001 to +0.003."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add only tab as an impression-time categorical feature to the neutral additive user/video scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "Tab is a single, fully available request-context field and isolates whether part of the measured request-context gain comes from placement or surface differences.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only the tab feature; exclude hour and weekday and keep every model, loss, and training setting unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely small positive or neutral effect from surface-specific within-user ordering; expect approximately 0.000 to +0.003.",
+      "nDCG@5": "Likely neutral to mildly positive, with a plausible effect of 0.000 to +0.002."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Add only impression-time hour and weekday features to the neutral additive user/video scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "Temporal request context produced positive lifts on three of four screened days, making a time-context-only confirmation a useful decomposition of the aggregate request-context result.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only hour and weekday; do not add tab and do not change architecture, loss, optimizer, or schedule.",
+    "expected_effect": {
+      "GAUC": "Likely positive but time-regime dependent; expect approximately +0.001 to +0.004.",
+      "nDCG@5": "Likely neutral to mildly positive, with possible instability across time blocks; expect approximately -0.001 to +0.003."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "medium",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Replace the neutral additive ID scorer with an embedding-plus-MLP scorer using the same user_id and video_id inputs only.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The seed has only additive ID effects, so compact embeddings and a nonlinear trunk could model user-item affinity patterns without introducing any additional feature family.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Replace only the additive linear scoring architecture with a user/video embedding-plus-MLP architecture; retain the same IDs, BCE loss, data split, and training budget.",
+    "expected_effect": {
+      "GAUC": "Potential moderate positive lift if nonlinear identity interactions matter; expect approximately +0.001 to +0.008.",
+      "nDCG@5": "Potential positive lift at the top ranks, but greater variance from overfitting; expect approximately -0.002 to +0.008."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Replace the neutral additive scorer with a low-rank Deep & Cross architecture using the same user_id and video_id inputs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "Explicit bounded-order crosses target candidate-specific user-item interactions while retaining a relatively compact architecture and avoiding unsafe metadata or outcome fields.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Replace only the additive architecture with a two-layer low-rank cross network over user/video embeddings; keep features, BCE loss, optimizer, and schedule fixed.",
+    "expected_effect": {
+      "GAUC": "Could improve broad within-user discrimination if explicit identity crosses help; expect approximately -0.002 to +0.007.",
+      "nDCG@5": "Could improve top-five ordering but may be volatile for sparse IDs; expect approximately -0.003 to +0.007."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with a BCE plus nDCG@5-weighted within-group pairwise ranking loss while retaining the neutral additive scorer and current inputs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The screened request-context group improved broad ranking more than top-five concentration, so directly weighting swaps affecting the first five positions is a materially different route to improve nDCG@5.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the pointwise BCE objective with the specified BCE-plus-LambdaRank-style nDCG@5 hybrid; keep architecture, features, optimizer, and sampling unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely neutral to mildly negative because optimization focuses on top-five swaps; expect approximately -0.003 to +0.002.",
+      "nDCG@5": "Most likely positive if displayed groups are reconstructed correctly; expect approximately +0.001 to +0.008."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.frozen_candidate_group_integrity_audit"
+    ]
+  },
+  {
+    "text": "Replace shuffled minibatch training with deterministic chronological minibatch training over the same neutral additive model and features.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "A chronological training order can reduce optimization mismatch under temporal drift without adding any feature or changing the model objective.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Change only the training minibatch order from seeded random permutation to chronological order; retain architecture, features, BCE loss, learning rate, and epoch budget.",
+    "expected_effect": {
+      "GAUC": "Likely neutral, with a possible small positive effect if temporal drift is material; expect approximately -0.002 to +0.003.",
+      "nDCG@5": "Likely neutral to mildly positive or negative depending on recency bias; expect approximately -0.002 to +0.003."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "dataset.inventory_and_splits",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Increase the neutral additive model's embedding-free ID regularization from the seed value to a stronger fixed L2 penalty.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The current scaffold can memorize sparse user/video effects; stronger regularization is a cheap, isolated test for whether generalization rather than capacity is limiting ranking quality.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Change only L2 regularization from 1e-6 to 1e-4; keep IDs, additive architecture, BCE loss, optimizer, and all other configuration fixed.",
+    "expected_effect": {
+      "GAUC": "Likely neutral to mildly positive if sparse-ID overfitting exists, otherwise slightly negative; expect approximately -0.003 to +0.002.",
+      "nDCG@5": "Likely neutral or mildly positive through smoother scores; expect approximately -0.003 to +0.002."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Remove user_id from the neutral additive scorer, leaving video_id as the sole predictive input.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "This is a clean diagnostic of whether user-specific variation is helping within-user ordering; it is expected to be a fallback or negative control rather than a likely winner.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Remove only user_id; retain video_id, additive scoring, BCE loss, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely negative because user-specific ordering information is removed; expect approximately -0.010 to -0.001.",
+      "nDCG@5": "Likely negative or neutral, especially for users exposed to heterogeneous items; expect approximately -0.010 to +0.001."
+    },
+    "expected_primary_gain": -0.004,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Remove video_id from the neutral additive scorer, leaving user_id as the sole predictive input.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "A user-only constant cannot change within-user item ordering, making this a concrete sanity-control ablation for the ranking task.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Remove only video_id; retain user_id, additive scoring, BCE loss, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Expected to collapse toward tie behavior and decrease substantially because scores become constant within user; expect approximately -0.10 to -0.01.",
+      "nDCG@5": "Expected to decrease substantially from loss of candidate differentiation; expect approximately -0.10 to -0.01."
+    },
+    "expected_primary_gain": -0.05,
+    "confidence": 9,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add only server_width and server_height as normalized impression-time numeric context features to the neutral additive scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Display dimensions are available request context and provide an isolated test of device/layout effects distinct from the measured tab-hour-weekday group.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only server_width and server_height; exclude tab, hour, and weekday and keep architecture, loss, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely neutral to mildly positive if layout context changes long-view propensity within users; expect approximately -0.001 to +0.003.",
+      "nDCG@5": "Likely neutral or very small positive because the signal may shift calibration more than relative item ordering; expect approximately -0.001 to +0.002."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Add only one-hot categorical context fields onehot_feat0 through onehot_feat17 to the neutral additive scorer, with separate learned weights and unknown buckets.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The one-hot fields are available candidate/impression attributes and offer a broader but still single-family alternative to the measured request-context group without using metadata snapshots or outcomes.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only the one-hot feature family {onehot_feat0..onehot_feat17}; keep user_id/video_id, additive architecture, BCE loss, optimizer, and schedule fixed.",
+    "expected_effect": {
+      "GAUC": "Potential small positive lift if these fields encode contextual preference differences, but sparse categories may add noise; expect approximately -0.003 to +0.004.",
+      "nDCG@5": "Likely neutral to mildly positive with higher variance than the compact request-context group; expect approximately -0.003 to +0.004."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "task.leakage_policy"
+    ]
+  }
+]

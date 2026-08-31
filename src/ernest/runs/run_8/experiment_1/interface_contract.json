@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "data.py load() continues to return split rows in canonical source order. encode(splits) continues to return (encoded, dimension); each encoded split is (features, labels, users), where features is an int32 matrix with columns [user_id, video_id, tab, hour, weekday], labels is float32, and users is U32. The three added fields use only train-fitted vocabularies with one unknown bucket each."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "model.py receives the encoded int32 feature matrix and the total five-field vocabulary dimension. Model.logits must remain bias plus the sum of the five indexed weights for each row; no interactions, loss, optimizer, or schedule changes are permitted."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

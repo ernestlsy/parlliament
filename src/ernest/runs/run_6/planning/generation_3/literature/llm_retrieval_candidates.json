@@ -1,0 +1,695 @@
+[
+  {
+    "candidates": [
+      {
+        "avoid_when": [
+          "Propensities are unavailable, estimated from post-impression variables, or have severe non-overlap.",
+          "The random-exposure sample is too small to substantiate an exposure-bias motivation.",
+          "Training becomes unstable after predeclared clipping and normalization; retain the unweighted baseline rather than repeatedly tuning clipping thresholds."
+        ],
+        "category": "bias_and_robustness",
+        "id": "robustness.clipped_ips_within_group_rank_loss",
+        "method_family": "clipped_ips_within_group_rank_loss",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "stabilized exposure propensity per impression",
+          "long-view label",
+          "displayed candidate-group identifier",
+          "pre-impression covariates used to estimate propensity when propensities are not logged"
+        ],
+        "retrieval_score": 0.41864058,
+        "summary": "Replace the ordinary contribution of each observed long-view label with a stabilized clipped inverse-exposure-propensity weight, then optimize weighted BCE or weighted positive-negative RankNet pairs only within complete displayed candidate groups. Normalize weights within minibatches and cap both individual and group total weight so rare-propensity examples improve exposure robustness without dominating the ranking signal.",
+        "tags": [
+          "exposure_bias",
+          "ips",
+          "pairwise_ranking",
+          "training_objective"
+        ],
+        "title": "Clipped IPS-weighted within-group ranking loss",
+        "use_when": [
+          "The propensity-overlap gate passes and exposure probabilities describe the data-generating display mechanism.",
+          "A strong unweighted BCE or RankNet baseline is already available for a one-variable comparison.",
+          "The expected bias concerns are primarily position, presentation, or selective-exposure bias rather than label-definition error."
+        ]
+      },
+      {
+        "avoid_when": [
+          "never replace fixed evaluation"
+        ],
+        "category": "evaluation",
+        "id": "evaluation.within_user_metrics",
+        "method_family": "metric_interpretation",
+        "metrics": [
+          "GAUC",
+          "nDCG@5",
+          "primary",
+          "Precision@5",
+          "Recall@5",
+          "MAP@5",
+          "MRR@5"
+        ],
+        "required_features": [
+          "scores",
+          "binary_labels",
+          "user_id"
+        ],
+        "retrieval_score": 0.34413356,
+        "summary": "Explains official and advisory metrics, their weighting, tradeoffs, and interpretation hazards.",
+        "tags": [
+          "gauc",
+          "ndcg",
+          "top-k",
+          "classification",
+          "diagnostics"
+        ],
+        "title": "Within-user ranking and diagnostic metrics",
+        "use_when": [
+          "diagnosing every scored experiment",
+          "predicting metric-specific effects"
+        ]
+      },
+      {
+        "avoid_when": [
+          "Replacing the fixed official validation score with this audit without an approved protocol change",
+          "Mixing random and ordinary impressions into one unstratified metric",
+          "Claiming causal policy value when the available random log lacks the required policy and support information"
+        ],
+        "category": "evaluation",
+        "id": "evaluation.random_exposure_generalization_audit",
+        "method_family": "random_exposure_generalization_audit",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "canonical validation predictions",
+          "random-exposure holdout predictions",
+          "exposure-regime indicator",
+          "user IDs",
+          "video IDs",
+          "long-view labels"
+        ],
+        "retrieval_score": 0.36841729,
+        "summary": "Keep official validation ranking as the model-selection target, then score a separately frozen random-exposure holdout as a secondary audit. Compare each model's ordinary-log and random-exposure ranking behavior, with matched support summaries, to detect gains likely tied to the historical exposure policy rather than user preference.",
+        "tags": [
+          "exposure_bias",
+          "external_evaluation",
+          "robustness",
+          "kuairand"
+        ],
+        "title": "Random-exposure generalization audit",
+        "use_when": [
+          "Assessing whether a model overfits recommendation-policy exposure patterns",
+          "Comparing popularity-heavy, causal-history, or debiased variants",
+          "Making a final robustness claim after official validation selection is complete"
+        ]
+      },
+      {
+        "avoid_when": [
+          "Searching many unplanned slices until a favorable result appears",
+          "Ranking models by tiny slices with inadequate mixed-label groups",
+          "Using slices built from post-impression information unavailable at scoring time"
+        ],
+        "category": "evaluation",
+        "id": "evaluation.stratified_temporal_population_evaluation",
+        "method_family": "stratified_temporal_population_evaluation",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "canonical validation predictions",
+          "timestamps",
+          "user IDs",
+          "video IDs",
+          "displayed candidate-group IDs",
+          "long-view labels",
+          "train-prefix entity frequencies"
+        ],
+        "retrieval_score": 0.34661578,
+        "summary": "Decompose validation GAUC and nDCG@5 into predeclared slices: validation time block, user-history depth, user and video frequency bucket, candidate-group size, and zero-positive, mixed, or all-positive label composition. Report support and uncertainty beside each slice rather than selecting models from a single noisy subgroup.",
+        "tags": [
+          "robustness",
+          "temporal_shift",
+          "cold_start",
+          "diagnostics"
+        ],
+        "title": "Temporal and population-slice ranking dashboard",
+        "use_when": [
+          "Checking whether an overall gain is robust across late validation time blocks",
+          "Diagnosing cold or sparse-entity failures",
+          "Selecting between models with similar aggregate metrics but different deployment risks"
+        ]
+      },
+      {
+        "avoid_when": [
+          "Slice deficits are based on tiny supports or are not stable under paired group bootstrap.",
+          "The optimization budget cannot support tracking per-group moving losses and weights.",
+          "The intended groups encode protected attributes without an approved fairness and governance protocol."
+        ],
+        "category": "papers",
+        "id": "paper.group_dro_within_user_ranking",
+        "method_family": "group_distributionally_robust_ranking",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "complete displayed candidate groups",
+          "predeclared training-only temporal, frequency, history-depth, or group-size assignments",
+          "per-group support thresholds",
+          "ordinary user-normalized BCE or within-group ranking anchor"
+        ],
+        "retrieval_score": 0.31425773,
+        "summary": "Optimize a robust mixture of group-complete ranking losses by upweighting predeclared high-loss groups, such as late training periods, sparse-history users, rare videos, or candidate-group-size buckets. Combine the group-DRO term with strong regularization and early stopping, because worst-group optimization alone can overfit neural models; retain the ordinary objective as an anchor to protect the primary aggregate metric. ([mlanthology.org](https://mlanthology.org/iclr/2020/sagawa2020iclr-distributionally/?utm_source=openai))",
+        "tags": [
+          "robustness",
+          "group_shift",
+          "objective",
+          "temporal_generalization"
+        ],
+        "title": "Predeclared group-DRO within-user ranking objective",
+        "use_when": [
+          "Temporal and population-slice evaluation reveals repeatable regressions despite acceptable aggregate GAUC and nDCG@5.",
+          "A model is suspected of exploiting correlations concentrated in frequent entities or historical periods.",
+          "Predeclared groups have enough complete mixed-label candidate groups to estimate stable losses."
+        ]
+      },
+      {
+        "avoid_when": [
+          "Creating an auxiliary retrieval benchmark explicitly defined over a different full-catalog candidate universe",
+          "Treating sampled-negative metrics as interchangeable with the fixed official ranking metric"
+        ],
+        "category": "evaluation",
+        "id": "evaluation.frozen_candidate_group_integrity_audit",
+        "method_family": "frozen_candidate_group_integrity_audit",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "canonical validation predictions",
+          "user IDs",
+          "displayed candidate-group IDs",
+          "long-view labels"
+        ],
+        "retrieval_score": 0.30248805,
+        "summary": "Evaluate every model on the exact supplied displayed candidate groups and their canonical row order. Audit group completeness, duplicate rows, score coverage, label composition, and denominator handling before metric computation; never replace displayed candidates with sampled negatives for the official result.",
+        "tags": [
+          "candidate_sets",
+          "protocol_integrity",
+          "ranking_validity",
+          "negative_sampling"
+        ],
+        "title": "Frozen displayed-candidate evaluation audit",
+        "use_when": [
+          "Implementing official within-user GAUC or nDCG@5 scoring",
+          "Validating a newly generated prediction artifact",
+          "Comparing models whose dataloaders or ranking heads may reorder, drop, or duplicate impressions"
+        ]
+      },
+      {
+        "avoid_when": [
+          "Neither propensity nor outcome nuisance models can be validated independently.",
+          "The random-exposure data has negligible coverage of important users, videos, or contexts, making nuisance-model extrapolation dominant.",
+          "Implementation cannot enforce fold separation or train-only fitting for imputation and propensity models."
+        ],
+        "category": "bias_and_robustness",
+        "id": "robustness.doubly_robust_exposure_debiased_ranking",
+        "method_family": "doubly_robust_exposure_debiased_ranking",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "long-view label",
+          "exposure propensity or train-fitted propensity estimate",
+          "imputation-model inputs restricted to impression-time availability",
+          "displayed candidate-group identifier",
+          "fold or temporal split identifier for nuisance-model isolation"
+        ],
+        "retrieval_score": 0.3505298,
+        "summary": "Combine a direct long-view outcome model with a propensity-corrected residual loss: train the ranking model on an imputed outcome term plus a clipped IPS correction for observed-label errors. Cross-fit or isolate nuisance-model fitting from scored folds, keep the final scorer group-aware, and compare against both ordinary and IPS-only objectives to determine whether the imputation model reduces high-variance propensity correction.",
+        "tags": [
+          "exposure_bias",
+          "doubly_robust",
+          "counterfactual_learning",
+          "variance_reduction"
+        ],
+        "title": "Doubly robust exposure-debiased ranking objective",
+        "use_when": [
+          "Propensities pass overlap checks but IPS-only training is noisy or sensitive to reasonable clipping levels.",
+          "There is adequate training support to fit both an outcome/imputation model and a propensity model using only pre-impression information.",
+          "The experiment budget supports a clearly predeclared three-way test: ordinary baseline, IPS, and doubly robust."
+        ]
+      },
+      {
+        "avoid_when": [
+          "The official split is effectively i.i.d. or temporal analysis shows no material drift.",
+          "The recent period is too small or label-sparse to support stronger weighting.",
+          "Timestamps, event ordering, or cutoff handling are ambiguous and could introduce future information."
+        ],
+        "category": "bias_and_robustness",
+        "id": "robustness.recency_weighted_causal_ranking_training",
+        "method_family": "recency_weighted_causal_ranking_training",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "impression timestamp",
+          "training cutoff timestamp",
+          "displayed candidate-group identifier",
+          "long-view label"
+        ],
+        "retrieval_score": 0.30441578,
+        "summary": "Apply a bounded exponential time-decay multiplier to complete training candidate groups, preserving within-group labels and user normalization while giving recent impressions more influence. Select only from a short predeclared half-life grid, normalize total training weight, and retain a nonzero minimum weight for older groups so the ranker adapts to preference or inventory drift without catastrophically forgetting sparse entities.",
+        "tags": [
+          "temporal_robustness",
+          "distribution_shift",
+          "training",
+          "implicit_feedback"
+        ],
+        "title": "Recency-weighted causal ranking training",
+        "use_when": [
+          "Chronological validation or the temporal slice dashboard indicates recent-period ranking degradation.",
+          "Timestamps are reliable and all recency weights are computed relative to the training cutoff, never future validation data.",
+          "The catalog, popularity distribution, or engagement behavior plausibly changes over the observation window."
+        ]
+      },
+      {
+        "avoid_when": [
+          "Only the long-view label is reliable or auxiliary labels are too sparse.",
+          "Auxiliary labels contain post-impression information forbidden by the availability policy.",
+          "Compute limits cannot support even a small multi-head model; use the existing shared trunk instead."
+        ],
+        "category": "papers",
+        "id": "paper.mmoe_auxiliary_behavior_ranker",
+        "method_family": "multi_gate_mixture_of_experts",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "all long-view ranker features",
+          "one or more impression-time-valid auxiliary binary labels"
+        ],
+        "retrieval_score": 0.28661961,
+        "summary": "Replace a fully shared multitask trunk with a small multi-gate mixture-of-experts model: share 2\u20134 compact experts, learn a task-specific gate for long-view and each admitted auxiliary behavior, and retain a long-view-dominant user-normalized BCE or ranking loss. MMoE explicitly adapts sharing to task relatedness, addressing negative transfer from weak auxiliary labels. ([doi.org](https://doi.org/10.1145/3219819.3220007?utm_source=openai))",
+        "tags": [
+          "architecture",
+          "multitask_learning",
+          "negative_transfer",
+          "auxiliary_labels"
+        ],
+        "title": "Multi-gate mixture-of-experts auxiliary-behavior ranker",
+        "use_when": [
+          "At least one impression-time-valid auxiliary engagement label has adequate prevalence and a shared-trunk multitask baseline is neutral or inconsistent.",
+          "Different behaviors plausibly depend on different mixtures of user, item, context, and history signals.",
+          "A compact change is preferred over independently training several task-specific rankers."
+        ]
+      },
+      {
+        "avoid_when": [
+          "Using calibration metrics as a replacement for GAUC or nDCG@5 model selection",
+          "Fitting a calibrator on validation labels and then reporting that same validation result",
+          "Applying monotonic calibration solely to manufacture a ranking gain"
+        ],
+        "category": "evaluation",
+        "id": "evaluation.probability_calibration_and_ranking_error_audit",
+        "method_family": "probability_calibration_and_ranking_error_audit",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "canonical validation predictions",
+          "long-view labels",
+          "displayed candidate-group IDs",
+          "train or cross-fitted calibration predictions"
+        ],
+        "retrieval_score": 0.28255694,
+        "summary": "Supplement rank metrics with train-fitted calibration diagnostics such as Brier score, log loss, reliability bins, and predicted-positive-rate checks. Inspect errors separately for mixed candidate groups, because a model can preserve ranking while producing unstable probabilities that impair multitask weighting, threshold analyses, and ensemble averaging.",
+        "tags": [
+          "calibration",
+          "error_analysis",
+          "bce",
+          "ranking_diagnostics"
+        ],
+        "title": "Probability calibration and ranking-error audit",
+        "use_when": [
+          "Training with BCE or multitask binary heads",
+          "Averaging predictions or combining score heads",
+          "Investigating whether a ranking improvement came with implausibly extreme or collapsed probabilities"
+        ]
+      }
+    ],
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "candidates": [
+      {
+        "avoid_when": [
+          "Aggregate tables include the target row, future events, or validation/test outcomes.",
+          "Counts are treated as static when they are unavailable at the actual impression time.",
+          "The supplied aggregate-statistics table has unclear causal provenance."
+        ],
+        "category": "features",
+        "id": "features.train_prefix_smoothed_popularity_features",
+        "method_family": "causal_smoothed_aggregates",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "historical interaction log",
+          "video_id",
+          "video attributes or creator fields; use none when unavailable",
+          "user_id"
+        ],
+        "retrieval_score": 0.37140393,
+        "summary": "Add smoothed, causally available counts and rates for videos, creators or categories, plus user-by-attribute affinities, fitted on training prefixes and backed off for sparse groups.",
+        "tags": [
+          "aggregates",
+          "popularity",
+          "target_encoding",
+          "smoothing",
+          "train_only"
+        ],
+        "title": "Train-prefix smoothed popularity and affinity statistics",
+        "use_when": [
+          "IDs and metadata are sparse enough that aggregate evidence can complement embeddings.",
+          "The pipeline can enforce train-only fitting and timestamp-prefix lookup.",
+          "Rare-item estimates can be shrunk toward global or attribute-level priors."
+        ]
+      },
+      {
+        "avoid_when": [
+          "Most training groups are homogeneous, because they yield no valid positive-negative pairs.",
+          "Cross-user negatives would be needed to create pairs; these are misaligned with within-user scoring.",
+          "Pair enumeration is too large and negative sampling cannot be made deterministic."
+        ],
+        "category": "objectives",
+        "id": "objective.within_user_ranknet_pairwise_loss",
+        "method_family": "within_user_ranknet_pairwise_loss",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "target long-view label",
+          "within-user candidate-group identifier"
+        ],
+        "retrieval_score": 0.35076661,
+        "summary": "Construct preference pairs only within the same displayed user candidate group, with a positive long-view impression preferred to a negative one, and optimize logistic score differences. Sample a bounded number of negatives per positive to control cost while directly training the ordering used by GAUC.",
+        "tags": [
+          "pairwise",
+          "ranknet",
+          "gauc",
+          "negative_sampling",
+          "implicit_feedback"
+        ],
+        "title": "Within-user RankNet pairwise ranking loss",
+        "use_when": [
+          "Validation GAUC is the limiting metric and mixed-label user groups are sufficiently common.",
+          "The model can batch impressions by user candidate group.",
+          "A ranking-focused alternative to pointwise BCE is required without listwise softmax instability."
+        ]
+      },
+      {
+        "avoid_when": [
+          "The official split is effectively i.i.d. or temporal analysis shows no material drift.",
+          "The recent period is too small or label-sparse to support stronger weighting.",
+          "Timestamps, event ordering, or cutoff handling are ambiguous and could introduce future information."
+        ],
+        "category": "bias_and_robustness",
+        "id": "robustness.recency_weighted_causal_ranking_training",
+        "method_family": "recency_weighted_causal_ranking_training",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "impression timestamp",
+          "training cutoff timestamp",
+          "displayed candidate-group identifier",
+          "long-view label"
+        ],
+        "retrieval_score": 0.36069203,
+        "summary": "Apply a bounded exponential time-decay multiplier to complete training candidate groups, preserving within-group labels and user normalization while giving recent impressions more influence. Select only from a short predeclared half-life grid, normalize total training weight, and retain a nonzero minimum weight for older groups so the ranker adapts to preference or inventory drift without catastrophically forgetting sparse entities.",
+        "tags": [
+          "temporal_robustness",
+          "distribution_shift",
+          "training",
+          "implicit_feedback"
+        ],
+        "title": "Recency-weighted causal ranking training",
+        "use_when": [
+          "Chronological validation or the temporal slice dashboard indicates recent-period ranking degradation.",
+          "Timestamps are reliable and all recency weights are computed relative to the training cutoff, never future validation data.",
+          "The catalog, popularity distribution, or engagement behavior plausibly changes over the observation window."
+        ]
+      },
+      {
+        "avoid_when": [
+          "The sole objective must explicitly prioritize top-five swaps and a stable pointwise baseline has already plateaued.",
+          "Labels are missing or are not available for every scored training impression."
+        ],
+        "category": "objectives",
+        "id": "objective.user_normalized_binary_cross_entropy",
+        "method_family": "user_normalized_binary_cross_entropy",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "target long-view label",
+          "within-user candidate-group identifier",
+          "per-user candidate count"
+        ],
+        "retrieval_score": 0.35600946,
+        "summary": "Train the long-view logit with numerically stable binary cross-entropy, weighting each impression inversely by its user candidate-count so prolific users do not dominate a GAUC-style within-user objective. Use this as the low-variance reference objective and preserve raw probabilities for diagnostics.",
+        "tags": [
+          "pointwise",
+          "baseline",
+          "gauc",
+          "calibration",
+          "implicit_feedback"
+        ],
+        "title": "User-normalized pointwise binary cross-entropy",
+        "use_when": [
+          "A reliable first neural-ranker objective is needed under scarce experiment budget.",
+          "The scorer needs a stable supervised signal on every labeled impression.",
+          "Candidate lists contain many zero/mixed/all-positive groups, making pure ranking losses partially undefined or uninformative."
+        ]
+      },
+      {
+        "avoid_when": [
+          "Training a strictly pointwise-only baseline where group reconstruction materially limits throughput.",
+          "Candidate-group identifiers cannot be reconstructed reliably."
+        ],
+        "category": "training",
+        "id": "training.group_complete_stratified_minibatching",
+        "method_family": "group_complete_stratified_minibatching",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "user candidate-group identifier",
+          "long-view label",
+          "candidate order or stable impression identifier"
+        ],
+        "retrieval_score": 0.35090358,
+        "summary": "Build minibatches from complete displayed candidate groups rather than independent impressions. Stratify group sampling by zero-positive, mixed-label, and all-positive groups, while ensuring every mixed group retains all of its displayed candidates so pairwise and listwise losses see valid within-user comparisons.",
+        "tags": [
+          "training",
+          "minibatch",
+          "within_user_ranking",
+          "listwise",
+          "pairwise"
+        ],
+        "title": "Group-complete, label-stratified minibatching",
+        "use_when": [
+          "Training RankNet, LambdaRank-style, or ListNet objectives.",
+          "The primary metrics are computed within user candidate groups.",
+          "Mixed-label groups are uncommon enough that ordinary row sampling yields many uninformative batches."
+        ]
+      },
+      {
+        "avoid_when": [
+          "Most useful information is in the ordered item sequence rather than tabular field interactions.",
+          "Feature dimensions or categorical vocabularies are so sparse that extra cross capacity overfits despite regularization."
+        ],
+        "category": "architectures",
+        "id": "architecture.deep_cross_ranker",
+        "method_family": "deep_cross_network",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "user ID embedding",
+          "video ID embedding",
+          "impression-time metadata/context",
+          "causal behavioral-history features",
+          "train-prefix aggregate features"
+        ],
+        "retrieval_score": 0.33982779,
+        "summary": "Augment an embedding-plus-MLP scorer with a small Deep & Cross Network branch so that user, video, context, popularity, and history fields receive explicit bounded-degree crosses alongside nonlinear deep interactions.",
+        "tags": [
+          "feature_crossing",
+          "tabular_context",
+          "id_embeddings",
+          "dcn"
+        ],
+        "title": "Deep & Cross ranker for bounded-order feature interactions",
+        "use_when": [
+          "Interactions such as user-by-category affinity, video-by-context, and recency-by-history-length are expected to matter.",
+          "You want controlled explicit crosses without enumerating manual feature conjunctions.",
+          "The embedding-plus-MLP baseline has useful signal but leaves room for better GAUC or nDCG@5."
+        ]
+      },
+      {
+        "avoid_when": [
+          "Slice deficits are based on tiny supports or are not stable under paired group bootstrap.",
+          "The optimization budget cannot support tracking per-group moving losses and weights.",
+          "The intended groups encode protected attributes without an approved fairness and governance protocol."
+        ],
+        "category": "papers",
+        "id": "paper.group_dro_within_user_ranking",
+        "method_family": "group_distributionally_robust_ranking",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "complete displayed candidate groups",
+          "predeclared training-only temporal, frequency, history-depth, or group-size assignments",
+          "per-group support thresholds",
+          "ordinary user-normalized BCE or within-group ranking anchor"
+        ],
+        "retrieval_score": 0.34326057,
+        "summary": "Optimize a robust mixture of group-complete ranking losses by upweighting predeclared high-loss groups, such as late training periods, sparse-history users, rare videos, or candidate-group-size buckets. Combine the group-DRO term with strong regularization and early stopping, because worst-group optimization alone can overfit neural models; retain the ordinary objective as an anchor to protect the primary aggregate metric. ([mlanthology.org](https://mlanthology.org/iclr/2020/sagawa2020iclr-distributionally/?utm_source=openai))",
+        "tags": [
+          "robustness",
+          "group_shift",
+          "objective",
+          "temporal_generalization"
+        ],
+        "title": "Predeclared group-DRO within-user ranking objective",
+        "use_when": [
+          "Temporal and population-slice evaluation reveals repeatable regressions despite acceptable aggregate GAUC and nDCG@5.",
+          "A model is suspected of exploiting correlations concentrated in frequent entities or historical periods.",
+          "Predeclared groups have enough complete mixed-label candidate groups to estimate stable losses."
+        ]
+      },
+      {
+        "avoid_when": [
+          "The validation result shows that a candidate-specific reading of behavioral history is consistently valuable.",
+          "A simple model already saturates both GAUC and nDCG@5 and scarce experiments are better spent on objective or feature changes."
+        ],
+        "category": "architectures",
+        "id": "architecture.embedding_mlp_ranker",
+        "method_family": "embedding_mlp_ranker",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "user ID embedding",
+          "video ID embedding",
+          "impression-time metadata/context",
+          "causal behavioral-history features",
+          "train-prefix aggregate features"
+        ],
+        "retrieval_score": 0.33337395,
+        "summary": "A compact pointwise scorer that concatenates user/video ID embeddings, metadata embeddings, causal history features, and numeric aggregates before a residual MLP outputs one long-view logit per impression.",
+        "tags": [
+          "baseline",
+          "id_embeddings",
+          "tabular_context",
+          "efficient"
+        ],
+        "title": "Embedding-plus-MLP pointwise ranker",
+        "use_when": [
+          "A strong, low-risk architecture baseline is needed before adding specialized interaction or sequence modules.",
+          "Candidate lists are short and scoring every displayed impression independently is computationally inexpensive.",
+          "You need an architecture that cleanly accommodates all causally available dense and categorical features."
+        ]
+      },
+      {
+        "avoid_when": [
+          "Candidate groups are predominantly size one or have no mixed labels.",
+          "The implementation cannot compute group-local ranks and swap deltas without leakage across groups.",
+          "Experiment budget cannot support a controlled coefficient comparison against the BCE parent."
+        ],
+        "category": "objectives",
+        "id": "objective.bce_lambdarank_ndcg5_hybrid",
+        "method_family": "bce_lambdarank_ndcg5_hybrid",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "target long-view label",
+          "within-user candidate-group identifier",
+          "candidate position only for training-group reconstruction"
+        ],
+        "retrieval_score": 0.35206297,
+        "summary": "Combine user-normalized binary cross-entropy with a within-user pairwise logistic term weighted by the absolute nDCG@5 change induced by swapping each positive-negative pair. Start with BCE-dominant weighting and tune one fixed ranking-loss coefficient, targeting top-five order without discarding broad GAUC supervision.",
+        "tags": [
+          "hybrid_objective",
+          "lambdarank",
+          "ndcg_at_5",
+          "top_k",
+          "metric_alignment"
+        ],
+        "title": "BCE plus LambdaRank-style nDCG@5 hybrid",
+        "use_when": [
+          "nDCG@5 trails GAUC or top-ranked errors are the principal failure mode.",
+          "Candidate groups have at least some positive-negative pairs and usually exceed one candidate.",
+          "A compact metric-aligned change can be tested on top of an established BCE model."
+        ]
+      },
+      {
+        "avoid_when": [
+          "IDs are unavailable at scoring time.",
+          "Most validation entities are unseen and no side information is available for fallback."
+        ],
+        "category": "features",
+        "id": "features.entity_id_embeddings",
+        "method_family": "entity_embedding",
+        "metrics": [
+          "GAUC",
+          "nDCG@5"
+        ],
+        "required_features": [
+          "user_id",
+          "video_id"
+        ],
+        "retrieval_score": 0.33889289,
+        "summary": "Use compact learned embeddings for user and video IDs as the primary personalization signal, with explicit unknown-index handling and frequency-aware regularization for rare entities.",
+        "tags": [
+          "categorical",
+          "user_id",
+          "video_id",
+          "embedding",
+          "cold_start"
+        ],
+        "title": "User and video identity embeddings with cold/OOV handling",
+        "use_when": [
+          "The validation set contains mostly warm users or videos seen during training.",
+          "A simple personalized baseline is needed before adding side features or histories.",
+          "Candidate lists require within-user score variation."
+        ]
+      }
+    ],
+    "request_index": 2,
+    "round": 1
+  }
+]

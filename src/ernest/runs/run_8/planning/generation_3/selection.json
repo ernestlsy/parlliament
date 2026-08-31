@@ -1,0 +1,36 @@
+{
+  "winner": {
+    "text": "Replace the additive user/video scorer with a user-video latent-factor interaction model using the existing request-context additive terms.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The current additive model cannot represent personalized user-video affinity beyond separate user and video offsets. Experiment 1 has strong warm-traffic coverage but poor rare-item performance, making a compact interaction model a targeted test of whether warm-user personalization can improve ordering.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:segment:item_frequency:warm_20_plus",
+      "experiment:2:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Replace only the separate user_id and video_id additive weights with 16-dimensional user-video dot-product embeddings, retaining the additive tab, hour, and weekday terms, BCE loss, optimizer, schedule, and all rows.",
+    "expected_effect": {
+      "GAUC": "Possible moderate lift of approximately +0.002 to +0.007 on warm users, with little benefit for cold items.",
+      "nDCG@5": "Possible positive effect of approximately +0.001 to +0.006 if affinity moves relevant videos into the top five; rare-item nDCG may decline."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  "selection_rationale": "Select c03 because it has the Consultant's top ranking and best balance of expected primary gain (0.0025), confidence (6), feasibility (7), and low runtime risk. It directly addresses the additive model's missing user-video affinity while preserving the proven request-context terms, BCE training, data rows, and schedule. The main downside is possible rare-item regression, but this is more bounded and reliable than the broader, medium-risk nonlinear alternatives.",
+  "counted_experiments_consumed": 0
+}

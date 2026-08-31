@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c03",
+      "rank": 1,
+      "utility_score": 0.82,
+      "rationale": "Best alignment with the ranking objective: it directly replaces pointwise BCE with within-user pairwise optimization, preserves the feature and architecture contract, has credible GAUC and nDCG upside, low leakage risk, and only medium runtime risk."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 2,
+      "utility_score": 0.76,
+      "rationale": "Strong candidate-specific personalization hypothesis because the additive parent cannot model user-video affinity. Warm-user and warm-item evidence supports it, while medium runtime and sparse-entity overfitting risk prevent the top rank."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 3,
+      "utility_score": 0.7,
+      "rationale": "Most directly targets the moderate nDCG@5 result and users with few positives, but listwise grouping and top-five emphasis introduce high runtime, implementation, and objective-mismatch risk."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 4,
+      "utility_score": 0.66,
+      "rationale": "A focused, evidence-based intervention for the weak rare-item slice with limited duplication and low leakage risk. It is less ambitious and likely lower upside than interaction or loss changes, and count-aware regularization adds medium implementation risk."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 5,
+      "utility_score": 0.61,
+      "rationale": "Cheap, clean single-field ablation motivated by severe tab diagnostics and low runtime risk. However, the weak tab slices are sparse and the expected overall gain is small, so the evidence is suggestive rather than strong."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 6,
+      "utility_score": 0.58,
+      "rationale": "Nonlinear scoring could convert the validated request-context signal into candidate-specific ordering, but it is a broad architecture change with medium runtime and substantial overfitting risk relative to the modest screen lift."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 7,
+      "utility_score": 0.55,
+      "rationale": "Very feasible and easy to interpret, but a global tenfold L2 increase is weakly targeted, may suppress useful identity signal, and has limited expected gain despite the observed weak segments."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 8,
+      "utility_score": 0.5,
+      "rationale": "A low-cost, isolated test of whether hour adds noise, supported by weak hour slices. The parent screen supports the full context group, so removing hour has ambiguous evidence and low expected upside."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 9,
+      "utility_score": 0.47,
+      "rationale": "Useful for uncertainty reduction because the parent has only one score and the screen lift is below daily variability, but it changes validation checkpoint selection and risks validation overfitting while offering little direct model improvement."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 10,
+      "utility_score": 0.42,
+      "rationale": "Explicit crosses are conceptually relevant to weak context-conditioned segments, but the evidence is sparse, the architecture change is duplicative with other interaction candidates, and high runtime and implementation scope make it poor for one scarce run."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 11,
+      "utility_score": 0.38,
+      "rationale": "A clean and feasible redundancy test, but weekday has no isolated negative evidence, the expected gain is nearly zero, and it is less informative than removing fields with documented weak slices."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 12,
+      "utility_score": 0.25,
+      "rationale": "High novelty but weakest experiment choice: auxiliary-label semantics are uncertain, leakage risk is medium, runtime and scope are high, negative transfer is plausible, and the proposal duplicates architecture and loss changes without strong supporting evidence."
+    }
+  ]
+}

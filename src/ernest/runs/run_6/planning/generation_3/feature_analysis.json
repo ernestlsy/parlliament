@@ -1,0 +1,36 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context"
+      ],
+      "finding": "Request-context features are the only screened group with positive overall primary lift and full coverage. Evidence is directionally positive across all four holdout days, but daily variability is substantial, so the signal should be treated as promising rather than fully stable.",
+      "recommended_action": "Retain for a future controlled run or limited canary after the current budget is stopped; do not expand spend until the lift is replicated."
+    },
+    {
+      "evidence_ids": [
+        "experiment:2:segment:tab:8",
+        "experiment:2:segment:hour:3",
+        "experiment:2:segment:hour:2"
+      ],
+      "finding": "Post-score diagnostics show the largest meaningful ranking weaknesses in tab 8 and hours 2\u20133. These weaknesses affect both within-user GAUC and top-five metrics, indicating genuine ranking difficulty rather than only a top-five presentation issue.",
+      "recommended_action": "Prioritize targeted data and candidate-coverage investigation for tab 8 and low-activity hours in a later experiment, while preserving within-user evaluation."
+    },
+    {
+      "evidence_ids": [
+        "experiment:2:segment:duration_bucket:(136900.0, inf]",
+        "experiment:2:segment:item_frequency:rare_1_4"
+      ],
+      "finding": "Long-duration and rare-item slices have materially lower primary and top-five performance. The rare-item slice also has very low GAUC, supporting a cold or sparse-item ranking problem; its small sample size warrants confirmation before a large intervention.",
+      "recommended_action": "Investigate sparse-item representation and candidate exposure, with stratified validation before funding feature expansion."
+    }
+  ],
+  "avoid": [
+    "Stop further experiment spending under the strict early-stopping rule: experiment 2 reduced primary from 0.603017810137948 to 0.6008384440812004, with an observed gain of -0.0021793660567476225.",
+    "Do not promote user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response; their training-only screening lifts are negative.",
+    "Do not use user_positive_count as a train-time feature or optimization target. Its zero-positive slice is retrospective validation-label analysis and is not deployable evidence.",
+    "Do not infer success from GAUC alone: several slices have comparatively acceptable GAUC but weak MAP@5, MRR@5, Precision@5, Recall@5, or nDCG@5. Evaluate stable within-user ranking together with top-five quality.",
+    "Do not admit current-impression outcomes or aggregate snapshots without per-impression availability timestamps; these create leakage risk."
+  ],
+  "metric_diagnosis": "The pairwise ranking hypothesis did not justify continued budget: experiment 2 achieved GAUC 0.6665342542869394 and nDCG@5 0.5351426338754613, but primary declined versus experiment 1. The overall GAUC indicates useful within-user ordering, while weak tab and hour slices and the rare-item slice reveal uneven ranking quality. Top-five metrics are especially weak in tab 8 and rare items, so the next funded effort should target segment robustness rather than broad feature expansion. Current segment results are official-validation diagnostics, not independent test estimates."
+}

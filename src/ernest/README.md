@@ -14,7 +14,9 @@ The implementation keeps the specification's responsibilities separate:
 | Overseer | `agentic_recsys/overseer.py`: generations, sandboxes, counted IDs, backfill, stopping |
 | Research engine | `agentic_recsys/research.py`: leakage policy, profiling, temporal screening, cached evidence |
 | Feature Analyst / Evolution Judge / Consultant | `agentic_recsys/agents.py`: evidence review, candidate tournament, selection |
-| Literature knowledge base | `agentic_recsys/knowledge/`: read-only research and known-result context for the Judge |
+| Librarian | `agentic_recsys/librarian.py`: catalog validation, TF-IDF/MMR retrieval, query expansion, reading-list selection, guarded fetch |
+| Literature knowledge base | `agentic_recsys/knowledge/`: categorized Markdown cards, `catalog.jsonl`, and hash manifest |
+| Knowledge-base builder | `agentic_recsys/knowledge_builder.py`: manual staged LLM generation, schema repair, hashing, validation, backup, and install |
 | Orchestrator | `agentic_recsys/agents.py`: interface contract, selective delegation, targeted debugging |
 | Feature Engineer / Model Designer / Trainer | role-specific prompts in `agents.py`, restricted to `data.py`, `model.py`, and `train.py`/`config.json` |
 | Experimentor | `agentic_recsys/experimentor.py`: contract probe, bounded subprocess, error classification |
@@ -35,27 +37,34 @@ Successful descendants are atomically renamed to `runs/<run>/experiment_<id>`. F
 1. Before the first Judge call, the Research Engine profiles the dataset and screens feature groups
    on a temporal holdout entirely inside the April 8-21 training period. It never reads official
    validation rows, writes official predictions, creates a journal record, or consumes an ID.
-2. The Feature Analyst interprets the cached screen and the latest post-score error slices. The
-   Evolution Judge creates 12 evidence-citing candidates, the Consultant ranks every candidate
-   head-to-head, and the Judge selects exactly one winner. The full tournament is retained under
-   `runs/<run>/planning/generation_<n>/` without affecting convergence.
-3. Odd generations retain Draft context over the full archive; even generations use the globally
+2. The Feature Analyst interprets the cached screen and latest post-score error slices. The Judge
+   may issue up to two rounds of structured research requests. The Librarian combines deterministic
+   TF-IDF/MMR retrieval with LLM query expansion, validates a final reading list, and fetches at most
+   eight cataloged cards within a 40,000-character generation budget.
+3. The informed Evolution Judge creates 12 evidence-citing candidates, the Consultant ranks every
+   candidate head-to-head, and the Judge selects exactly one winner. Tournament and literature
+   artifacts are retained under `runs/<run>/planning/generation_<n>/` without affecting convergence.
+4. Odd generations retain Draft context over the full archive; even generations use the globally
    best scored parent as Improve context. Only the tournament winner proceeds to implementation.
    Eligible parents are recomputed from the durable journal before every initial or replacement call.
-4. The Orchestrator fixes the machine-readable contract and activates only relevant code agents.
-5. Each code agent returns the complete contents of every file assigned to its role. Ernest rejects
+5. The Orchestrator receives the deterministic dataset feature schema, fixes the machine-readable
+   contract, activates only relevant code agents, and gives each one explicit required changes and
+   behavior to preserve.
+6. The Feature Engineer always receives the raw-source schema, train-only profiles, leakage status,
+   and canonical derived-feature recipes. Each code agent returns the complete contents of every
+   file assigned to its role. Ernest rejects
    absolute/traversing paths, unmanaged or missing files, empty/no-op responses, invalid Python, and
    invalid configuration JSON before replacing anything. Journal diffs are calculated locally.
-6. Before training, a small-slice `--contract-check` validates the connected data/model/train path.
+7. Before training, a small-slice `--contract-check` validates the connected data/model/train path.
    The full process then writes `predictions_valid.npz` containing exactly canonical `row_ids` and
    `scores`. The fixed evaluator independently reloads users and labels from the official validation
    rows, so generated code cannot redefine the ground truth or evaluation population.
-7. The fixed Experimentor computes GAUC, nDCG@5, classification diagnostics, and supplementary
+8. The fixed Experimentor computes GAUC, nDCG@5, classification diagnostics, and supplementary
    ranking diagnostics. After official scoring succeeds, a non-blocking analyzer adds segment
    diagnostics; only then is the sandbox finalized and the next experiment ID journaled.
    Failures are routed to responsible agents for at most three total attempts and one shared
    wall-clock budget. A repeatedly resource-failing configuration is reclassified as semantic.
-8. After every score, Ernest stops immediately if 50 experiments are counted or if the newest score
+9. After every score, Ernest stops immediately if 50 experiments are counted or if the newest score
    minus the score two counted experiments earlier is strictly less than `0.002`.
 
 The default backfill ceiling is two replacements per abandoned generation slot. This bounds the
@@ -88,6 +97,71 @@ For every Judge proposal and revision call, Ernest sends a `metric_catalog` desc
 the full experiment archive, and a dedicated `scored_metric_history` containing each successful
 experiment's complete nested metric object. This makes classification, ranking, and score-distribution
 diagnostics directly available for hypothesis decisions without changing the official objective.
+
+## Populate the literature knowledge base once
+
+The population command is a pre-run preparation utility. Run it manually before starting Ernest;
+`ernest run` never imports it, calls it, or mutates the installed knowledge base. Its default
+`extend` mode preserves the current cards and lets the curator choose four to ten non-duplicate
+cards for every generated research category:
+
+```bash
+ernest-populate-knowledge \
+  --model YOUR_CAPABLE_MODEL \
+  --mode extend
+```
+
+`OPENAI_API_KEY` supplies the key. The equivalent source script is
+`python scripts/populate_knowledge_base.py ...` after installing this package. Provider options
+(`--base-url`, `--api-mode`, `--no-json-mode`, `--llm-timeout`, and `--llm-retries`) have the same
+meaning as they do for `ernest run`. A local JSON adapter can instead be supplied with
+`--llm-command "your-adapter --json"`.
+
+HTTP-model generation enables OpenAI Responses API hosted web search by default, requires at least
+one search on every planning and card-writing request, and uses `high` search context. Every card
+must receive at least one URL citation annotation; validated citation titles and URLs are appended
+under `Audited web sources`, while search actions and sources remain in the LLM audit. This requires
+the Responses API: `--api-mode chat` and compatible providers that resolve to Chat Completions are
+rejected unless `--disable-web-search` is supplied. Use `--web-search-context-size low|medium|high`
+to change the search budget. A command adapter is responsible for providing and auditing its own web
+search because Ernest cannot inject a hosted provider tool into an arbitrary local command. OpenAI
+does not permit hosted web search and provider-enforced JSON mode in the same request, so the builder
+automatically omits `text.format` for these requests, explicitly asks for JSON in the prompt, and
+validates the returned JSON locally. `--no-json-mode` is therefore not needed for web-enabled builds;
+non-search requests continue to use provider-enforced JSON mode by default.
+
+Generation is deliberately staged. For each selected category, the model first proposes catalog
+metadata; it then writes each card separately. Invalid schemas, duplicate IDs, near-duplicate topics,
+bad Markdown structure, and undersized cards are returned to the model for repair. Cards longer than
+the configured maximum are truncated without another LLM call. If a card still cannot be generated
+after all response attempts, it is dropped and recorded with its final failure reason while the
+remaining cards continue. Only successfully written cards enter later planning context and the final
+catalog. The utility writes
+the catalog and canonical Windows/Linux hashes into a temporary sibling directory and loads that
+directory through the production `KnowledgeCatalog` validator before installation. The prior live
+directory is retained as `knowledge.backup-<timestamp>`, and full LLM traffic plus a concise result
+report are written beside it.
+
+The repository owns the `task` and `dataset` categories because their facts come from the fixed
+specification, evaluator, and supplied CSVs. They are excluded from `--category` and from default LLM
+generation. The all-category default therefore makes between 45 and 99 LLM requests (9 category
+plans followed by 36-90 card-writing calls), so a targeted first pass is often more practical:
+
+```bash
+ernest-populate-knowledge \
+  --model YOUR_CAPABLE_MODEL \
+  --category architectures \
+  --category training \
+  --category experiment_strategy \
+  --minimum-cards-per-category 5 \
+  --maximum-cards-per-category 10 \
+  --guidance-file my_research_priorities.md
+```
+
+Use `--mode replace --yes` only when intentionally rebuilding the retrievable research catalog.
+System-owned task, dataset, leakage, and evaluation cards are retained even in replacement
+mode. Replacement still creates a backup, and generated research and citations should always receive
+human review before the backup is removed or the cards guide expensive experiments.
 
 ## Install and run
 
@@ -152,7 +226,9 @@ Important options include `--max-experiments` (default 50), `--timeout` (one wal
 experiment), `--max-debug-attempts` (default 3), `--max-backfills` (default 2),
 `--candidate-pool-size` (default 12), `--screening-timeout` (default 900 seconds),
 `--screening-holdout-fraction` (default 0.25), `--llm-timeout` (default 300 seconds),
-`--llm-retries` (default 2), and `--force-rescreen`.
+`--llm-retries` (default 2), `--literature-rounds` (default 2),
+`--literature-max-documents` (default 8), `--literature-character-budget` (default 40000),
+`--disable-literature`, and `--force-rescreen`.
 
 The screen writes `runs/<run>/research/feature_catalog.json`, `screening_report.json`, and
 `manifest.json`. The manifest records the internal date boundary, dataset fingerprint, dependency
@@ -172,6 +248,9 @@ screens are reused when a run resumes.
   revision count, metrics/failure reason, and sandbox path.
 - Research and planning artifacts are deliberately outside the journal and cannot advance the
   experiment counter or the convergence window.
+- Literature is fetched only by validated catalog ID. Paths, hashes, candidate-pool membership,
+  uniqueness, document count, and the generation character budget are system-enforced; retrieved
+  text cannot override fixed task, leakage, evaluation, or file guardrails.
 - The host process controls files it writes. Generated Python is trusted to run as ordinary local
   experiment code; use an OS/container sandbox if the LLM itself is not trusted.
 

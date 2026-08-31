@@ -1,0 +1,395 @@
+[
+  {
+    "text": "Retain tab and hour request context but remove weekday, testing whether the recurring calendar signal adds ranking value beyond finer-grained impression timing.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "The request-context screen measured a positive primary lift of 0.00221 with full coverage, while the scored parent reached GAUC 0.6689 and nDCG@5 0.5370. Isolating weekday is a cheap way to determine whether its signal is useful or merely redundant with hour and tab.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Remove only the weekday feature from the parent feature set; keep tab, hour, architecture, BCE objective, optimizer, schedule, seed, and all other inputs unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely neutral to slightly negative, approximately -0.001 to +0.001, because weekday may provide modest broad within-user ordering signal.",
+      "nDCG@5": "Likely neutral to slightly negative, approximately -0.0015 to +0.001, because weekday may affect only a small number of top-five decisions."
+    },
+    "expected_primary_gain": 0.0002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use only tab and weekday from the request-context group, removing hour to test whether the unstable hour-specific behavior is hurting ranking.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 10
+    },
+    "rationale": "The parent\u2019s hour diagnostics show weak within-user ranking in hour 3, 4, 8, 11, and several other hours, including GAUC 0.5318 for hour 3 and 0.6003 for hour 8. Removing hour is a focused robustness ablation while preserving the positive request-context family screen.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:8"
+    ],
+    "exact_ablation": "Remove only the hour feature from the parent feature set; keep tab, weekday, architecture, BCE objective, optimizer, schedule, seed, and all other inputs unchanged.",
+    "expected_effect": {
+      "GAUC": "Possible small positive effect of approximately 0 to +0.003 if hour-specific estimates add noise; downside is a small loss of approximately -0.002 if hour carries genuine ordering signal.",
+      "nDCG@5": "Possible small positive effect of approximately 0 to +0.002 by reducing harmful hour-based reorderings; downside is approximately -0.002 if hour helps identify the best top-five candidates."
+    },
+    "expected_primary_gain": 0.0007,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Use only hour and weekday from the request-context group, removing tab to test whether tab-specific failures outweigh its context benefit.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 10
+    },
+    "rationale": "The parent has severe tab-specific weaknesses: tab 8 has GAUC 0.3519 and tab 3 has GAUC 0.5000, while the request-context screen only establishes evidence for the combined group. Removing tab directly tests whether the most problematic context field is causing harmful within-user ordering.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:tab:3"
+    ],
+    "exact_ablation": "Remove only the tab feature from the parent feature set; keep hour, weekday, architecture, BCE objective, optimizer, schedule, seed, and all other inputs unchanged.",
+    "expected_effect": {
+      "GAUC": "Potential small positive effect of approximately 0 to +0.003 if tab-specific memorization harms ordering; risk of approximately -0.003 to -0.001 if tab captures useful exposure context.",
+      "nDCG@5": "Potential small positive effect of approximately 0 to +0.002 if tab disproportionately misorders top candidates in weak tabs; risk of approximately -0.002 if tab helps head ranking."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer with an embedding-plus-MLP scorer over the same user, video, tab, hour, and weekday inputs.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The scored parent is a linear additive model with GAUC 0.6689 and nDCG@5 0.5370. A nonlinear scorer can represent context-dependent user-video ordering that additive weights cannot, which is especially relevant when request context varies substantially across weak tabs and hours.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Replace only the additive linear scoring architecture with a two-layer embedding-plus-MLP scorer using the identical encoded fields, labels, split, optimizer budget, and evaluation artifact contract; do not add or remove features.",
+    "expected_effect": {
+      "GAUC": "Likely positive by approximately +0.002 to +0.008 if nonlinear user-video-context interactions improve broad within-user ordering.",
+      "nDCG@5": "Likely positive by approximately +0.002 to +0.010 if nonlinear interactions correct the highest-ranked candidates; overfitting could make it neutral or negative.",
+      "},": ""
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a single low-rank cross branch to the scorer while preserving the existing additive branch and all five parent fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 10,
+      "novelty": 9,
+      "feasibility": 6
+    },
+    "rationale": "The current additive model can capture only independent field contributions. The parent\u2019s poor tab and hour slices suggest that conditional interactions may matter, while the request-context screen provides a measured positive signal worth exploiting through bounded interactions rather than broad feature expansion.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only one low-rank cross branch over the existing encoded user, video, tab, hour, and weekday inputs; retain the original additive branch, BCE objective, optimizer, schedule, and feature set unchanged.",
+    "expected_effect": {
+      "GAUC": "Possible positive lift of approximately +0.002 to +0.007 from user-video-context interactions; rare combinations may instead reduce GAUC through memorization.",
+      "nDCG@5": "Possible positive lift of approximately +0.003 to +0.009 if crosses fix top-rank context mistakes; volatility or overfitting could produce a small decline.",
+      "},": ""
+    },
+    "expected_primary_gain": 0.0045,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with a within-user pairwise logistic ranking loss using the same rows and features.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 10,
+      "novelty": 9,
+      "feasibility": 6
+    },
+    "rationale": "The official objective is within-user ordering, but the parent trains with pointwise BCE. The parent\u2019s GAUC of 0.6689 and nDCG@5 of 0.5370 leave room for an objective aligned directly with positive-negative ordering, especially in users with multiple positive and negative impressions.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:two_to_four",
+      "experiment:1:segment:user_positive_count:five_plus"
+    ],
+    "exact_ablation": "Replace only the BCE objective with pairwise logistic loss formed from positive-negative impression pairs within each user; keep features, additive architecture, candidate rows, optimizer, schedule, and checkpoint rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely positive by approximately +0.002 to +0.009 because the loss directly optimizes positive-over-negative ordering.",
+      "nDCG@5": "Possible positive effect of approximately +0.001 to +0.006, but it may be neutral or slightly negative if pairwise improvements occur below rank five.",
+      "},": ""
+    },
+    "expected_primary_gain": 0.0035,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics",
+      "experiment.paired_group_bootstrap_confirmation"
+    ]
+  },
+  {
+    "text": "Add impression-weighted BCE so users with more positive-bearing impressions contribute proportionally more to training.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "GAUC is positive-count-weighted, and the parent\u2019s positive-bearing user segments show substantially stronger ranking structure than the zero-positive diagnostic. Reweighting training toward informative impressions may improve ordering without changing the scorer or feature contract.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:one",
+      "experiment:1:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Change only the BCE per-row training weight to a predeclared user-level weight proportional to the user\u2019s train-prefix impression count, normalized to mean one; keep features, architecture, labels, optimizer, schedule, and evaluation unchanged.",
+    "expected_effect": {
+      "GAUC": "Possible positive effect of approximately +0.001 to +0.005 by emphasizing users with more ranking evidence; it could be neutral if the existing natural distribution is already suitable.",
+      "nDCG@5": "Possible small positive effect of approximately 0 to +0.003, with risk of -0.002 from underemphasizing sparse users whose top-five ranking is fragile.",
+      "},": ""
+    },
+    "expected_primary_gain": 0.0018,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add gradient clipping to the existing training procedure to reduce unstable updates from sparse categorical fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 8,
+      "feasibility": 9
+    },
+    "rationale": "The parent model contains many sparse ID/context parameters and reaches only a modest primary score of 0.6029. Clipping can reduce occasional large updates without changing the ranking features, although it may also suppress useful updates for rare users or videos.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:rare_1_4",
+      "experiment:1:segment:user_frequency:cold_0"
+    ],
+    "exact_ablation": "Add only global gradient-norm clipping at a fixed norm threshold before each optimizer update; keep feature inputs, additive architecture, BCE objective, learning rate, batch size, epochs, seed, and checkpoint rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely neutral to slightly positive, approximately -0.001 to +0.003, if sparse-field updates are noisy; excessive clipping could reduce GAUC by about -0.002.",
+      "nDCG@5": "Likely neutral to slightly positive, approximately -0.001 to +0.002, with downside risk from weaker learning on rare or cold entities.",
+      "},": ""
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace the fixed learning rate with cosine decay over the same maximum number of training updates.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 9
+    },
+    "rationale": "The parent\u2019s official metrics are moderate and request-context gains are small relative to daily variability. A smoother late-training schedule may improve generalization and reduce late overfitting, but could underfit if the decay is too aggressive.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context",
+      "experiment:1:segment:duration_bucket:(136900.0, inf]"
+    ],
+    "exact_ablation": "Replace only the constant learning rate with cosine decay from the parent learning rate to zero across the parent\u2019s maximum update budget; keep architecture, features, BCE objective, batch size, seed, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Possible small positive effect of approximately +0.001 to +0.004 from improved parameter convergence; risk of -0.002 if late updates are needed for sparse IDs.",
+      "nDCG@5": "Possible small positive effect of approximately +0.001 to +0.004 through smoother top-rank scores; risk of neutral or slightly negative results from underfitting.",
+      "},": ""
+    },
+    "expected_primary_gain": 0.0018,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "experiment.paired_group_bootstrap_confirmation"
+    ]
+  },
+  {
+    "text": "Increase L2 regularization on the existing additive scorer by one order of magnitude.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 10
+    },
+    "rationale": "The parent uses very weak L2 regularization and has unstable-looking context slices, including hour 3 GAUC 0.5318 and tab 8 GAUC 0.3519. Stronger shrinkage may reduce sparse category memorization and improve temporal robustness, though it can weaken legitimate user and video effects.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Change only the L2 coefficient from 1e-6 to 1e-5; keep features, additive architecture, BCE objective, learning rate, batch size, epochs, seed, and checkpoint rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Possible positive effect of approximately 0 to +0.004 if sparse weights overfit; risk of -0.003 from under-regularizing useful identity signal.",
+      "nDCG@5": "Possible positive effect of approximately 0 to +0.003 if top-rank scores become less brittle; risk of -0.003 if shrinkage collapses useful candidate separation.",
+      "},": ""
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Replace the categorical hour representation with a cyclic two-dimensional hour encoding while retaining tab and weekday categories.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The parent\u2019s hour slices vary widely, including GAUC 0.5318 at hour 3, 0.6041 at hour 4, and 0.6691 at hour 19. A cyclic encoding shares statistical strength between adjacent hours rather than assigning unrelated parameters to each hour, potentially improving generalization across sparse hours.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:4",
+      "experiment:1:segment:hour:19"
+    ],
+    "exact_ablation": "Replace only the categorical hour field with sin(2\u03c0\u00b7hour/24) and cos(2\u03c0\u00b7hour/24), normalized using fixed known bounds; keep tab, weekday, user/video IDs, additive architecture, BCE objective, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Possible positive effect of approximately +0.001 to +0.005 by smoothing adjacent-hour effects; risk of -0.002 if hour effects are genuinely discontinuous.",
+      "nDCG@5": "Possible positive effect of approximately +0.001 to +0.004 from more stable hour-conditioned top-five ordering; risk of neutral or slightly negative movement if discrete hour distinctions matter.",
+      "},": ""
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer\u2019s summed field weights with a shallow residual MLP over one-hot field indicators, without adding any new feature family.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The parent\u2019s additive structure cannot express nonlinear combinations among user, video, and request context. A shallow residual MLP is a bounded architecture change that may address severe tab and hour failures while preserving the exact displayed rows and leakage-safe feature set.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:hour:8"
+    ],
+    "exact_ablation": "Replace only the additive linear logit computation with a one-hidden-layer residual MLP over the parent\u2019s existing encoded fields; keep the five fields, BCE objective, optimizer, schedule, seed, and evaluation contract unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely positive by approximately +0.001 to +0.006 if conditional user-video-context effects matter; overfitting can produce a decline of roughly -0.003.",
+      "nDCG@5": "Likely positive by approximately +0.002 to +0.008 if nonlinearities repair top-five mistakes in weak context slices; it may be neutral if gains occur below rank five.",
+      "},": ""
+    },
+    "expected_primary_gain": 0.0035,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

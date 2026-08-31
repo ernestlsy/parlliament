@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.92,
+      "rationale": "Strongest candidate: directly measured +0.00221 primary lift, full coverage, positive lift on all four holdout dates, narrow ablation, and low runtime and leakage risk."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 2,
+      "utility_score": 0.68,
+      "rationale": "Builds on the only positive feature direction and tests bounded nonlinear context personalization with moderate runtime risk and low leakage risk, though it duplicates some of c01 and expands scope."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 3,
+      "utility_score": 0.64,
+      "rationale": "Uses the fully covered, consistently positive request-context signal with low runtime and leakage risk; less scope than c12, but the nonlinear representation is not directly measured."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 4,
+      "utility_score": 0.43,
+      "rationale": "Very safe and interpretable single-field ablation directly tied to the positive screen, but expected gain is limited because tab is only part of the measured group."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 5,
+      "utility_score": 0.39,
+      "rationale": "Narrow, cheap, and leakage-safe temporal test, but the cyclic encoding is speculative and expected lift is smaller than the broader context ablation."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 6,
+      "utility_score": 0.34,
+      "rationale": "Potentially aligns training with within-user evaluation, but evidence is indirect and the stated medium leakage and runtime risks reduce its value."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 7,
+      "utility_score": 0.31,
+      "rationale": "A contained architecture test with moderate runtime risk, but it lacks direct architecture evidence, omits the measured request-context signal, and may overfit identity interactions."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 8,
+      "utility_score": 0.28,
+      "rationale": "Cheap, clean, and interpretable, but weekday alone has weak expected lift and no field-level evidence supporting it."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 9,
+      "utility_score": 0.22,
+      "rationale": "Potential interaction benefit is plausible, but it stacks a cross branch onto an embedding-plus-MLP concept, creating duplication and excessive architectural scope without direct evidence."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 10,
+      "utility_score": 0.16,
+      "rationale": "The top-rank objective is interesting, but ListNet depends on valid mixed-label groups, has high runtime risk and medium leakage risk, and lacks direct measured loss evidence."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 11,
+      "utility_score": 0.14,
+      "rationale": "Pairwise loss is aligned with GAUC, but sampled-pair construction, group coverage, high runtime, and medium leakage risk make it a poor scarce-experiment choice."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 12,
+      "utility_score": 0.08,
+      "rationale": "Combines request-context features with a loss change relative to the seed, increasing scope and confounding attribution; it also carries high runtime and medium leakage risk with weak direct evidence."
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.88,
+      "rationale": "Best-supported positive ablation: request_context showed a measured +0.00221 primary lift with full coverage and explicit advancement recommendation. It is narrowly scoped with low leakage and runtime risk, despite uncertain nDCG@5 gains."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 2,
+      "utility_score": 0.67,
+      "rationale": "A compact user/video embedding interaction directly addresses the additive model limitation with moderate feasibility and lower scope than larger neural alternatives. Evidence is indirect and expected gains are speculative, but duplication and runtime risk are manageable."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 3,
+      "utility_score": 0.65,
+      "rationale": "A factorization-style interaction is a plausible capacity improvement and has a relatively strong expected gain, but it overlaps heavily with c08 and is less tightly bounded. Its evidence is only the base-ID screen and runtime risk is medium."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 4,
+      "utility_score": 0.56,
+      "rationale": "Aligns training with the within-user GAUC objective while changing only the loss, but evidence for improvement is indirect and pair construction adds runtime and implementation risk. nDCG@5 impact is notably uncertain."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 5,
+      "utility_score": 0.54,
+      "rationale": "Low-risk, inexpensive isolation of tab context, supported by the positive aggregate request_context screen. However, the evidence does not identify tab as the source of the lift, and the expected gain is small."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 6,
+      "utility_score": 0.52,
+      "rationale": "Low-risk temporal-context isolation with full coverage and plausible behavioral rationale. It is less directly evidenced than the combined request_context ablation, with small and uncertain expected gains."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 7,
+      "utility_score": 0.48,
+      "rationale": "Nonlinear identity compatibility could improve ranking, but it duplicates the interaction direction of c02 and c08 while adding more parameters and overfitting risk. Evidence is limited to base-ID relevance rather than nonlinear architecture performance."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 8,
+      "utility_score": 0.39,
+      "rationale": "Targets the GAUC/nDCG@5 mismatch, but has weak direct evidence, high runtime complexity, medium leakage risk, and substantial validation-overfitting potential from optimizing the top-five metric. The GAUC tradeoff is also uncertain."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 9,
+      "utility_score": 0.32,
+      "rationale": "Potentially useful explicit crosses, but it is the broadest and riskiest architecture change, with high runtime risk and substantial duplication with the other interaction candidates. Evidence is indirect and confidence is lowest among the architecture options."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 10,
+      "utility_score": 0.25,
+      "rationale": "Group-complete sampling is conceptually aligned with ranking evaluation, but expected lift is minimal and uncertain. High runtime risk, medium leakage risk, and possible changes to effective sampling make it a poor scarce-experiment choice."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 11,
+      "utility_score": 0.12,
+      "rationale": "Useful as a negative-control diagnostic for personalization, but it is expected to hurt performance and therefore has negative experiment value when seeking a primary improvement. Its low runtime risk does not offset the likely loss."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 12,
+      "utility_score": 0.03,
+      "rationale": "The result is nearly predetermined: user-only additive scores cannot distinguish items within a user. It is a valid sanity check but offers no credible upside and would consume the scarce experiment on a likely catastrophic negative result."
+    }
+  ]
+}

@@ -1,0 +1,354 @@
+[
+  {
+    "text": "Add impression-time request-context fields tab, hour, and weekday to the neutral user/video additive scorer; the measured train-only temporal screen reports a +0.00221 primary lift with full coverage and positive lift on all four holdout dates.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "This is the most directly supported candidate: screen:request_context measured a positive aggregate primary lift of 0.002213 with 100% coverage and positive daily lifts on every screened date. The change is small, ranking-relevant, and easy to isolate.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only the impression-time request_context fields tab, hour, and weekday; keep the additive user/video model, optimizer, loss, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase, approximately +0.002 to +0.004, because the screened feature group improved within-user discrimination.",
+      "nDCG@5": "Small increase or flat, approximately -0.001 to +0.002, because the screening showed stronger GAUC evidence than top-five evidence."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace the additive user/video scorer with an embedding-plus-MLP scorer while retaining only user_id and video_id inputs, testing whether nonlinear identity interactions improve within-user ordering.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 3
+    },
+    "rationale": "The neutral seed cannot represent nonlinear user-item effects. The measured request-context screen shows that impression-time context contains incremental ranking signal, supporting a broader test of nonlinear ranking capacity even though this candidate deliberately isolates architecture rather than adding that feature family.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the additive linear scoring function with a compact embedding-plus-MLP scorer over the existing user_id and video_id inputs; do not add request-context features or change the loss.",
+    "expected_effect": {
+      "GAUC": "Likely modest increase, approximately 0 to +0.003, if nonlinear user-item affinity is present.",
+      "nDCG@5": "Likely flat to modestly positive, approximately -0.001 to +0.003; nonlinear separation may not consistently alter the top five."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Add a low-rank explicit cross branch over user/video IDs and request context to the embedding-plus-MLP ranker, isolating bounded-order context interactions.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 3
+    },
+    "rationale": "The request-context screen is the only measured positive direction, and its benefit may depend on user- or item-specific context effects rather than additive offsets. Explicit crosses directly test that mechanism while preserving the deep branch.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only one two-layer low-rank cross branch over the existing feature vector and concatenate it with the unchanged MLP output; keep features, loss, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase by approximately 0 to +0.003 if context changes user/video preferences.",
+      "nDCG@5": "Potentially larger relative benefit than GAUC, approximately 0 to +0.004, if the interactions correct top-rank choices; otherwise it may be flat."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with within-group RankNet pairwise loss on valid positive-negative displayed groups, targeting the GAUC ordering objective directly.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "The official objective contains within-user pairwise ordering, while the seed uses pointwise BCE. The measured request-context evidence indicates useful ranking signal exists, making a ranking-aligned loss a plausible next test, but group construction and pair coverage create substantial implementation risk.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only pointwise BCE with within-user RankNet pairwise loss using four sampled negatives per positive within intact training candidate groups; keep the seed feature set and model architecture unchanged.",
+    "expected_effect": {
+      "GAUC": "More likely positive than nDCG@5, approximately +0.001 to +0.005, if mixed-label groups are sufficiently common.",
+      "nDCG@5": "Likely flat to positive, approximately -0.001 to +0.004; sampled pairs may improve broad ordering without fixing top-rank errors."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with mixed-group ListNet top-one loss to emphasize competition among displayed candidates and top-five ranking quality.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "The screened request-context gain is stronger for GAUC than nDCG@5, suggesting a complementary top-ranking intervention may be valuable. ListNet is a materially distinct listwise objective, though its value depends on reliable intact candidate groups and adequate mixed-label coverage.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only pointwise BCE with ListNet top-one loss on intact mixed-label groups; retain the seed user/video features, additive model, optimizer, and training schedule.",
+    "expected_effect": {
+      "GAUC": "Flat to modestly positive, approximately -0.001 to +0.003, because group normalization may sacrifice some broad calibration.",
+      "nDCG@5": "Potentially positive, approximately +0.001 to +0.005, if the displayed groups are valid and top-rank competition is learnable."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use user-normalized BCE instead of impression-weighted BCE so prolific users or long candidate groups do not dominate training.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 3
+    },
+    "rationale": "The official GAUC is within-user and positive-count weighted, so changing the reduction may improve alignment with the evaluated population. The positive request-context screen provides a useful signal for this reweighting test, but no direct measured evidence establishes the weighting effect.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Change only the BCE reduction to exact inverse candidate-count weighting with equal total weight per complete user candidate group; keep features, additive architecture, optimizer, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely small increase or flat, approximately 0 to +0.003, if the current fit is dominated by prolific users.",
+      "nDCG@5": "Uncertain and possibly slightly negative, approximately -0.002 to +0.002, because pointwise group normalization does not explicitly target top ranks."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Encode the screened request context as learned categorical embeddings rather than additive one-hot weights, allowing compact nonlinear context effects without changing the user/video scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 4
+    },
+    "rationale": "The request-context group has full coverage and positive lift on every screened date, but its aggregate effect is variable. A compact learned representation may capture interactions among tab, hour, and weekday more efficiently than independent additive weights.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only learned embeddings for tab, hour, and weekday and concatenate their pooled representation to the seed scorer; do not add other fields, interaction layers, or loss changes.",
+    "expected_effect": {
+      "GAUC": "Likely increase of approximately 0 to +0.003 if context categories have nonlinear effects.",
+      "nDCG@5": "Likely flat to modestly positive, approximately -0.001 to +0.003, with gains dependent on context-specific candidate ordering."
+    },
+    "expected_primary_gain": 0.0012,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Add only an hour-of-day cyclic representation from the request context, testing whether smooth temporal preference variation is more useful than independent hour categories.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "The measured request-context group is positive, but the available screen aggregates tab, hour, and weekday. A single-field decomposition can determine whether hour is the main transferable signal while keeping the experiment narrowly interpretable.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only sine and cosine encodings of impression hour to the seed user/video features; omit tab and weekday and change nothing else.",
+    "expected_effect": {
+      "GAUC": "Likely small positive or flat, approximately -0.001 to +0.002, if temporal preference is smooth.",
+      "nDCG@5": "Likely flat to small positive, approximately -0.001 to +0.002, because smooth time effects may improve separation below the top ranks."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Add only tab as an impression-time categorical feature to the additive scorer, isolating the strongest operational component of request context without adding hour or weekday.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The full request-context screen measured a +0.00221 primary lift with full coverage and consistent positive daily direction. This narrow decomposition is lower-risk and can reveal whether tab alone carries enough of that measured signal to justify broader context expansion.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only the tab field to the seed user/video additive features; do not add hour, weekday, or any other context field.",
+    "expected_effect": {
+      "GAUC": "Likely small positive or flat, approximately -0.001 to +0.002, because tab is only part of the screened group.",
+      "nDCG@5": "Likely flat to small positive, approximately -0.001 to +0.002."
+    },
+    "expected_primary_gain": 0.0006,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add only weekday as an impression-time categorical feature to the additive scorer, isolating weekly preference differences from the other request-context fields.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The request-context screen showed positive lift on all four dates, but did not identify field-level attribution. Weekday is a clean, low-cost single-field ablation that tests whether calendar effects contribute ranking signal.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add only weekday to the seed user/video additive features; do not add tab, hour, or any other context field.",
+    "expected_effect": {
+      "GAUC": "Likely near flat to small positive, approximately -0.001 to +0.0015, because weekday is a limited subset of the measured signal.",
+      "nDCG@5": "Likely flat, approximately -0.001 to +0.0015."
+    },
+    "expected_primary_gain": 0.0003,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Train the seed scorer with a pairwise margin objective only on request-context-conditioned within-user pairs, testing whether context-supported ordering benefits from a ranking-specific optimization target.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "This combines the strongest measured feature direction with a distinct ranking loss, but keeps the comparison interpretable as a single objective replacement relative to a context-enabled pointwise formulation. The screen establishes that request context is promising; it does not establish pairwise-loss gains, so confidence is limited.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only BCE with within-user RankNet loss while adding the already screened request_context fields as the fixed feature set for both compared implementations; no architecture or sampling change beyond the loss replacement.",
+    "expected_effect": {
+      "GAUC": "Potentially positive, approximately +0.001 to +0.005, if context separates positive-negative pairs within users.",
+      "nDCG@5": "Potentially positive but less certain, approximately -0.001 to +0.004, depending on whether sampled pairs reflect top-rank errors."
+    },
+    "expected_primary_gain": 0.0018,
+    "confidence": 3,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss"
+    ]
+  },
+  {
+    "text": "Use a shallow residual MLP head on top of request-context features and user/video embeddings, replacing the additive scorer to learn context-dependent nonlinear preference shifts.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 3
+    },
+    "rationale": "The measured request-context direction is positive but has daily variability larger than its mean lift. A small residual nonlinear head is a bounded architecture change intended to model stable context-by-identity effects without the capacity and risk of a deep cross network.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the additive scoring head with one two-layer residual MLP over user/video embeddings plus tab, hour, and weekday embeddings; keep pointwise BCE, optimizer, and feature availability policy unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely modest positive, approximately +0.001 to +0.004, if nonlinear context personalization is stable across time.",
+      "nDCG@5": "Likely flat to modestly positive, approximately 0 to +0.004, with potential top-rank gains from context-specific interactions."
+    },
+    "expected_primary_gain": 0.0018,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+command: ['/home/user/anaconda3/envs/evo/bin/python', 'train.py', '--config', 'config.json', '--data-dir', '/mnt/d/tehpengagent/src/kuairand-starter-kit/KuaiRand-Pure/data', '--output', '/mnt/d/tehpengagent/src/ernest/runs/run_7/attempts/attempt_94b745f91d89/predictions_valid.npz', '--contract-check']
+--- stdout ---
+
+--- stderr ---
+Traceback (most recent call last):
+  File "/mnt/d/tehpengagent/src/ernest/runs/run_7/attempts/attempt_94b745f91d89/train.py", line 114, in <module>
+    main()
+  File "/mnt/d/tehpengagent/src/ernest/runs/run_7/attempts/attempt_94b745f91d89/train.py", line 67, in main
+    loss = model.step(train_features[:probe_size], train_labels[:probe_size])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/d/tehpengagent/src/ernest/runs/run_7/attempts/attempt_94b745f91d89/model.py", line 122, in step
+    raise ValueError("feature and label lengths differ")
+ValueError: feature and label lengths differ

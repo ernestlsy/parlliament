@@ -24,6 +24,15 @@ class SystemConfig:
     screening_holdout_fraction: float = 0.25
     screening_seed: int = 0
     force_rescreen: bool = False
+    literature_enabled: bool = True
+    literature_max_rounds: int = 2
+    literature_max_requests_per_round: int = 2
+    literature_deterministic_candidates: int = 10
+    literature_assisted_candidates: int = 10
+    literature_alternative_queries: int = 5
+    literature_results_per_alternative: int = 2
+    literature_max_documents: int = 8
+    literature_character_budget: int = 40_000
     python_executable: str = ""
 
     def __post_init__(self) -> None:
@@ -37,6 +46,10 @@ class SystemConfig:
             "experiment_timeout_seconds", "max_consultant_rounds",
             "max_backfills_per_slot", "max_draft_hypotheses",
             "candidate_pool_size", "screening_timeout_seconds",
+            "literature_max_rounds", "literature_max_requests_per_round",
+            "literature_deterministic_candidates", "literature_assisted_candidates",
+            "literature_alternative_queries", "literature_results_per_alternative",
+            "literature_max_documents", "literature_character_budget",
         ):
             if getattr(self, name) <= 0:
                 raise ValueError(f"{name} must be positive")

@@ -41,6 +41,59 @@ FEATURE_GROUPS: Dict[str, List[str]] = {
     ],
 }
 
+# Canonical recipes bridge the names used by screening with the raw dataset columns that generated
+# experiment code must actually read. Keep these deterministic and auditable rather than asking an
+# LLM to infer aliases from a conceptual feature name.
+DERIVED_FEATURE_RECIPES: Dict[str, Dict[str, Any]] = {
+    "hour": {
+        "source_file": "log_standard_*.csv",
+        "source_columns": ["hourmin"],
+        "recipe": "integer hour = floor(numeric hourmin / 100), constrained to 0..23",
+    },
+    "weekday": {
+        "source_file": "log_standard_*.csv",
+        "source_columns": ["date"],
+        "recipe": "calendar weekday from YYYYMMDD date, Monday=0 through Sunday=6",
+    },
+    "upload_age_days": {
+        "source_file": "video_features_basic_pure.csv joined to log_standard_*.csv",
+        "source_columns": ["upload_dt", "date", "video_id"],
+        "recipe": "nonnegative calendar days between impression date and upload_dt after video_id join",
+    },
+    "prior_item_impressions": {
+        "source_file": "log_standard_4_08_to_4_21_pure.csv",
+        "source_columns": ["video_id", "date", "time_ms"],
+        "recipe": "count strictly earlier training impressions for the video_id",
+    },
+    "prior_item_long_rate": {
+        "source_file": "log_standard_4_08_to_4_21_pure.csv",
+        "source_columns": ["video_id", "date", "time_ms", "long_view"],
+        "recipe": "smoothed long_view rate from strictly earlier training impressions only",
+    },
+    "prior_author_impressions": {
+        "source_file": "training log joined with video_features_basic_pure.csv",
+        "source_columns": ["video_id", "author_id", "date", "time_ms"],
+        "recipe": "count strictly earlier training impressions for the joined author_id",
+    },
+    "prior_author_long_rate": {
+        "source_file": "training log joined with video_features_basic_pure.csv",
+        "source_columns": ["video_id", "author_id", "date", "time_ms", "long_view"],
+        "recipe": "smoothed author long_view rate from strictly earlier training impressions only",
+    },
+    "prior_user_author_impressions": {
+        "source_file": "training log joined with video_features_basic_pure.csv",
+        "source_columns": ["user_id", "video_id", "author_id", "date", "time_ms"],
+        "recipe": "count strictly earlier training impressions for the user_id-author_id pair",
+    },
+    "prior_user_author_long_rate": {
+        "source_file": "training log joined with video_features_basic_pure.csv",
+        "source_columns": [
+            "user_id", "video_id", "author_id", "date", "time_ms", "long_view",
+        ],
+        "recipe": "smoothed pair long_view rate from strictly earlier training impressions only",
+    },
+}
+
 
 @dataclass(frozen=True)
 class ScreeningConfig:
@@ -153,6 +206,54 @@ class ResearchEngine:
             "numpy": numpy.__version__,
             "pandas": pandas.__version__,
             "scikit_learn": sklearn.__version__,
+        }
+
+    def feature_schema(self) -> Dict[str, Any]:
+        """Return compact, deterministic field provenance for implementation agents."""
+        if not self.catalog_path.is_file():
+            raise FileNotFoundError(
+                "feature schema is unavailable until train-only screening has completed"
+            )
+        catalog = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        profiles = catalog.get("profiles", {})
+        sources: Dict[str, List[Dict[str, Any]]] = {}
+        for item in catalog.get("policy", []):
+            source = str(item.get("source", ""))
+            if not source or source == "derived_feature_group":
+                continue
+            feature = str(item.get("feature", ""))
+            entry = {
+                "name": feature,
+                "status": str(item.get("status", "")),
+                "reason": str(item.get("reason", "")),
+            }
+            profile = profiles.get(feature)
+            if isinstance(profile, dict):
+                entry["training_profile"] = {
+                    key: profile[key]
+                    for key in (
+                        "dtype", "missing_rate", "cardinality", "holdout_unseen_rate",
+                    )
+                    if key in profile
+                }
+            sources.setdefault(source, []).append(entry)
+        return {
+            "schema_version": 1,
+            "scope": "raw headers plus train-only profiles; no official validation statistics",
+            "training_date_boundary": {"date_lte": TRAIN_END},
+            "raw_sources": {
+                source: sorted(entries, key=lambda value: value["name"])
+                for source, entries in sorted(sources.items())
+            },
+            "derived_features": DERIVED_FEATURE_RECIPES,
+            "feature_groups": FEATURE_GROUPS,
+            "implementation_rules": [
+                "Use exact raw source column names; do not invent aliases.",
+                "Use canonical derived-feature recipes when a requested feature is derived.",
+                "Never use forbidden or quarantined fields as model inputs.",
+                "Fit vocabularies, imputers, scalers, and aggregates on training data only.",
+                "Preserve canonical source row order for validation predictions.",
+            ],
         }
 
     def _cache_key(self, fingerprint: str, versions: Mapping[str, str]) -> str:

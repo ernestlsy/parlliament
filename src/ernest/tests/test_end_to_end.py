@@ -117,13 +117,26 @@ class EndToEndTests(unittest.TestCase):
                     {"candidate_id": "c2", "rank": 2, "utility_score": 3, "rationale": "weaker"},
                 ]},
                 {"winner_candidate_id": "c1", "selection_rationale": "highest confidence"},
-                {"active_agents": ["model_designer"], "reasoning": "model-only", "contract": contract},
+                {
+                    "active_agents": ["model_designer"],
+                    "agent_instructions": {
+                        "model_designer": {
+                            "objective": "Update only the neutral model documentation",
+                            "required_changes": ["Change the model module docstring"],
+                            "preserve": ["All executable model behavior"],
+                            "coordination_notes": [],
+                        }
+                    },
+                    "reasoning": "model-only",
+                    "contract": contract,
+                },
                 {"files": {"model.py": "def broken(:\n"}},
                 {"model.py": updated_model},
             ])
             config = SystemConfig(
                 workspace=str(root / "workspace"), data_dir=str(data),
                 max_experiments=1, experiment_timeout_seconds=60, candidate_pool_size=2,
+                literature_enabled=False,
             )
             overseer = Overseer(config, llm)
 

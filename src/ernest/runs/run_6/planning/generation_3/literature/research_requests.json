@@ -1,0 +1,51 @@
+[
+  {
+    "categories": [
+      "evaluation",
+      "bias_and_robustness",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "recommendation evaluation",
+      "exposure bias",
+      "propensity scoring",
+      "logged bandit feedback",
+      "KuaiRand"
+    ],
+    "purpose": "Resolve whether the severe tab and low-activity-hour weaknesses reflect candidate exposure or logging bias rather than model ranking capacity, and identify leakage-safe diagnostics compatible with the fixed within-user evaluation.",
+    "query": "Literature on unbiased offline evaluation and exposure or selection bias in recommendation ranking with logged impressions, including propensity methods, random-exposure datasets, and within-user metrics such as GAUC and nDCG@5",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "architectures",
+      "features",
+      "objectives",
+      "training",
+      "bias_and_robustness",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "cold start",
+      "long tail recommendation",
+      "sparse items",
+      "pairwise ranking",
+      "candidate coverage"
+    ],
+    "purpose": "Resolve which deployable architecture, feature, or training changes are supported for the rare-item and long-duration weaknesses without using forbidden current-impression outcomes or unavailable aggregate snapshots.",
+    "query": "Literature on cold-start, long-tail, and sparse-item recommendation ranking, including item representation, candidate coverage, pairwise or listwise training, and robustness evaluation for rare items",
+    "request_index": 2,
+    "round": 1
+  }
+]

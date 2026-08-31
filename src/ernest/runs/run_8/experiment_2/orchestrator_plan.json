@@ -1,0 +1,74 @@
+{
+  "active_agents": [
+    "model_designer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.py remains unchanged: encode(splits) returns, for each split, (features, labels, users), with features retaining canonical FIELDS order [user_id, video_id, tab, hour, weekday] and validation rows in source order."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model.step receives unchanged encoded features with shape (batch_size, 5), where features[:, 0] is the encoded canonical user_id field, and labels is the corresponding float32 long_view vector. Model.predict receives encoded validation features and returns one score per row in input order."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "model_designer": {
+      "objective": "Replace the model's pointwise BCE optimization with within-user pairwise logistic ranking loss while keeping the additive model and all input rows/features unchanged.",
+      "required_changes": [
+        "Modify only model.py, specifically Model.step(features, labels). Treat features[:, 0] as the encoded user_id field because data.py defines FIELDS with user_id at index 0 and applies its first vocabulary offset there; do not introduce a source-column alias or alter data.py.",
+        "Within each training batch, group rows by identical features[:, 0] values. For every user having at least one label equal to 1 and one label equal to 0, form every positive-negative pair from those rows. For each pair, compute d = positive_logit - negative_logit and pair loss softplus(-d), implemented stably as maximum(-d, 0) + log1p(exp(-abs(d))).",
+        "Accumulate pair gradients using sigmoid(d): positive-row gradient is sigmoid(d) - 1 and negative-row gradient is 1 - sigmoid(d). Divide all accumulated feature gradients by the total number of formed pairs, then apply the existing l2 * weights regularization and the existing Adam first/second-moment updates, bias update interface, and learning-rate behavior.",
+        "Because the additive bias cancels in every score difference, use zero bias gradient for pairwise updates; leave bias unchanged by the ranking objective. If a batch contains no valid within-user positive-negative pair, return a finite zero loss and perform only the existing regularization/optimizer handling without producing NaN or infinity.",
+        "Keep Model.logits, Model.predict, state, and load_state interfaces unchanged. Ensure step still returns a finite scalar loss and accepts the unchanged two-argument call from train.py."
+      ],
+      "preserve": [
+        "Use exactly the existing additive score: bias plus the sum of weights indexed by each row's encoded feature IDs.",
+        "Do not change feature dimensions, vocabulary encoding, candidate rows, validation ordering, optimizer hyperparameters, epoch schedule, early-stop proxy, checkpoint selection, or prediction computation.",
+        "Do not add forbidden, quarantined, or newly derived features; this experiment changes only the objective.",
+        "Preserve numerical finiteness for empty groups, all-positive/all-negative batches, tied scores, and large score differences."
+      ],
+      "coordination_notes": [
+        "train.py will continue passing only train_features and train_labels; infer within-user membership from encoded features[:, 0] as the canonical user_id feature rather than changing the training interface.",
+        "The fixed command must continue emitting predictions_valid.npz with exactly row_ids and scores; row_ids must remain np.arange(len(valid_labels), dtype=np.int64), matching canonical validation row order.",
+        "No config.json edit is needed; trainer remains inactive."
+      ]
+    }
+  },
+  "reasoning": "Only model_designer is required because the exact ablation changes the objective in model.py and the existing encoded first feature is the canonical user_id field, allowing pair construction without modifying data.py or train.py. The additive architecture, features, rows, optimizer, schedule, checkpoint rule, and output contract remain unchanged."
+}

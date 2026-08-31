@@ -1,0 +1,54 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "features",
+      "evaluation",
+      "training"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "context-aware-recommendation",
+      "feature-interactions",
+      "ranking",
+      "temporal-leakage",
+      "GAUC",
+      "nDCG@5"
+    ],
+    "purpose": "Resolve whether the additive architecture is fundamentally unable to exploit interactions between request context and user/item signals, and identify a bounded architecture change appropriate for improving GAUC and nDCG@5 without changing the fixed evaluation or using unavailable outcomes.",
+    "query": "Literature on context-aware recommender architectures and feature-interaction models for impression-time context such as tab, hour, and weekday, especially methods that improve within-user ranking over additive ID scorers while controlling overfitting and preserving temporal leakage safety. Include comparisons of factorization machines, deep cross networks, field-aware interactions, and context-gated or mixture-of-experts rankers.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "bias_and_robustness",
+      "experiment_strategy",
+      "evaluation",
+      "architectures"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5",
+      "MAP@5",
+      "MRR@5"
+    ],
+    "preferred_tags": [
+      "long-tail-recommendation",
+      "cold-start",
+      "sparse-feedback",
+      "segment-robustness",
+      "fallback-models",
+      "within-user-ranking"
+    ],
+    "purpose": "Resolve whether targeted tab treatment, fallback ranking, or long-tail robustness methods are justified for the severe failures in tabs 8, 3, 5, and 0, and how to evaluate them without optimizing mechanically zero-positive slices or overinterpreting tiny segments.",
+    "query": "Literature on robust recommender ranking under severe segment heterogeneity and sparse or zero-positive evaluation groups, including context-specific calibration or fallback models for low-volume tabs, cold or rare items, and users with little history. Focus on methods that distinguish true within-user ordering failures from label-prevalence and support-size artifacts.",
+    "request_index": 2,
+    "round": 1
+  }
+]

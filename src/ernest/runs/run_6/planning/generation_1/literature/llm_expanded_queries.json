@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Context-aware recommender ranking architectures that learn explicit and implicit user-item-request-context interactions, including tab, hour, and weekday, with temporal evaluation using within-user GAUC and nDCG@5",
+      "Deep context-aware ranking models for recommendation that combine user and item representations with request context features such as tab, hour, and weekday; compare interaction layers, cross networks, factorization machines, and additive baselines using temporal within-user GAUC and top-k nDCG@5",
+      "Literature on neural recommender architectures for user-item-context feature interaction modeling in ranking, including feature crossing, bilinear interaction, attention, and factorization-based methods, with evidence for GAUC and nDCG@5 under time-based evaluation",
+      "Temporal evaluation of context-aware recommendation ranking systems that model interactions among user embeddings, item embeddings, and request context such as tab, hour, and weekday, focusing on within-user GAUC versus nDCG@5 tradeoffs",
+      "Contextual recommendation and personalized ranking architectures for converting request-context signals into user-item-context interaction features rather than user-only or additive effects, with reported within-user GAUC and top-five nDCG performance under temporal splits"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "Compare pointwise, pairwise, and listwise learning-to-rank losses for implicit-feedback recommender systems using within-user GAUC and macro nDCG@5, with temporal holdout evaluation and cold-start user/item analysis.",
+      "Literature on pointwise versus pairwise ranking versus listwise ranking objectives for implicit-feedback recommendation, focusing on GAUC, per-user AUC, and macro nDCG@5 under chronological splits and cold-start conditions.",
+      "Empirical studies of recommendation training objectives for implicit feedback that compare binary pointwise loss, BPR or other pairwise losses, and listwise losses, evaluated with within-user GAUC and macro nDCG@5 using temporal validation and warm-start versus cold-start segments.",
+      "When does changing from pointwise training to pairwise or listwise ranking improve top-five recommendation quality relative to broad within-user discrimination? Search studies using implicit feedback, temporal holdout, cold-start analysis, GAUC, and macro nDCG@5.",
+      "Recommender-system objective selection for implicit-feedback data: evidence comparing pointwise, pairwise, and listwise optimization when the fixed primary evaluation metric is within-user GAUC, with secondary macro nDCG@5, chronological testing, and user/item cold-start considerations."
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

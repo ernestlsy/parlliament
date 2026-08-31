@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "evaluation.random_exposure_generalization_audit",
+      "evaluation.within_user_metrics",
+      "evaluation.frozen_candidate_group_integrity_audit",
+      "robustness.clipped_ips_within_group_rank_loss",
+      "robustness.doubly_robust_exposure_debiased_ranking",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1,
+    "selected_document_ids": [
+      "features.train_prefix_smoothed_popularity_features",
+      "paper.group_dro_within_user_ranking"
+    ]
+  }
+]

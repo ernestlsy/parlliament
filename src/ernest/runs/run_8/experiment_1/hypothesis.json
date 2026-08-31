@@ -1,0 +1,30 @@
+{
+  "text": "Add impression-time request-context features tab, hour, and weekday to the neutral user/video additive scorer while leaving model, loss, and training unchanged.",
+  "parent_experiment_id": 0,
+  "scores": {
+    "interestingness": 9,
+    "novelty": 5,
+    "feasibility": 9
+  },
+  "rationale": "The only screened feature group with positive overall primary lift and full coverage is request context, but its modest size and daily variability require confirmation.",
+  "candidate_id": "c01",
+  "evidence_ids": [
+    "screen:request_context"
+  ],
+  "exact_ablation": "Add only the request-context feature group {tab, hour, weekday}; keep the neutral additive architecture, BCE objective, optimizer, and schedule fixed.",
+  "expected_effect": {
+    "GAUC": "Likely small positive lift from improved broad within-user ordering, especially for warm users/items; expect approximately +0.001 to +0.004.",
+    "nDCG@5": "Possible small positive or neutral effect because screening showed weaker top-five concentration; expect approximately -0.001 to +0.003."
+  },
+  "expected_primary_gain": 0.002,
+  "confidence": 7,
+  "leakage_risk": "low",
+  "runtime_risk": "low",
+  "active_components": [
+    "features"
+  ],
+  "literature_document_ids": [
+    "task.leakage_policy",
+    "evaluation.within_user_metrics"
+  ]
+}

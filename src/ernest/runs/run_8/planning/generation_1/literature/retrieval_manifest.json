@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "built"
+  ],
+  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.embedding_mlp_ranker",
+      "path": "20_architectures/embedding_mlp_ranker.md",
+      "sha256": "c81739cefc5d550399a927013519688953b21ea274c3211bcfc5316593a569be",
+      "source_characters": 8308,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.deep_cross_ranker",
+      "path": "20_architectures/deep_cross_ranker.md",
+      "sha256": "db004648e9c7b63e0f9bc0954691dbcf9fe572c134fa90b309e12eee9d590cb8",
+      "source_characters": 7634,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 1273,
+      "id": "evaluation.within_user_metrics",
+      "path": "50_evaluation/within_user_metrics.md",
+      "sha256": "d51c53af38a3d738934f2cd6d5e7e15b728aef0d5c1cf5a17f04f55ba5d3ad52",
+      "source_characters": 1273,
+      "truncated": false
+    },
+    {
+      "fetched_characters": 5745,
+      "id": "evaluation.stratified_temporal_population_evaluation",
+      "path": "50_evaluation/stratified_temporal_population_evaluation.md",
+      "sha256": "e4df7be674e589b5c88253f7965f273f7db10aae686d8278f51698e65a7d9fed",
+      "source_characters": 7645,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 1663,
+      "id": "task.leakage_policy",
+      "path": "00_task/leakage_policy.md",
+      "sha256": "2349c37fe36c7539b44967a775ce47fd44c150b1887e60e4a1aed1a1fa5b48d9",
+      "source_characters": 1663,
+      "truncated": false
+    },
+    {
+      "fetched_characters": 7106,
+      "id": "objective.bce_lambdarank_ndcg5_hybrid",
+      "path": "30_objectives/bce_lambdarank_ndcg5_hybrid.md",
+      "sha256": "48f2455f2d5620a3b9548e5d66c4ef2249f048e19be4023f4d958e67901489a0",
+      "source_characters": 10000,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 7106,
+      "id": "evaluation.frozen_candidate_group_integrity_audit",
+      "path": "50_evaluation/frozen_candidate_group_integrity_audit.md",
+      "sha256": "1841e0eaea615303278e54285a2deb2d53d834834948d2bd21ee21f139e9483c",
+      "source_characters": 8716,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 7107,
+      "id": "experiment.proxy_then_frozen_validation_gate",
+      "path": "80_experiment_strategy/proxy_then_frozen_validation_gate.md",
+      "sha256": "d658bf283f56516f1808bcd5737370d2d244e74986e872d6fb57dbac04c6d6ac",
+      "source_characters": 9713,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "architecture.embedding_mlp_ranker",
+    "architecture.deep_cross_ranker",
+    "evaluation.within_user_metrics",
+    "evaluation.stratified_temporal_population_evaluation",
+    "task.leakage_policy",
+    "objective.bce_lambdarank_ndcg5_hybrid",
+    "evaluation.frozen_candidate_group_integrity_audit",
+    "experiment.proxy_then_frozen_validation_gate"
+  ],
+  "total_fetched_characters": 40000
+}

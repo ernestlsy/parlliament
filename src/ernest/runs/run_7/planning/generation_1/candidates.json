@@ -1,0 +1,355 @@
+[
+  {
+    "text": "Add impression-time request-context features tab, hour, and weekday to the neutral user/video additive scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 5,
+      "feasibility": 9
+    },
+    "rationale": "The training-only temporal screen measured a positive primary lift of 0.00221 with full coverage for request_context, and the analyst recommends advancing it. This is the most directly supported feature ablation.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Ablate the absence of request_context by adding only tab, hour, and weekday features; keep the additive user/video model, BCE training, and all hyperparameters unchanged.",
+    "expected_effect": {
+      "GAUC": "Small increase, approximately +0.001 to +0.004, because context can change within-user ordering; the screen indicates useful discrimination for both cold users and warm users/items.",
+      "nDCG@5": "Small uncertain increase, approximately -0.001 to +0.003; the measured screen showed stronger GAUC than nDCG@5, so top-five gains may be limited."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 8,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace the additive user/video effects with a factorization-machine-style user-video embedding interaction while retaining user and video identifiers.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The measured base-ID screen establishes the permitted identity signal, while the neutral scaffold cannot represent user-specific item affinity beyond additive effects. A low-rank interaction is a focused capacity change that can improve within-user ordering without adding unavailable data.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Ablate the additive-only ID scorer by replacing it with user and video embeddings plus their dot product; use no metadata, context, history, or other feature additions.",
+    "expected_effect": {
+      "GAUC": "Moderate increase, approximately +0.002 to +0.010, primarily on warm user/video rows where collaborative interaction is identifiable.",
+      "nDCG@5": "Moderate but less certain increase, approximately 0 to +0.008; better personalization may move relevant items into the top five, but broad affinity can also misorder the very top."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings"
+    ]
+  },
+  {
+    "text": "Replace the additive ID model with an embedding-plus-MLP scorer using only user and video IDs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 6
+    },
+    "rationale": "The base-ID evidence indicates that identity features are ranking-relevant, but the seed model is strictly additive. A nonlinear scorer can learn user-video compatibility beyond a sum of independent effects while keeping the feature contract minimal.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Ablate the additive architecture by replacing it with 32-dimensional user/video embeddings concatenated into a two-layer MLP; keep the same labels, split, and pointwise BCE objective.",
+    "expected_effect": {
+      "GAUC": "Moderate increase, approximately +0.001 to +0.009, if nonlinear identity compatibility captures warm-user preferences better than additive effects.",
+      "nDCG@5": "Small-to-moderate increase, approximately -0.001 to +0.007; extra capacity may improve top-five ordering but can overfit sparse entities."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "features.entity_id_embeddings"
+    ]
+  },
+  {
+    "text": "Add an explicit low-rank cross branch to an embedding-plus-MLP identity scorer, without adding any new feature family.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 5
+    },
+    "rationale": "The identity screen supports preserving user/video inputs, while a cross branch directly targets candidate-specific interactions that the additive scaffold cannot express. This is a distinct architecture intervention rather than a feature expansion.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Ablate the absence of explicit crosses by adding two low-rank cross layers over the user/video embedding vector; keep the embedding inputs, MLP branch, loss, and training schedule otherwise fixed.",
+    "expected_effect": {
+      "GAUC": "Potential moderate increase of approximately +0.001 to +0.008 if bounded user-video interactions improve pairwise separation; otherwise near zero.",
+      "nDCG@5": "Potential small increase of approximately 0 to +0.006, with greater uncertainty because added cross capacity can improve average ordering without fixing top-five mistakes."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with within-user pairwise logistic loss over positive-negative identity candidates.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The official objective is within-user ranking, whereas the seed optimizes pointwise classification. The measured base-ID evidence confirms that the available IDs provide some ordering signal; a pairwise objective can align training pressure more directly with GAUC.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Ablate pointwise BCE by training the same user/video additive scorer with within-user positive-negative logistic pairs only; change no features or architecture.",
+    "expected_effect": {
+      "GAUC": "Small-to-moderate increase, approximately +0.001 to +0.008, because training directly penalizes within-user inversions.",
+      "nDCG@5": "Uncertain change, approximately -0.002 to +0.006; pairwise optimization may improve broad ordering while neglecting the highest-ranked five positions."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "training.group_complete_stratified_minibatching"
+    ]
+  },
+  {
+    "text": "Add an nDCG@5-weighted pairwise term to the existing pointwise BCE objective for identity features.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "The official metric combines GAUC and nDCG@5, and the request-context screen shows that GAUC strength does not guarantee top-five improvement. A metric-focused auxiliary loss is therefore a targeted way to address the observed metric mismatch without changing features.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Ablate the absence of a top-five ranking term by adding one LambdaRank-style nDCG@5-weighted pairwise loss to BCE; keep the additive user/video features and model unchanged.",
+    "expected_effect": {
+      "GAUC": "Small increase or neutral, approximately -0.001 to +0.005, because the added top-five weighting may sacrifice some broad pair ordering.",
+      "nDCG@5": "Moderate potential increase, approximately +0.001 to +0.010, if positive items currently just below the top five receive stronger updates."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 5,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use group-complete, label-stratified minibatches instead of independent row minibatches while retaining pointwise BCE.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 5
+    },
+    "rationale": "The task evaluates within-user ordering, but independent row batches provide no coherent candidate-group structure for future ranking losses and can distort exposure composition. This training intervention preserves the same features and objective while improving group representation.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Ablate independent row sampling by sampling complete user candidate groups with a fixed mixed/zero-positive/all-positive group mixture; keep the additive model, features, and BCE loss unchanged.",
+    "expected_effect": {
+      "GAUC": "Small uncertain increase, approximately -0.002 to +0.005, from more representative group-level optimization even under BCE.",
+      "nDCG@5": "Small uncertain increase, approximately -0.002 to +0.006; complete groups may stabilize top-five behavior but can reduce throughput or alter effective sampling."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "training.group_complete_stratified_minibatching"
+    ]
+  },
+  {
+    "text": "Increase the identity representation from scalar additive effects to 16-dimensional user and video embeddings with a dot-product interaction.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "The measured base-ID evidence supports identity inputs, while the seed uses one scalar per entity and cannot encode multiple preference dimensions. A small embedding interaction is a bounded alternative to a larger neural architecture.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Ablate scalar identity parameters by replacing them with 16-dimensional user/video embeddings and one dot-product score; retain no other feature or training changes.",
+    "expected_effect": {
+      "GAUC": "Small-to-moderate increase, approximately +0.001 to +0.007, with the strongest effect on warm entities.",
+      "nDCG@5": "Small increase, approximately -0.001 to +0.006; compact embeddings limit overfit but may not capture enough fine-grained affinity for top-five gains."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings"
+    ]
+  },
+  {
+    "text": "Add only tab context to the identity scorer, excluding hour and weekday.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "The measured request_context result is positive but aggregates three fields with variable daily lift. Isolating tab is a clean, lower-complexity test that can determine whether the robust part of the observed gain comes from surface context rather than temporal buckets.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Ablate the absence of the tab field by adding only tab to the user/video additive scorer; do not add hour or weekday and change nothing else.",
+    "expected_effect": {
+      "GAUC": "Small increase, approximately 0 to +0.003, if tab captures stable within-user surface preference.",
+      "nDCG@5": "Near-neutral to small increase, approximately -0.001 to +0.003; a single context field may not reliably resolve top-five item order."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Add only hour and weekday context to the identity scorer, excluding tab.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "The measured request_context screen supports temporal context overall, and separating its temporal fields tests whether time-dependent user intent drives the measured gain. It is a single feature-family ablation with full expected coverage.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Ablate the absence of temporal context by adding only hour and weekday to the user/video additive scorer; exclude tab and keep every other setting fixed.",
+    "expected_effect": {
+      "GAUC": "Small increase, approximately 0 to +0.004, if within-user preferences vary by time of day or day of week.",
+      "nDCG@5": "Small and uncertain increase, approximately -0.001 to +0.004; temporal context may discriminate broadly without consistently selecting the top five."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Remove the user identifier and retain only video identity in the additive scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 8,
+      "feasibility": 9
+    },
+    "rationale": "The base-ID screen provides measured evidence for the identity scaffold, but it does not separate user and video contributions. This negative-control ablation tests whether personalization is genuinely needed for within-user ranking rather than merely item-level popularity effects.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Ablate user_id only: remove the user identifier while retaining video_id, the additive architecture, BCE loss, and all training settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely decrease, approximately -0.010 to -0.001, because a user-constant score cannot personalize ordering within a user's candidates and item-only scores may be insufficient.",
+      "nDCG@5": "Likely decrease, approximately -0.015 to -0.001, because removing user-specific ordering should hurt top-five relevance; the effect may be muted if candidate lists are already item-skewed."
+    },
+    "expected_primary_gain": -0.006,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Remove the video identifier and retain only user identity in the additive scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 8,
+      "feasibility": 9
+    },
+    "rationale": "The ranking task requires scores to vary among a user's candidate items. The base-ID evidence supports the identity scaffold, and this control directly tests the necessity of candidate-specific video identity under the fixed evaluator.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Ablate video_id only: remove the video identifier while retaining user_id, the additive architecture, BCE loss, and all training settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely collapse toward 0.5 or a substantially lower value, approximately -0.20 to -0.01 relative to the parent, because user-only constants cannot order items within a user.",
+      "nDCG@5": "Likely decrease substantially, approximately -0.20 to -0.01 relative to the parent, because identical scores across a user's candidates produce tied or arbitrary top-five rankings."
+    },
+    "expected_primary_gain": -0.08,
+    "confidence": 9,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

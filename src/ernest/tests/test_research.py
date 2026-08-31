@@ -152,6 +152,26 @@ class ResearchEngineIntegrationTests(unittest.TestCase):
             cached = engine.ensure()
             self.assertEqual(cached, report)
             self.assertEqual(engine.manifest_path.read_text(encoding="utf-8"), manifest_before)
+            schema = engine.feature_schema()
+            training_fields = {
+                item["name"]
+                for item in schema["raw_sources"][
+                    "log_standard_4_08_to_4_21_pure.csv"
+                ]
+            }
+            self.assertIn("hourmin", training_fields)
+            self.assertNotIn("hour", training_fields)
+            self.assertEqual(
+                schema["derived_features"]["hour"]["source_columns"], ["hourmin"]
+            )
+            forbidden = {
+                item["name"]
+                for item in schema["raw_sources"][
+                    "log_standard_4_08_to_4_21_pure.csv"
+                ]
+                if item["status"] == "forbidden"
+            }
+            self.assertIn("long_view", forbidden)
             self.assertNotIn(
                 "feature:log_standard_4_08_to_4_21_pure.csv:play_time_ms",
                 engine.evidence_ids(),

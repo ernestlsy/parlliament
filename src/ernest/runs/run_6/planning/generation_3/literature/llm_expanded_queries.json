@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "unbiased offline evaluation of recommender ranking with logged impressions exposure bias selection bias propensity scoring within-user GAUC nDCG@5 leakage-safe diagnostics",
+      "counterfactual evaluation recommendation systems logged bandit feedback propensity-weighted ranking metrics random exposure datasets KuaiRand GAUC nDCG@5",
+      "recommendation exposure and presentation bias in impression logs candidate selection effects versus ranking quality within-user evaluation nDCG@5 GAUC",
+      "randomized or random-exposure datasets for diagnosing exposure bias in recommender systems logged impressions propensity methods KuaiRand within-user ranking metrics",
+      "offline robustness evaluation of recommender ranking across tab position hour low-activity and rare-item segments selection bias logged exposure inverse propensity weighting GAUC nDCG@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "(\"cold-start recommendation\" OR \"new-item recommendation\" OR \"item cold start\") AND (\"long-tail\" OR \"rare items\" OR \"sparse items\") AND (ranking OR recommender systems) AND (\"item representation\" OR content features OR metadata) AND (GAUC OR \"nDCG@5\" OR nDCG)",
+      "(\"long-tail recommendation\" OR \"tail-item recommendation\" OR \"rare-item recommendation\") AND (\"candidate coverage\" OR recall OR retrieval) AND (\"pairwise ranking\" OR \"listwise ranking\" OR learning-to-rank) AND (robustness OR fairness OR segment evaluation)",
+      "(\"sparse item\" OR \"low-interaction item\" OR \"item sparsity\") AND recommender AND (\"cold-start\" OR \"new items\") AND (embedding OR representation learning OR metadata) AND (\"within-user\" OR pairwise OR listwise) AND (nDCG OR GAUC)",
+      "(\"rare-item\" OR \"long-tail\" OR \"low-exposure\") AND recommendation AND (\"candidate generation\" OR \"candidate coverage\" OR retrieval) AND (\"ranking loss\" OR \"pairwise loss\" OR \"listwise loss\") AND (\"robust evaluation\" OR \"slice analysis\" OR \"tail performance\")",
+      "(\"cold-start\" AND \"long-tail\" AND recommendation) AND (architecture OR features OR objective OR training) AND (\"offline evaluation\" OR \"temporal evaluation\") AND (\"data leakage\" OR \"information leakage\") AND (GAUC OR \"nDCG@5\")"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "data_output": {
+    "description": "data.py load/encode must include only user_id, video_id, tab, hour, and weekday features for this ablation; request-context values must be derived from each impression row without future or validation-informed statistics. Encodings and unknown buckets are fit on training rows only. Encoded validation rows must retain original canonical validation order, with labels and user IDs carried only for training-time proxy logic."
+  },
+  "config_keys": [
+    "seed"
+  ],
+  "model_input": {
+    "description": "model.py receives a two-dimensional integer feature-index matrix with one row per impression and additive field offsets, plus the encoded feature dimension. The unchanged Model logits method sums the corresponding weights. The fixed training command must write predictions_valid.npz containing exactly the arrays row_ids and scores, where row_ids are canonical validation row identifiers/order and scores are one finite score per validation row."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

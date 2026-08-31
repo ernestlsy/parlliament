@@ -1,0 +1,75 @@
+{
+  "active_agents": [
+    "feature_engineer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.py load() continues to return split rows in canonical source order. encode(splits) continues to return (encoded, dimension); each encoded split is (features, labels, users), where features is an int32 matrix with columns [user_id, video_id, tab, hour, weekday], labels is float32, and users is U32. The three added fields use only train-fitted vocabularies with one unknown bucket each."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "model.py receives the encoded int32 feature matrix and the total five-field vocabulary dimension. Model.logits must remain bias plus the sum of the five indexed weights for each row; no interactions, loss, optimizer, or schedule changes are permitted."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Extend the neutral ID feature encoding with exactly the request_context group {tab, hour, weekday} while preserving the existing data interface and canonical row order.",
+      "required_changes": [
+        "In data.py, read the exact raw columns tab, hourmin, and date from each log_standard_4_08_to_4_21_pure.csv and log_standard_4_22_to_5_08_pure.csv row; do not introduce aliases or read excluded fields.",
+        "Derive hour exactly as integer floor(numeric hourmin / 100), constrained to 0..23.",
+        "Derive weekday exactly as the calendar weekday of the YYYYMMDD date, with Monday=0 through Sunday=6.",
+        "Retain user_id and video_id as the first two encoded feature fields and add tab, hour, and weekday as three additional categorical fields, for a five-column encoded feature matrix.",
+        "Fit all five vocabularies on the training split only, allocate one unknown bucket per field, and preserve the existing offset-based single-vector indexing scheme.",
+        "Keep encode(splits) returning (encoded, dimension), with each encoded split retaining the existing (features, labels, users) tuple shape so train.py remains compatible.",
+        "Preserve source filtering and row order: split rows must remain in the order produced by load(), and validation features, labels, and users must remain aligned in canonical validation source-row order."
+      ],
+      "preserve": [
+        "The LABEL, SPLITS, input filenames, train-only vocabulary fitting, unknown-bucket behavior, int32 feature dtype, float32 labels, and U32 user IDs.",
+        "The neutral additive architecture: features are independent categorical indices consumed by Model.logits as a sum of per-index weights; do not add interactions, embeddings, baselines, profile aggregates, or any other feature group.",
+        "The existing BCE training objective, optimizer, learning-rate schedule, and configuration values; do not modify model.py, train.py, or config.json."
+      ],
+      "coordination_notes": [
+        "The resulting model input is an int32 matrix of shape (N, 5), with dimension equal to the sum of the five train-fitted vocabulary dimensions including unknown buckets.",
+        "The fixed trainer continues to receive the unchanged three-element encoded tuple and must emit only row_ids and scores; no ground-truth labels may be written to predictions_valid.npz.",
+        "Use only the canonical schema names and recipes: raw tab; raw hourmin for hour=floor(numeric hourmin/100) constrained to 0..23; raw date for Monday=0..Sunday=6 weekday."
+      ]
+    }
+  },
+  "reasoning": "Only feature_engineer is activated because model.py already implements a dimension-agnostic additive scorer and the existing trainer already writes exactly row_ids and scores without changing configuration. The data change is limited to the request_context group, uses training-only vocabularies, and preserves the existing train.py interface and canonical validation order."
+}

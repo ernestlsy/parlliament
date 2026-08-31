@@ -1,0 +1,34 @@
+{
+  "winner": {
+    "text": "Use a pairwise within-user ranking loss instead of pointwise binary cross-entropy while retaining the parent architecture and features.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 7,
+      "feasibility": 5
+    },
+    "rationale": "The official objective is entirely ranking-based, with GAUC 0.6694 and nDCG@5 0.5367, but the parent is trained with pointwise BCE. A pairwise objective directly trains positive-over-negative ordering and is especially relevant when classification improvements do not translate to top-k ranking.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only pointwise BCE optimization with a within-user pairwise logistic loss formed from positive-negative impression pairs; keep the same five features, additive scorer, optimizer settings, batch budget, checkpoint rule, and validation evaluator unchanged.",
+    "expected_effect": {
+      "GAUC": "Likely increase approximately +0.002 to +0.006 because the loss directly targets positive-negative ordering within users.",
+      "nDCG@5": "Likely increase approximately +0.001 to +0.005, though it may trade off against GAUC if pair sampling underrepresents the few items that belong in the top five."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  "selection_rationale": "Select the within-user pairwise ranking loss. It is ranked first by the Consultant, directly aligns training with the GAUC and nDCG@5 objectives, preserves the validated parent features and architecture, has the highest expected primary gain among the reliable candidates (+0.003), confidence 5, low leakage risk, and only medium runtime risk. This offers a more reliable improvement than higher-novelty architecture changes.",
+  "counted_experiments_consumed": 0
+}

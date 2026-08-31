@@ -1,0 +1,46 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "context-aware recommendation",
+      "feature interactions",
+      "factorization machines",
+      "sparse ranking"
+    ],
+    "purpose": "Resolve the architecture uncertainty about whether a bounded user-item-context interaction model is more appropriate than the current additive scorer, especially for improving weak tab and hour segments without changing the fixed objective or evaluation.",
+    "query": "Context-aware recommender architectures that model interactions between user/item identities and impression-time context such as tab, hour, and weekday, with emphasis on factorization machines, field-aware factorization machines, and lightweight interaction layers for sparse implicit-feedback ranking",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "bias_and_robustness",
+      "evaluation",
+      "experiment_strategy",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "temporal drift",
+      "sparse segments",
+      "group robustness",
+      "offline recommender evaluation"
+    ],
+    "purpose": "Resolve the robustness and experiment-design uncertainty around the severe tab/hour diagnostic weaknesses, including whether targeted interactions, regularization, or shrinkage are supported by prior evidence and how such changes should be evaluated on temporal holdouts.",
+    "query": "Robustness and generalization of context-aware recommender systems under temporal drift and sparse context segments, including methods for detecting or mitigating performance degradation across time-of-day and application-surface groups without using post-impression outcomes",
+    "request_index": 2,
+    "round": 1
+  }
+]

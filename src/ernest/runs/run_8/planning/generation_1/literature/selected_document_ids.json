@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "architecture.deep_cross_ranker",
+      "evaluation.within_user_metrics",
+      "evaluation.stratified_temporal_population_evaluation",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1,
+    "selected_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.frozen_candidate_group_integrity_audit",
+      "experiment.proxy_then_frozen_validation_gate"
+    ]
+  }
+]

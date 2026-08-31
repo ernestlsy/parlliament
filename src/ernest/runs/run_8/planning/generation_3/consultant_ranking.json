@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c03",
+      "rank": 1,
+      "utility_score": 78.0,
+      "rationale": "Best balance of targeted novelty, low runtime risk, and feasibility. It directly tests missing user-video affinity while retaining proven request-context signal. Warm-traffic evidence supports upside, though rare-item regression remains a concern."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 2,
+      "utility_score": 73.0,
+      "rationale": "Strong architectural opportunity to model context interactions without new feature families, with moderate expected gain and reasonable evidence from request-context lift. It is broader and more overfitting-prone than c03, with medium runtime risk."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 3,
+      "utility_score": 62.0,
+      "rationale": "Safest and easiest experiment, specifically addressing severe sparse-context slices. Expected upside is small and the arbitrary tenfold penalty may shrink genuinely useful context signal, limiting value for the scarce run."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 4,
+      "utility_score": 59.0,
+      "rationale": "Low-risk, clean objective ablation that may improve broad separation, but class weighting is weakly supported and does not directly optimize ranking. It also partially revisits the already unfavorable loss direction."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 5,
+      "utility_score": 56.0,
+      "rationale": "Simple and low-risk loss change with plausible head-ranking benefit, but evidence is indirect and focal weighting may overemphasize noisy rare impressions. Expected gain and confidence are modest."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 6,
+      "utility_score": 53.0,
+      "rationale": "Very feasible and leakage-safe, but chronological minibatching has uncertain direction and may introduce recency bias. The request-context temporal evidence is train-only and insufficient to justify strong confidence."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 7,
+      "utility_score": 51.0,
+      "rationale": "Directly aligns updates with within-user evaluation and remains a bounded training change, but BCE is still pointwise and user-contiguous batches may overweight large users. Medium runtime risk further reduces priority."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 8,
+      "utility_score": 49.0,
+      "rationale": "Potentially useful for context-dependent ranking, but it overlaps substantially with c01 and c03 while adding architectural scope and medium runtime risk. Evidence is based on weak slices and does not establish that explicit crosses are needed."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 9,
+      "utility_score": 45.0,
+      "rationale": "Clean, cheap feature ablation with no leakage concern, but weekday has not been isolated as harmful and the expected gain is near zero. It is useful mainly as a diagnostic rather than the best scarce experiment."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 10,
+      "utility_score": 40.0,
+      "rationale": "Low runtime risk and a precise ablation, but it builds on the pairwise experiment that reduced the primary metric. Margin pressure is likely to amplify the same instability and has weak independent evidence."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 11,
+      "utility_score": 35.0,
+      "rationale": "Hard negatives are relevant to top-rank quality, but this depends on the failed pairwise parent, introduces batch-selection instability, and risks overfitting noisy or incomplete negatives. Medium runtime risk and limited evidence make it a poor scarce-run choice."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 12,
+      "utility_score": 27.0,
+      "rationale": "Although directly targeted at nDCG@5, it has the highest runtime and optimization risk, relies on an unstable within-batch rank proxy, and could sacrifice GAUC. The pairwise parent already underperformed, so evidence is especially weak."
+    }
+  ]
+}

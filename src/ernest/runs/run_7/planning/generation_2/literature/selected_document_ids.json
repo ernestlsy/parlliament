@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "architecture.deep_cross_ranker",
+      "architecture.embedding_mlp_ranker",
+      "architecture.candidate_conditioned_history_attention",
+      "architecture.causal_sequence_transformer_ranker",
+      "paper.mmoe_auxiliary_behavior_ranker"
+    ]
+  },
+  {
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1,
+    "selected_document_ids": [
+      "evaluation.stratified_temporal_population_evaluation",
+      "paper.group_dro_within_user_ranking",
+      "experiment.paired_group_bootstrap_confirmation"
+    ]
+  }
+]

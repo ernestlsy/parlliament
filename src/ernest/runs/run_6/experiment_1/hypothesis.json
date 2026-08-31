@@ -1,0 +1,29 @@
+{
+  "text": "Add impression-time request-context fields tab, hour, and weekday to the neutral user/video additive scorer; the measured train-only temporal screen reports a +0.00221 primary lift with full coverage and positive lift on all four holdout dates.",
+  "parent_experiment_id": 0,
+  "scores": {
+    "interestingness": 5,
+    "novelty": 3,
+    "feasibility": 5
+  },
+  "rationale": "This is the most directly supported candidate: screen:request_context measured a positive aggregate primary lift of 0.002213 with 100% coverage and positive daily lifts on every screened date. The change is small, ranking-relevant, and easy to isolate.",
+  "candidate_id": "c01",
+  "evidence_ids": [
+    "screen:request_context"
+  ],
+  "exact_ablation": "Add only the impression-time request_context fields tab, hour, and weekday; keep the additive user/video model, optimizer, loss, and training schedule unchanged.",
+  "expected_effect": {
+    "GAUC": "Likely increase, approximately +0.002 to +0.004, because the screened feature group improved within-user discrimination.",
+    "nDCG@5": "Small increase or flat, approximately -0.001 to +0.002, because the screening showed stronger GAUC evidence than top-five evidence."
+  },
+  "expected_primary_gain": 0.002,
+  "confidence": 7,
+  "leakage_risk": "low",
+  "runtime_risk": "low",
+  "active_components": [
+    "features"
+  ],
+  "literature_document_ids": [
+    "evaluation.within_user_metrics"
+  ]
+}

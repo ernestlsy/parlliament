@@ -1,0 +1,38 @@
+{
+  "winner": {
+    "text": "Increase only L2 regularization on the existing additive context model to reduce sparse-context overfitting.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "Official diagnostics show very weak sparse context cells, especially tab 8 with nDCG@5 0.026 and tab 0 with nDCG@5 0.062, while the full model's aggregate metrics remain moderate. Stronger regularization is a clean non-feature intervention that may stabilize rare tab and hour offsets.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:2:segment:tab:8",
+      "experiment:2:segment:tab:0",
+      "experiment:2:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Change only L2 from 1e-6 to 1e-4 for all additive weights; retain the current user/video/tab/weekday/hour features, BCE objective, optimizer, learning rate, batch size, and stopping rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Small uncertain change, approximately -0.0010 to +0.0020; shrinkage may improve rare-context generalization but can weaken useful user/video separation.",
+      "nDCG@5": "Small possible increase, approximately -0.0010 to +0.0025, if extreme sparse offsets currently displace good candidates; excessive shrinkage may flatten top-five scores.",
+      "},": "x"
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training",
+      "regularization"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  "selection_rationale": "Select c12 because it is the consultant's top-ranked experiment and offers the best risk-adjusted opportunity: low runtime and leakage risk, highest confidence among the leading options, and direct targeting of severe sparse-context failures in tabs 8 and 0 through stronger regularization. Its expected gain is modest but more reliable than the higher-risk architecture and loss changes.",
+  "counted_experiments_consumed": 0
+}

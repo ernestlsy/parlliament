@@ -1,0 +1,388 @@
+[
+  {
+    "text": "Remove hour while retaining tab and weekday request context in the additive user/video scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The request-context screen is positive overall, but official validation is weak in several hour slices, including hour 3 with GAUC 0.51212 and hour 8 with GAUC 0.58799. Removing the noisiest context field tests whether hour causes harmful within-user reorderings while preserving the stronger context signal.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:8"
+    ],
+    "exact_ablation": "Ablate only the hour feature: use user_id, video_id, tab, and weekday exactly as in experiment 1; keep the additive model, BCE loss, optimizer, seed, and all hyperparameters unchanged.",
+    "expected_effect": {
+      "GAUC": "Small increase of approximately +0.0005 to +0.0025 if noisy hour-specific weights currently hurt ordering; otherwise near zero.",
+      "nDCG@5": "Small increase or neutral change, approximately -0.0005 to +0.0020; removing hour may reduce some useful top-five context distinctions."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Remove tab while retaining hour and weekday request context in the additive scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "Tab has extremely uneven official validation behavior: tab 8 has GAUC 0.35185 and nDCG@5 0.02634, while the overall request-context result is only modestly positive. This controlled removal tests whether tab memorization is responsible for poor context-specific ordering.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Ablate only the tab feature: use user_id, video_id, hour, and weekday exactly as in experiment 1; keep the additive model, BCE loss, optimizer, seed, and all hyperparameters unchanged.",
+    "expected_effect": {
+      "GAUC": "Small increase of approximately +0.0005 to +0.0030 if tab-specific weights overfit sparse contexts; possible decrease of -0.0015 if tab carries genuine stable preference differences.",
+      "nDCG@5": "Uncertain, approximately -0.0010 to +0.0030; tab removal could improve noisy top-five ranks but may erase useful within-user context separation."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace categorical hour with a two-dimensional cyclic hour representation while retaining tab and weekday.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Hour-specific validation ranking varies substantially, with GAUC 0.51212 at hour 3 versus 0.65698 at hour 21. A cyclic representation shares statistical strength between adjacent hours instead of learning unrelated one-hot weights, potentially reducing sparse-context instability.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:21"
+    ],
+    "exact_ablation": "Ablate only the categorical hour encoding and replace it with sin(2\u03c0\u00b7hour/24) and cos(2\u03c0\u00b7hour/24), keeping tab, weekday, user_id, video_id, additive scoring, BCE training, and every hyperparameter otherwise unchanged.",
+    "expected_effect": {
+      "GAUC": "Small increase of approximately +0.0005 to +0.0025 from smoother temporal generalization, with risk of -0.0010 if hour effects are non-cyclic.",
+      "nDCG@5": "Small uncertain increase of approximately -0.0005 to +0.0025; smoother hour effects may improve top-five stability but reduce sharp useful distinctions."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Add a shallow nonlinear interaction scorer over the existing user, video, tab, hour, and weekday fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The current additive model cannot express that a user's context preference changes by candidate video. The positive request-context screen (+0.00221 primary lift) and strong overall GAUC of 0.66937 suggest usable context signal that may benefit from candidate-specific interactions.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Ablate only the additive scoring architecture by replacing the summed one-hot weights with an embedding-plus-small-MLP scorer over the same five fields; keep the BCE objective, data rows, split, seed, and training budget fixed.",
+    "expected_effect": {
+      "GAUC": "Moderate possible increase of approximately +0.0010 to +0.0040 because nonlinear user-video-context interactions can refine within-user ordering.",
+      "nDCG@5": "Moderate but uncertain increase of approximately 0.0000 to +0.0040; interaction gains must reach the top five to help this metric."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add an explicit low-rank cross branch to the existing nonlinear scorer for bounded user/video/context interactions.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "Request context improves screening but has severe weak slices, indicating that a shared additive effect may not fit all user-context-item combinations. Explicit low-rank crosses can model these interactions while limiting the capacity and memorization risk of unrestricted conjunctions.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Ablate only the scorer architecture by adding one two-layer low-rank cross branch over the existing field representation and concatenating it with the existing scorer output; preserve features, BCE loss, optimizer, seed, and all other settings.",
+    "expected_effect": {
+      "GAUC": "Possible increase of approximately +0.0010 to +0.0045 if context-dependent candidate ordering is material; risk of -0.0020 from rare-combination overfitting.",
+      "nDCG@5": "Possible increase of approximately +0.0005 to +0.0040, but it may remain flat if cross capacity improves lower-ranked ordering rather than the top five."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with a within-user pairwise RankNet objective using the same features and scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The official objective is within-user ranking, while experiment 1 uses pointwise BCE. The model already reaches GAUC 0.66937 but nDCG@5 is lower at 0.53667, so directly emphasizing positive-negative ordering may improve ranking alignment.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:one",
+      "experiment:1:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Ablate only the training loss: replace pointwise BCE with RankNet pairwise logistic loss formed from positive-negative pairs within each training user; keep the additive user/video/context scorer, sampling, optimizer, seed, and checkpoint rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Moderate possible increase of approximately +0.0010 to +0.0040 because the loss directly optimizes within-user pair ordering.",
+      "nDCG@5": "Possible increase of approximately +0.0010 to +0.0050, with a risk of -0.0020 if pairwise optimization improves broad ordering but neglects score calibration for the top five."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Use a BCE-plus-pairwise ranking hybrid with a small pairwise coefficient to preserve pointwise stability.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 6
+    },
+    "rationale": "The current model has useful aggregate ranking quality but uneven top-five results. A lightly weighted pairwise term is a bounded alternative to fully replacing BCE and may improve positive-negative ordering without discarding the signal that produced GAUC 0.66937.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:five_plus",
+      "experiment:1:segment:user_positive_count:one"
+    ],
+    "exact_ablation": "Ablate only the objective by replacing BCE with 0.8\u00b7BCE + 0.2\u00b7within-user RankNet loss; keep features, model, pair construction, optimizer, seed, and every hyperparameter except the loss definition unchanged.",
+    "expected_effect": {
+      "GAUC": "Small to moderate increase of approximately +0.0005 to +0.0035 from better within-user separation.",
+      "nDCG@5": "Small possible increase of approximately +0.0005 to +0.0040; downside is a -0.0020 regression if pair sampling emphasizes users unlike the official nDCG population."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "experiment.paired_group_bootstrap_confirmation"
+    ]
+  },
+  {
+    "text": "Replace one-hot additive parameters with shared user/video embeddings and a compact residual MLP over the existing context fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 5
+    },
+    "rationale": "Experiment 1 provides strong enough aggregate ordering to justify capacity expansion, but its additive form cannot share statistical structure across related IDs or learn nonlinear interactions. A compact embedding model is a materially different but still impression-time-safe scorer.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:rare_1_4",
+      "experiment:1:segment:user_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Ablate only the model representation by replacing the additive one-hot scorer with 32-dimensional user/video embeddings, categorical context embeddings, and a two-layer residual MLP; retain the same fields, BCE loss, data split, seed, and checkpoint policy.",
+    "expected_effect": {
+      "GAUC": "Possible increase of approximately +0.0010 to +0.0040 through nonlinear sharing, but a -0.0030 decline is possible for rare IDs from embedding undertraining.",
+      "nDCG@5": "Possible increase of approximately +0.0005 to +0.0040; top-five gains are uncertain and may be offset by instability on sparse users or items."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add causal candidate-conditioned attention over a capped pre-impression user video history to the current context-aware scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 4
+    },
+    "rationale": "The current model uses stable IDs and request context but no evolving user intent. The sizeable gap between GAUC 0.66937 and nDCG@5 0.53667 leaves room for candidate-specific history matching, especially when the same user's current interest differs from durable ID affinity.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:two_to_four",
+      "experiment:1:segment:user_positive_count:five_plus"
+    ],
+    "exact_ablation": "Ablate only the feature representation by adding a masked attention-pooled vector from the user's last 50 strictly pre-impression video events, conditioned on the candidate video; keep the existing fields, scorer head, BCE loss, optimizer, seed, and all other settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Potential increase of approximately +0.0010 to +0.0050 for users with history, with near-zero effect for empty histories.",
+      "nDCG@5": "Potential increase of approximately +0.0010 to +0.0060 if current intent selects the right top-five candidates; risk of -0.0030 from noisy or sparse histories."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "features",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.candidate_conditioned_history_attention",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace the static ID/context scorer with a small causal self-attentive encoder over each user's pre-impression video sequence.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 3
+    },
+    "rationale": "The static scorer's official validation is stronger in aggregate than in top-five quality, while users with multiple positives have much better ranking metrics than users with only one. A causal sequence representation may capture transitions and current intent that static IDs miss.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:one",
+      "experiment:1:segment:user_positive_count:five_plus"
+    ],
+    "exact_ablation": "Ablate only the architecture by replacing the static user representation with a one-block causal Transformer over the last 50 strictly pre-impression video IDs, then concatenate its final state with candidate video and request context; keep BCE, split, seed, and training budget otherwise fixed.",
+    "expected_effect": {
+      "GAUC": "Possible increase of approximately +0.0005 to +0.0040 among users with sufficient history, but an aggregate decrease of up to -0.0030 is plausible from sparse-history noise.",
+      "nDCG@5": "Possible increase of approximately +0.0010 to +0.0050 if sequence intent improves the first ranks; risk of degradation for cold and short-history users."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 3,
+    "leakage_risk": "medium",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.causal_sequence_transformer_ranker",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Train with a predeclared group-DRO objective that upweights weak request-context groups while retaining an aggregate anchor loss.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 5
+    },
+    "rationale": "Official diagnostics reveal severe context-specific failures, especially tab 8 with primary 0.18909 and hour 3 with primary 0.44906, despite positive global metrics. A bounded group-DRO objective could reduce these regressions without optimizing a post-hoc metric or using label-derived features.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:hour:3",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Ablate only the training objective by replacing uniform BCE with an anchored group-DRO BCE over predeclared tab groups: 80% uniform loss plus 20% adversarial group-weighted loss, with group membership fixed from impression-time tab; keep model, features, optimizer, seed, and checkpoint rule unchanged.",
+    "expected_effect": {
+      "GAUC": "Small uncertain change from approximately -0.0010 to +0.0025; improving weak groups may trade off some strong-group ordering.",
+      "nDCG@5": "Possible increase of approximately +0.0005 to +0.0030 if weak-context top-five ranks improve, with downside risk of -0.0025 from overweighting noisy small groups."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "paper.group_dro_within_user_ranking",
+      "evaluation.stratified_temporal_population_evaluation"
+    ]
+  },
+  {
+    "text": "Increase regularization and use early stopping based on a paired ranking score rather than the current GAUC-only proxy.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The current checkpoint proxy is within-user GAUC, but the official objective also includes nDCG@5 and the observed nDCG@5 is substantially lower than GAUC. Selecting checkpoints with a training-only proxy that also emphasizes top-five ranking may reduce divergence between optimization and selection.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:one",
+      "experiment:1:segment:tab:8"
+    ],
+    "exact_ablation": "Ablate only checkpoint selection and regularization: select the best checkpoint using 0.5\u00b7training-only GAUC proxy plus 0.5\u00b7training-only nDCG@5 proxy and double L2; keep features, additive model, BCE updates, data order, seed, and epoch budget unchanged.",
+    "expected_effect": {
+      "GAUC": "Small uncertain change of approximately -0.0010 to +0.0020; stronger regularization may slightly reduce broad separation.",
+      "nDCG@5": "Possible increase of approximately +0.0010 to +0.0040 because checkpoint choice explicitly protects top-five ordering, with risk of a small decrease if the proxy is noisy."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "experiment.paired_group_bootstrap_confirmation"
+    ]
+  }
+]

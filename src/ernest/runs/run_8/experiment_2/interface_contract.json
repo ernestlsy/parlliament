@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "data.py remains unchanged: encode(splits) returns, for each split, (features, labels, users), with features retaining canonical FIELDS order [user_id, video_id, tab, hour, weekday] and validation rows in source order."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model.step receives unchanged encoded features with shape (batch_size, 5), where features[:, 0] is the encoded canonical user_id field, and labels is the corresponding float32 long_view vector. Model.predict receives encoded validation features and returns one score per row in input order."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

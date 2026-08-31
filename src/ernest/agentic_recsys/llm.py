@@ -128,6 +128,7 @@ class OpenAICompatibleClient(LLMClient):
         api_key: Optional[str] = None, timeout_seconds: int = 300,
         max_retries: int = 2, retry_backoff_seconds: float = 1.0,
         api_mode: str = "auto", json_mode: bool = True,
+        web_search: bool = False, web_search_context_size: str = "high",
     ):
         self.model = model
         self.base_url = base_url.rstrip("/")
@@ -143,6 +144,12 @@ class OpenAICompatibleClient(LLMClient):
             raise ValueError("api_mode must be one of: auto, responses, chat")
         self.api_mode = api_mode
         self.json_mode = json_mode
+        self.web_search = web_search
+        if web_search_context_size not in {"low", "medium", "high"}:
+            raise ValueError("web_search_context_size must be low, medium, or high")
+        self.web_search_context_size = web_search_context_size
+        if self.web_search and self._resolved_mode() != "responses":
+            raise ValueError("hosted web search requires the Responses API")
         if not self.api_key:
             raise ValueError("an API key is required (argument or OPENAI_API_KEY)")
 
@@ -219,6 +226,38 @@ class OpenAICompatibleClient(LLMClient):
             raise LLMError(f"unexpected Responses API response shape: {result}")
         return "".join(texts)
 
+    @staticmethod
+    def _responses_web_metadata(result: Dict[str, Any]) -> Dict[str, Any]:
+        calls = []
+        citations = []
+        seen_citations = set()
+        for item in result.get("output", []):
+            if not isinstance(item, dict):
+                continue
+            if item.get("type") == "web_search_call":
+                action = item.get("action", {})
+                calls.append({
+                    "id": item.get("id"),
+                    "status": item.get("status"),
+                    "action": action if isinstance(action, dict) else {},
+                })
+                continue
+            if item.get("type") != "message":
+                continue
+            for content in item.get("content", []):
+                if not isinstance(content, dict) or content.get("type") != "output_text":
+                    continue
+                for annotation in content.get("annotations", []):
+                    if not isinstance(annotation, dict) or annotation.get("type") != "url_citation":
+                        continue
+                    url = str(annotation.get("url", "")).strip()
+                    title = str(annotation.get("title", "")).strip()
+                    if not url or url in seen_citations:
+                        continue
+                    seen_citations.add(url)
+                    citations.append({"title": title or url, "url": url})
+        return {"calls": calls, "citations": citations}
+
     def complete_json(self, *, role: str, system: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         mode = self._resolved_mode()
         user_input = (
@@ -231,10 +270,28 @@ class OpenAICompatibleClient(LLMClient):
                 "instructions": system,
                 "input": user_input,
             }
-            if self.json_mode:
+            # The Responses API rejects provider-enforced JSON mode when hosted
+            # web search is present. The input still explicitly requests JSON,
+            # and _extract_json validates the returned text locally.
+            if self.json_mode and not self.web_search:
                 body["text"] = {"format": {"type": "json_object"}}
+            if self.web_search:
+                body.update({
+                    "tools": [{
+                        "type": "web_search",
+                        "search_context_size": self.web_search_context_size,
+                    }],
+                    "tool_choice": "required",
+                    "include": ["web_search_call.action.sources"],
+                })
             result = self._post("responses", body)
-            return _extract_json(self._responses_text(result))
+            parsed = _extract_json(self._responses_text(result))
+            if self.web_search:
+                metadata = self._responses_web_metadata(result)
+                if not metadata["calls"]:
+                    raise LLMError("web-search-enabled response did not contain a web_search_call")
+                parsed["_web_search"] = metadata
+            return parsed
 
         body = {
             "model": self.model,

@@ -1,0 +1,35 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context"
+      ],
+      "finding": "Prioritize request-context features (tab, hour, weekday). Training-only temporal screening shows a positive primary lift of 0.00221 with full coverage; daily lift is positive on three of four days, although variability warrants temporal monitoring.",
+      "recommended_action": "Retain and production-test this group, with drift checks by day, tab, and hour; do not expand it with outcome-derived fields."
+    },
+    {
+      "evidence_ids": [
+        "experiment:2:metrics",
+        "experiment:1:metrics"
+      ],
+      "finding": "Apply the strict early-stop rule to the cyclic-hour experiment. The latest experiment has GAUC 0.66937 and primary 0.60302, but observed primary gain versus its parent is 0.0, so the predicted gain was not realized.",
+      "recommended_action": "Stop further hour-encoding iterations and preserve budget for validation of the already screened request-context group."
+    },
+    {
+      "evidence_ids": [
+        "experiment:2:segment:tab:8",
+        "experiment:2:segment:tab:0",
+        "experiment:2:segment:hour:3",
+        "experiment:2:segment:duration_bucket:(136900.0, inf]"
+      ],
+      "finding": "Post-score diagnostics identify concentrated weaknesses. Tab 8 is severe in both within-user ranking and top-five quality (GAUC 0.352, nDCG@5 0.026); tab 0 is also weak (GAUC 0.541, nDCG@5 0.062). Hour 3 has low GAUC 0.512 and primary 0.449, while the longest-duration bucket has lower nDCG@5 0.413 and primary 0.524 despite GAUC 0.635.",
+      "recommended_action": "Investigate calibration, candidate quality, and coverage for tab 8, tab 0, hour 3, and long-duration content before adding new features; treat these as diagnostic slices, not independent test estimates."
+    }
+  ],
+  "avoid": [
+    "Reject screened user-profile, historical user-author affinity, upload-recency, content-duration, item-metadata, historical-author-response, and historical-item-response groups because their training-only primary lifts are negative; cite screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, and screen:historical_item_response if revisiting them.",
+    "Do not interpret user_positive_count=zero as evidence of ranking failure: its GAUC is 0.5 and all top-five metrics are zero because the retrospective slice has no positives; cite experiment:2:segment:user_positive_count:zero.",
+    "Do not use current-impression outcomes or aggregate snapshots lacking per-impression availability timestamps, because they can leak unavailable information at ranking time."
+  ],
+  "metric_diagnosis": "The strongest decision signal is stable within-user ranking evidence from the training-only temporal screen, where request_context is the only prioritized group with positive primary lift. GAUC should be read separately from top-five quality: several segments have moderate or high GAUC but materially weak nDCG@5, especially tab 8, tab 0, rare items, and long-duration content. Conversely, the zero-positive user segment has GAUC 0.5 and zero top-five metrics by construction, not necessarily poor ordering. Official post-score segments are diagnostic slices rather than independent test estimates, so they support targeted investigation but not a new feature-budget commitment."
+}

@@ -48,6 +48,13 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--screening-holdout-fraction", type=float, default=0.25)
     run.add_argument("--screening-seed", type=int, default=0)
     run.add_argument("--force-rescreen", action="store_true")
+    run.add_argument(
+        "--disable-literature", action="store_true",
+        help="skip Librarian research requests and use only fixed knowledge cards",
+    )
+    run.add_argument("--literature-rounds", type=int, default=2)
+    run.add_argument("--literature-max-documents", type=int, default=8)
+    run.add_argument("--literature-character-budget", type=int, default=40_000)
 
     status = sub.add_parser("status", help="summarize a run journal")
     status.add_argument("run_dir")
@@ -79,6 +86,24 @@ def main(argv=None) -> int:
                 "primary_lift": item.get("primary_lift"),
                 "recommendation": item.get("recommendation"),
             } for item in report.get("candidates", [])[:5]]
+        literature_manifests = sorted(
+            Path(args.run_dir).glob("planning/generation_*/literature/retrieval_manifest.json"),
+            key=lambda path: int(path.parent.parent.name.rsplit("_", 1)[-1]),
+        )
+        literature_summary = {
+            "generations_with_retrieval": len(literature_manifests),
+            "latest_manifest": None,
+            "latest_selected_document_ids": [],
+            "latest_fetched_characters": 0,
+        }
+        if literature_manifests:
+            latest_literature = literature_manifests[-1]
+            manifest = json.loads(latest_literature.read_text(encoding="utf-8"))
+            literature_summary.update({
+                "latest_manifest": str(latest_literature.resolve()),
+                "latest_selected_document_ids": manifest.get("selected_document_ids", []),
+                "latest_fetched_characters": manifest.get("total_fetched_characters", 0),
+            })
         print(json.dumps({
             "records": len(records),
             "scored": len(scored),
@@ -86,6 +111,7 @@ def main(argv=None) -> int:
             "latest_primary": scored[-1]["metrics"]["primary"] if scored else None,
             "converged": journal.converged(),
             "research": research_summary,
+            "literature": literature_summary,
             "recent_failures": [{
                 "attempt_id": record["attempt_id"],
                 "generation": record["generation"],
@@ -109,6 +135,10 @@ def main(argv=None) -> int:
         screening_holdout_fraction=args.screening_holdout_fraction,
         screening_seed=args.screening_seed,
         force_rescreen=args.force_rescreen,
+        literature_enabled=not args.disable_literature,
+        literature_max_rounds=args.literature_rounds,
+        literature_max_documents=args.literature_max_documents,
+        literature_character_budget=args.literature_character_budget,
     )
     if args.llm_command:
         llm = CommandLLMClient(

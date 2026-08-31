@@ -15,6 +15,7 @@ from .experimentor import Experimentor
 from .evaluation import METRIC_CATALOG
 from .journal import Journal
 from .knowledge import KnowledgeBase
+from .librarian import Librarian, RetrievalSettings
 from .llm import AuditedLLMClient, LLMClient
 from .research import ResearchEngine, ScreeningConfig
 from .sandbox import (
@@ -35,8 +36,24 @@ class Overseer:
         self.config = config
         self.journal = Journal(config.run_dir / "journal.jsonl")
         self.llm = AuditedLLMClient(llm, config.run_dir / "llm_events.jsonl")
-        knowledge = KnowledgeBase(Path(__file__).parent / "knowledge").documents()
+        knowledge_root = Path(__file__).parent / "knowledge"
+        knowledge = KnowledgeBase(knowledge_root).documents()
         self.judge = EvolutionJudge(self.llm, knowledge, METRIC_CATALOG)
+        self.librarian = (
+            Librarian(
+                self.llm,
+                knowledge_root,
+                RetrievalSettings(
+                    deterministic_candidates=config.literature_deterministic_candidates,
+                    assisted_candidates=config.literature_assisted_candidates,
+                    alternative_queries=config.literature_alternative_queries,
+                    results_per_alternative=config.literature_results_per_alternative,
+                    max_final_documents=config.literature_max_documents,
+                    character_budget=config.literature_character_budget,
+                ),
+            )
+            if config.literature_enabled else None
+        )
         self.feature_analyst = FeatureAnalyst(self.llm)
         self.consultant = Consultant(self.llm, config.max_consultant_rounds)
         self.orchestrator = Orchestrator(self.llm)
@@ -172,6 +189,82 @@ class Overseer:
             json.dumps(assessment, indent=2), encoding="utf-8"
         )
 
+        retrieved_documents: List[Dict[str, str]] = []
+        retrieved_document_ids: List[str] = []
+        retrieval_rounds: List[Dict[str, Any]] = []
+        if self.librarian is not None:
+            literature_dir = planning_dir / "literature"
+            available_features = {
+                "user_id", "item_id", "categorical_fields", "interaction_logs",
+                "timestamps", "binary_labels", "engagement_labels", "scores",
+            }
+            for item in research_brief.get("ranked_feature_evidence", []):
+                available_features.add(str(item.get("feature_group", "")))
+                available_features.update(str(field) for field in item.get("fields", []))
+            retrieval_context = {
+                "available_features": sorted(value for value in available_features if value),
+                "metric_weaknesses": assessment.get("metric_diagnosis", ""),
+                "current_architecture": "\n".join(
+                    str(item.get("hypothesis_text", "")) for item in snapshots
+                ),
+                "tested_hypotheses": "\n".join(
+                    str(item.get("hypothesis_text", "")) for item in archive
+                ),
+                "experiment_timeout_seconds": self.config.experiment_timeout_seconds,
+            }
+            for retrieval_round in range(1, self.config.literature_max_rounds + 1):
+                remaining_slots = (
+                    self.config.literature_max_documents - len(retrieved_document_ids)
+                )
+                remaining_characters = self.config.literature_character_budget - sum(
+                    len(item["content"]) for item in retrieved_documents
+                )
+                if remaining_slots <= 0 or remaining_characters <= 0:
+                    break
+                self.llm.set_context(
+                    phase="literature_research_request",
+                    generation=generation,
+                    mode=mode.value,
+                    retrieval_round=retrieval_round,
+                )
+                requests = self.judge.request_research(
+                    mode=mode,
+                    generation=generation,
+                    archive=archive,
+                    reference_snapshots=snapshots,
+                    research_brief=research_brief,
+                    analyst_assessment=assessment,
+                    available_evidence_ids=evidence_ids,
+                    retrieved_literature=retrieved_documents,
+                    allowed_categories=self.librarian.catalog.allowed_categories,
+                    max_requests=self.config.literature_max_requests_per_round,
+                    max_documents=min(self.config.literature_max_documents, remaining_slots),
+                    retrieval_round=retrieval_round,
+                    experiment_timeout_seconds=self.config.experiment_timeout_seconds,
+                )
+                if not requests:
+                    break
+                self.llm.set_context(
+                    phase="literature_retrieval",
+                    generation=generation,
+                    mode=mode.value,
+                    retrieval_round=retrieval_round,
+                )
+                result = self.librarian.retrieve(
+                    requests,
+                    context=retrieval_context,
+                    round_number=retrieval_round,
+                    excluded_document_ids=retrieved_document_ids,
+                    remaining_document_slots=remaining_slots,
+                    character_budget=remaining_characters,
+                )
+                retrieval_rounds.append(result)
+                retrieved_document_ids.extend(result["selected_document_ids"])
+                retrieved_documents.extend(result["documents"])
+                if not result["documents"]:
+                    break
+            self.librarian.write_audit(literature_dir, retrieval_rounds)
+
         self.llm.set_context(
             phase="candidate_generation", generation=generation, mode=mode.value
         )
@@ -184,6 +277,8 @@ class Overseer:
             research_brief=research_brief,
             analyst_assessment=assessment,
             available_evidence_ids=evidence_ids,
+            retrieved_literature=retrieved_documents,
+            retrieved_document_ids=retrieved_document_ids,
         )
         (planning_dir / "candidates.json").write_text(
             json.dumps([asdict(item) for item in candidates], indent=2), encoding="utf-8"
@@ -246,6 +341,24 @@ class Overseer:
             "hypothesis_text": hypothesis.text,
             "parent_experiment_id": hypothesis.parent_experiment_id,
         }
+        feature_schema_loader = getattr(self.research, "feature_schema", None)
+        unavailable_feature_schema = {
+            "schema_version": 1,
+            "scope": "feature schema unavailable because screening was bypassed",
+            "raw_sources": {},
+            "derived_features": {},
+            "feature_groups": {},
+            "implementation_rules": [],
+        }
+        if callable(feature_schema_loader):
+            try:
+                dataset_feature_schema = feature_schema_loader()
+            except FileNotFoundError:
+                # Direct unit/diagnostic calls may intentionally bypass run(), whose normal flow
+                # always completes screening before invoking a code agent.
+                dataset_feature_schema = unavailable_feature_schema
+        else:
+            dataset_feature_schema = unavailable_feature_schema
 
         def request_and_apply_replacements(
             agent: str, *, phase: str, failure=None
@@ -265,6 +378,7 @@ class Overseer:
                         hypothesis=hypothesis,
                         plan=plan,
                         sandbox=sandbox,
+                        dataset_feature_schema=dataset_feature_schema,
                         failure=repair_failure,
                     )
                     replacement_history.append({
@@ -300,10 +414,15 @@ class Overseer:
             )
             failure_stage = "orchestrator_plan"
             self.llm.set_context(**audit_context, phase=failure_stage)
-            plan = self.orchestrator.plan(hypothesis, parent_dir)
+            plan = self.orchestrator.plan(
+                hypothesis, parent_dir, dataset_feature_schema=dataset_feature_schema
+            )
             active_agents = list(plan.active_agents)
             (sandbox / "interface_contract.json").write_text(
                 json.dumps(asdict(plan.contract), indent=2), encoding="utf-8"
+            )
+            (sandbox / "orchestrator_plan.json").write_text(
+                json.dumps(asdict(plan), indent=2), encoding="utf-8"
             )
             for agent in active_agents:
                 failure_stage = f"initial_replacement:{agent}"
@@ -398,6 +517,7 @@ class Overseer:
                 "leakage_risk": hypothesis.leakage_risk,
                 "runtime_risk": hypothesis.runtime_risk,
                 "exact_ablation": hypothesis.exact_ablation,
+                "literature_document_ids": hypothesis.literature_document_ids,
             },
         )
         (final_path / "patch_history.json").write_text(
@@ -512,6 +632,13 @@ class Overseer:
                         mode=mode.value,
                         failed_attempt_id=record.attempt_id,
                     )
+                    replacement_literature = []
+                    if self.librarian is not None and hypothesis.literature_document_ids:
+                        replacement_literature, _ = self.librarian.catalog.fetch(
+                            hypothesis.literature_document_ids,
+                            allowed_ids=hypothesis.literature_document_ids,
+                            character_budget=self.config.literature_character_budget,
+                        )
                     replacement = self.judge.propose(
                         mode=mode,
                         generation=generation,
@@ -519,6 +646,8 @@ class Overseer:
                         reference_snapshots=replacement_snapshots,
                         count=1,
                         failed_attempt=record.to_dict(),
+                        retrieved_literature=replacement_literature,
+                        retrieved_document_ids=hypothesis.literature_document_ids,
                     )[0]
                     resolved = self._consult(
                         [replacement], archive, replacement_parent_ids

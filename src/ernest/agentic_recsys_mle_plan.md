@@ -21,6 +21,10 @@ Experiments are grouped into **generations** (1-3 experiments each). Even-number
 ### 2.2 Evolution Judge (LLM agent)
 Analyzes literature and prior performance to propose new hypotheses. Has access to a knowledge base of literature/research.
 
+Before candidate generation, the Judge may emit structured research requests. A Librarian combines
+catalog filters, TF-IDF/MMR retrieval, LLM query expansion, and a validated ID-only reading list;
+system code then fetches bounded Markdown context for a second, informed Judge call.
+
 **a. Improve mode** (even-numbered generations)
 - Sees hypothesis, config, code, and performance of **one** experiment from the most recent generation.
 - Proposes **1** improvement hypothesis referencing that experiment.
@@ -165,6 +169,7 @@ Because experiments run strictly sequentially and are numbered 1-onwards in exec
 |---|---|
 | Overseer | Sandbox creation, LLM client, sequential experiment spawning, convergence checks, guardrail enforcement |
 | Evolution Judge | Hypothesis generation (improve/draft), structured scoring, novelty filtering, diverse reference selection |
+| Librarian | Catalog filtering, hybrid literature retrieval, ID-only selection, guarded Markdown fetch, retrieval audit |
 | Consultant | Feasibility/novelty sanity check, capped revision loop (max 3 rounds), full-history awareness |
 | Journal | Full experiment + abandoned-attempt logging, lineage tracking, hypothesis scores |
 | Orchestrator | Interface contract definition, selective sub-agent activation, full-file delegation, retry ownership, error routing |

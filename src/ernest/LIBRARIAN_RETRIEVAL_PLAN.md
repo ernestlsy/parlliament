@@ -2,9 +2,8 @@
 
 ## Status
 
-This document records the agreed future design for scaling Ernest's recommender-system research
-knowledge base. It is a deferred implementation plan; the current codebase should be stabilized
-before this work begins.
+Implemented. This document records the design now used by Ernest's cataloged recommender-system
+research knowledge base and two-pass Librarian retrieval workflow.
 
 ## Goals
 
@@ -26,6 +25,7 @@ knowledge/
 ├── catalog.jsonl
 ├── manifest.json
 ├── 00_task/
+├── 05_dataset/
 ├── 10_features/
 ├── 20_architectures/
 ├── 30_objectives/
@@ -40,6 +40,7 @@ knowledge/
 Recommended categories include:
 
 - Fixed task facts, KuaiRand constraints, feature availability, and leakage policy
+- Supplied dataset schema, split boundaries, population properties, and exposure regimes
 - Feature engineering and historical or sequential signals
 - Model architectures
 - Pointwise, pairwise, listwise, and multitask objectives
@@ -71,7 +72,7 @@ Use `catalog.jsonl`, with one object per Markdown card. Each object should conta
 for retrieval without loading the full document:
 
 ```json
-{"id":"architecture.factorization_machines","path":"20_architectures/factorization_machines.md","title":"Factorization Machines","category":"architectures","tags":["metadata","feature-interactions","sparse-features"],"summary":"Models pairwise interactions between sparse categorical fields.","use_when":["categorical metadata has useful screening lift"],"avoid_when":["embedding memory exceeds the budget"],"required_features":["categorical-fields"],"metrics":["GAUC","nDCG@5"],"compute_cost":"medium","leakage_risk":"low","evidence_level":"established"}
+{"id":"architecture.factorization_machines","path":"20_architectures/factorization_machines.md","title":"Factorization Machines","category":"architectures","tags":["metadata","feature-interactions","sparse-features"],"summary":"Models pairwise interactions between sparse categorical fields.","use_when":["categorical metadata has useful screening lift"],"avoid_when":["embedding memory exceeds the budget"],"required_features":["categorical-fields"],"metrics":["GAUC","nDCG@5"],"method_family":"factorization_machine"}
 ```
 
 `manifest.json` should contain the schema version, card count, catalog hash, retrieval-index version,
@@ -101,15 +102,14 @@ return one or more structured research requests:
 ```
 
 The retrieval context should also contain available features, weak metric segments, current model
-architecture, previously tested hypotheses, leakage limits, compute limits, and experiment timeout.
+architecture, previously tested hypotheses, and the experiment timeout.
 
 ## Retrieval pipeline
 
 For each research request:
 
-1. Apply deterministic hard filters to remove catalog entries with unavailable required features,
-   excessive leakage risk, excessive compute cost, incompatible task assumptions, or materially
-   duplicated tested methods.
+1. Apply deterministic hard filters to remove catalog entries with incompatible task assumptions
+   or materially duplicated tested methods.
 2. Run deterministic TF-IDF retrieval with category, tag, feature, metric, and experiment-context
    enrichment. Apply deterministic diversity selection such as maximal marginal relevance. Retain
    up to 10 candidates.
@@ -220,17 +220,42 @@ Retrieved document IDs should be retained with the resulting hypothesis so later
 which literature informed each experiment. Literature retrieval itself must never create an attempt,
 consume an experiment ID, or affect convergence.
 
-## Deferred implementation components
+## Implemented components
 
 - Catalog schema and validator
 - Knowledge-card path and hash validator
-- TF-IDF index builder and cache
-- Deterministic filters and diversity selection
+- TF-IDF index builder and in-process cache
+- Deterministic filters and MMR diversity selection
 - LLM query-expansion role
-- Librarian selection role
+- Librarian selection role with deterministic fallback
 - System-owned Markdown fetcher
 - Two-pass Evolution Judge research interface
 - Retrieval budgets and retry handling
 - Planning audit artifacts
 - Tests for catalog integrity, path traversal, hallucinated IDs, deduplication, deterministic results,
   context budgets, caching, provider compatibility, and experiment-count isolation
+
+## One-time population utility
+
+`agentic_recsys.knowledge_builder` implements a manual, pre-run population workflow. It uses a
+capable configured LLM in two stages: category-level topic planning followed by one focused Markdown
+generation call per card. IDs and paths are derived by system code rather than accepted from the
+model. The curator chooses the number of cards per category within configurable minimum and maximum
+bounds, based on the number of distinct high-value topics rather than padding every category to a
+fixed count. Metadata, duplicate topics, card length, title, and standard headings are validated
+with bounded LLM repair attempts.
+
+For OpenAI HTTP generation, the builder enables the Responses API `web_search` tool with required
+tool choice and high search context by default. Category planning and every card-writing request are
+therefore web-grounded. Search calls, actions, source lists, and URL citation annotations are kept in
+the LLM audit, and validated citations are appended to each generated card. Normal Ernest runs do not
+enable this tool. Command-based adapters must provide their own search implementation and audit.
+
+The builder creates a complete sibling staging directory, regenerates `catalog.jsonl` and
+`manifest.json`, and validates the staged result with the same `KnowledgeCatalog` used at runtime.
+Only a valid result is installed, while the former knowledge directory is preserved as a timestamped
+backup. It also retains a full request/response JSONL audit and a generation report. This utility is
+available as `ernest-populate-knowledge` and `scripts/populate_knowledge_base.py`; it is not imported
+or invoked by the Overseer, Librarian, or normal run CLI. Extend mode is the default. Explicit
+replacement mode retains repository-authored task, dataset, leakage, and evaluation cards while
+rebuilding the retrievable research catalog. Task and dataset are not LLM-generated categories.

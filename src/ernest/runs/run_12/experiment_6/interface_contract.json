@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "Unchanged. data.encode returns encoded['train'], encoded['valid'], and encoded['test'] as (features, labels, users). Features remain int32 matrices with five columns ordered [user_id, video_id, tab, hour, weekday]. Validation labels are float32 long_view targets; test labels are None because load is called with include_test_labels=False. Validation and test feature row order is the canonical source-row order after split filtering."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Unchanged. Model receives the existing total encoded dimension plus the configured learning_rate and l2. Training step receives same-shape two-dimensional positive and negative encoded feature matrices with exactly five columns. Prediction receives an encoded feature matrix and returns one score per input row."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

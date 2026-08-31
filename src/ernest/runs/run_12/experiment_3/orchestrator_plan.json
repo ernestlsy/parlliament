@@ -1,0 +1,119 @@
+{
+  "active_agents": [
+    "feature_engineer",
+    "model_designer",
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "load(..., include_test_labels=False) and encode(...) provide encoded['train'] and encoded['valid'] as (features int32[N,5], labels float32[N], users unicode[N]) and encoded['test'] as (features int32[N,5], None, users unicode[N]). Feature columns are exactly [user_id, video_id, tab, hour, weekday], where hour is floor(numeric hourmin / 100) constrained to 0..23 and weekday is derived from date with Monday=0 through Sunday=6. Rows retain source order within each canonical date split."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model.step receives positive_features int32[P,5] and negative_features int32[P,5], P>0, aligned by row into same-user pairs with train long_view positive=1 and negative=0. Model.predict receives an int32[N,5] encoded feature matrix and returns one score per row. The trainer alone constructs pairs and uses validation labels only for validation-only checkpoint selection."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Prevent the training program from loading or exposing test long_view labels while preserving the existing additive five-field feature data contract and canonical row order.",
+      "required_changes": [
+        "In data.py, add an include_test_labels=False argument to load and ensure that when it is False, rows in the test date interval 20220429 through 20220508 do not read row[LABEL] (where LABEL is the exact raw field long_view) and instead carry a label sentinel of None.",
+        "Update encode so train and valid labels remain float32 arrays derived from the stored long_view values, while test labels are returned as None when the test rows carry the None sentinel. Test features and test users must still be encoded in the original source-row order.",
+        "Keep the exact five raw/derived fields unchanged: user_id, video_id, tab, hour derived as floor(numeric hourmin / 100) constrained to 0..23, and weekday derived from date as calendar Monday=0 through Sunday=6. Do not add any source field, join, profile, aggregate, or feature."
+      ],
+      "preserve": [
+        "Train-only vocabulary fitting, unknown-category buckets, field offsets, additive feature matrix shape, split date boundaries, and canonical source row order.",
+        "Train and validation long_view labels remain available because training and validation are the only splits used by the trainer for optimization and validation-only checkpoint selection."
+      ],
+      "coordination_notes": [
+        "The encode return contract is encoded[split] = (features, labels, users), with labels being a float32 vector for train and valid and None for test when load(..., include_test_labels=False) is used.",
+        "Trainer will call load(args.data_dir, max_rows_per_split=..., include_test_labels=False) and must obtain the number of test rows from len(test_features), never from test labels."
+      ]
+    },
+    "model_designer": {
+      "objective": "Replace Model.step's pointwise BCE update with a within-user positive-versus-negative logistic pairwise update while retaining the additive five-field linear scorer and Adam-style optimizer family.",
+      "required_changes": [
+        "In model.py, replace the training-step interface with step(positive_features, negative_features). Both arguments are int32 matrices with shape (pair_count, 5), where row k is a same-user positive-negative pair constructed by train.py.",
+        "For each pair, compute positive_logits and negative_logits with the unchanged additive logits rule, delta = positive_logits - negative_logits, pair loss = logaddexp(0, -delta), and mean batch loss as the return value.",
+        "Use dloss/ddelta = -sigmoid(-delta) / pair_count. Accumulate this gradient into every feature ID in positive_features and its negation into every feature ID in negative_features using np.add.at; then add the unchanged l2 * weights term before the existing Adam moment, bias-correction, and weight-update recipe.",
+        "Do not update bias during a pairwise step: the pairwise score difference cancels the global bias exactly. Keep bias in the model state and logits/predict interfaces for checkpoint compatibility.",
+        "Reject empty pair batches with ValueError and validate that positive_features and negative_features have the same two-dimensional shape. Ensure finite float32-compatible gradients and finite returned loss."
+      ],
+      "preserve": [
+        "The model remains only bias plus the sum of one scalar embedding/weight for each of the five encoded field IDs; do not add interactions, nonlinear layers, fields, calibration, or baseline-derived inputs.",
+        "Keep learning_rate, l2 regularization, Adam hyperparameters beta1=0.9, beta2=0.999, epsilon=1e-8, state/load_state behavior, and batched predict behavior unchanged.",
+        "Model code must not inspect user IDs, labels, validation data, or test data; trainer owns pair construction and split handling."
+      ],
+      "coordination_notes": [
+        "Trainer will supply only nonempty same-user pairs: positive_features[k] is labeled long_view=1 and negative_features[k] is labeled long_view=0 for the same raw user_id.",
+        "The contract-check path will call step with paired train feature matrices rather than the former feature/label arguments. No config.json edit is required for this model interface."
+      ]
+    },
+    "trainer": {
+      "objective": "Train the unchanged additive scorer using reproducible within-user sampled positive-negative logistic pairs, select checkpoints solely by validation GAUC proxy, and always emit canonical validation and test prediction archives.",
+      "required_changes": [
+        "In train.py, call load with include_test_labels=False in both normal and contract-check modes. Destructure encoded['test'] as test_features, test_labels, test_users and assert test_labels is None; do not inspect test_users or any test label.",
+        "Add a train-only pair builder that receives train_features, train_labels, train_users, and rng. Group training row indices by str(user_id); for each user with at least one label 1 and one label 0, create one pair for every positive index by sampling one negative index uniformly from that same user's negative indices using rng. Return parallel positive-index and negative-index arrays. This is a stochastic within-user positive-versus-negative pairwise logistic objective, has linear pair count in the number of positive training examples, and never creates cross-user pairs.",
+        "At every epoch, rebuild pairs using only train arrays and the epoch RNG, randomly permute pair positions, and call model.step(train_features[positive_pair_indices[batch]], train_features[negative_pair_indices[batch]]) in batches of the existing config batch_size. If an epoch has zero valid pairs, raise ValueError rather than falling back to pointwise BCE.",
+        "Retain validation-only early stopping: after each training epoch, predict valid_features and compute within_user_auc(valid_users, valid_labels, predictions). Use only this proxy to update best_score, best_state, and stale. Do not compute any training-selection, checkpoint, loss, or stopping metric from test data.",
+        "Update contract-check to build nonempty same-user pairs from the capped training slice. If the first capped slice contains no complete user positive-negative pair, search the complete capped training split for one; raise a clear ValueError if none exists. Call model.step on up to eight valid pairs and validate the resulting validation prediction shape and finiteness.",
+        "After restoring best_state, always write validation predictions to Path(args.output).with_name('predictions_valid.npz') and test predictions to Path(args.output).with_name('predictions_test.npz'). Each archive must contain exactly row_ids=np.arange(number_of_rows,dtype=np.int64) and scores=model.predict(split_features), with no additional arrays. row_ids must correspond to the encoded validation or test source-row order respectively."
+      ],
+      "preserve": [
+        "Do not modify config.json: retain seed, learning_rate, l2, batch_size, max_epochs, patience, and split values exactly. The configured optimizer family, regularization, epoch limit, batch size, patience, and validation stopping procedure therefore remain unchanged.",
+        "Use only the existing five-field encoded matrices from data.py and the Model supplied by model.py. Do not add features, alter split boundaries, use forbidden/quarantined fields, or introduce validation/test-derived training inputs.",
+        "Validation labels may be used only for the existing validation GAUC proxy. Test labels must not be loaded, accessed, evaluated, or used for any decision."
+      ],
+      "coordination_notes": [
+        "The pair-builder labels are train_labels only; same-user membership is determined from the raw user_id values provided as train_users by data.py, not from a newly invented column or alias.",
+        "The fixed command's --output value is treated only as an output directory/name anchor; the required files are forcibly named predictions_valid.npz and predictions_test.npz in that output path's parent directory.",
+        "The trainer depends on data.py returning None for test_labels when include_test_labels=False and on model.step accepting (positive_features, negative_features)."
+      ]
+    }
+  },
+  "reasoning": "The hypothesis changes only the optimization target: the existing additive scorer should receive gradients from same-user long_view-positive versus long_view-negative score differences. Model and trainer changes are necessary because the model must differentiate the pairwise logistic loss and the trainer must construct same-user training pairs. data.py requires a narrow safety-interface update so test long_view ground truth is never loaded by the training command; feature content, derivations, encodings, and row ordering remain unchanged. Validation alone remains the checkpoint-selection split, and output filenames are made invariant to the supplied output anchor."
+}

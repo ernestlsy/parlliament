@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "memory_hit"
+  ],
+  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.embedding_mlp_ranker",
+      "path": "20_architectures/embedding_mlp_ranker.md",
+      "sha256": "c81739cefc5d550399a927013519688953b21ea274c3211bcfc5316593a569be",
+      "source_characters": 8308,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.deep_cross_ranker",
+      "path": "20_architectures/deep_cross_ranker.md",
+      "sha256": "db004648e9c7b63e0f9bc0954691dbcf9fe572c134fa90b309e12eee9d590cb8",
+      "source_characters": 7634,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.adversarial_embedding_regularization",
+      "path": "40_training/adversarial_embedding_regularization.md",
+      "sha256": "f776c2d5191a8dd09a99afc246f926c9b3ef8916f9e18f8cc79bfc1182d9bf48",
+      "source_characters": 8458,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.group_complete_stratified_minibatching",
+      "path": "40_training/group_complete_stratified_minibatching.md",
+      "sha256": "ac4067495282d7b9958b561801403db5a3d02efd526f51595e93589f3edfb471",
+      "source_characters": 10000,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "paper.group_dro_within_user_ranking",
+      "path": "90_papers/group_dro_within_user_ranking.md",
+      "sha256": "4cf07fb8ed80114172821d7ef36480545e9423a61f12e86b046cb832dd045571",
+      "source_characters": 10000,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.metric_aligned_checkpoint_averaging",
+      "path": "40_training/metric_aligned_checkpoint_averaging.md",
+      "sha256": "b2da1788bc426937876f44a8bee418c5ee304e87ce49dd11f98881983dc53ffc",
+      "source_characters": 8702,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.within_user_ranknet_pairwise_loss",
+      "path": "30_objectives/within_user_ranknet_pairwise_loss.md",
+      "sha256": "6216278cdf2db9cbda95e1b4c7bd3dc1c0d5f56ec944bc787e1ffce628dc8c57",
+      "source_characters": 7726,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.bce_lambdarank_ndcg5_hybrid",
+      "path": "30_objectives/bce_lambdarank_ndcg5_hybrid.md",
+      "sha256": "48f2455f2d5620a3b9548e5d66c4ef2249f048e19be4023f4d958e67901489a0",
+      "source_characters": 10000,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "architecture.embedding_mlp_ranker",
+    "architecture.deep_cross_ranker",
+    "training.adversarial_embedding_regularization",
+    "training.group_complete_stratified_minibatching",
+    "paper.group_dro_within_user_ranking",
+    "training.metric_aligned_checkpoint_averaging",
+    "objective.within_user_ranknet_pairwise_loss",
+    "objective.bce_lambdarank_ndcg5_hybrid"
+  ],
+  "total_fetched_characters": 40000
+}

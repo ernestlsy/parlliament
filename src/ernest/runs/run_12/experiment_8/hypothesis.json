@@ -1,0 +1,35 @@
+{
+  "text": "Replace the raw 24-category hour feature with a train-fitted six-bin four-hour categorical feature.",
+  "parent_experiment_id": 4,
+  "scores": {
+    "interestingness": 6,
+    "novelty": 5,
+    "feasibility": 10
+  },
+  "rationale": "Hour-specific diagnostics are weak across many adjacent hours, which may indicate that the current 24-way hour effect is too granular for stable temporal transfer. Coarsening is a single representation ablation using only request-time information. Downside: it can erase real hour-level preference variation and lower top-five precision.",
+  "candidate_id": "c11",
+  "evidence_ids": [
+    "experiment:4:metrics",
+    "experiment:7:segment:hour:2",
+    "experiment:7:segment:hour:15",
+    "experiment:7:segment:hour:18",
+    "screen:request_context"
+  ],
+  "exact_ablation": "Replace only the existing hour categorical field with floor(hour/4), yielding six train-fitted hour-bin categories and an unknown bucket; retain user_id, video_id, tab, weekday, additive architecture, K=4 uniform sampling, pairwise loss, optimizer, regularization, and all other settings unchanged.",
+  "expected_effect": {
+    "GAUC": "Change by -0.0003 to 0.0009 because pooling adjacent hours can reduce variance while sacrificing detail.",
+    "nDCG@5": "Change by -0.0003 to 0.0011 if more stable time effects improve top-five ordering."
+  },
+  "expected_primary_gain": 0.0004,
+  "confidence": 4,
+  "leakage_risk": "low",
+  "runtime_risk": "low",
+  "active_components": [
+    "features",
+    "training"
+  ],
+  "literature_document_ids": [
+    "task.leakage_policy",
+    "evaluation.within_user_metrics"
+  ]
+}

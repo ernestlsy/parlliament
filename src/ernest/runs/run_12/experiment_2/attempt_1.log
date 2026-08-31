@@ -1,0 +1,10 @@
+command: ['/home/user/anaconda3/envs/evo/bin/python', 'train.py', '--config', 'config.json', '--data-dir', '/mnt/d/tehpengagent/src/kuairand-starter-kit/KuaiRand-Pure/data', '--output', '/mnt/d/tehpengagent/src/ernest/runs/run_12/attempts/attempt_9321bc15ca75/predictions_valid.npz']
+elapsed_seconds: 21.779
+return_code: 0
+--- stdout ---
+epoch=1 loss=0.543289 valid_gauc_proxy=0.665890
+epoch=2 loss=0.500204 valid_gauc_proxy=0.658684
+epoch=3 loss=0.476245 valid_gauc_proxy=0.645107
+epoch=4 loss=0.448846 valid_gauc_proxy=0.633219
+
+--- stderr ---

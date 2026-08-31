@@ -1,0 +1,34 @@
+{
+  "result": {
+    "benchmark": "KuaiRand-Pure",
+    "best_experiment_id": 3,
+    "validation_GAUC": 0.6704966836327051,
+    "baseline_GAUC": 0.6674,
+    "absolute_delta_GAUC": 0.0030966836327050995,
+    "validation_nDCG@5": 0.537679764075165,
+    "baseline_nDCG@5": 0.5357,
+    "absolute_delta_nDCG@5": 0.0019797640751650913,
+    "validation_primary": 0.6040882238539351,
+    "baseline_primary": 0.6016,
+    "absolute_delta_primary": 0.002488223853935101
+  },
+  "resources": {
+    "token_consumption": {
+      "input_tokens": null,
+      "output_tokens": null,
+      "total_tokens": null,
+      "llm_calls": 31,
+      "failed_llm_calls": 0,
+      "calls_with_usage": 0,
+      "complete": false,
+      "note": "Token usage is incomplete because one or more provider/client events did not report usage."
+    },
+    "agent_wall_clock_seconds": null,
+    "agent_wall_clock_complete": false,
+    "agent_wall_clock_note": "Wall-clock timing is unavailable or incomplete for this legacy run.",
+    "iterations": 3,
+    "attempts": 3,
+    "manual_interventions": 0,
+    "manual_intervention_summary": "None"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c09",
+      "rank": 1,
+      "utility_score": 0.79,
+      "rationale": "Directly corrects a documented mismatch between the early-stopping proxy and the official primary metric without changing data, features, or updates. It has low leakage risk and bounded runtime, though checkpoint-selection-on-validation creates some metric-specific overfitting risk."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 2,
+      "utility_score": 0.76,
+      "rationale": "Compact tab-by-hour interaction is supported by the only positively screened feature family, has full availability, low runtime cost, and avoids the failed high-cardinality user-by-tab construction. Evidence is indirect because the screen supports context fields more clearly than their interaction."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 3,
+      "utility_score": 0.72,
+      "rationale": "Hour-by-weekday is a very low-cardinality, leakage-safe context interaction with a plausible temporal mechanism and low implementation cost. It is somewhat weaker than tab-by-hour because its motivation leans on retrospective weak-hour slices, increasing validation-overfitting risk."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 4,
+      "utility_score": 0.68,
+      "rationale": "A grouped softmax over the already beneficial K=4 comparison set is a coherent objective-level generalization that may better align with top-list competition. It has no leakage issue, but is a broader loss change with uncertain calibration and only indirect supporting evidence."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 5,
+      "utility_score": 0.62,
+      "rationale": "This is a clean, low-leakage extrapolation from the observed K=1 to K=4 improvement. However, the observed gain was only 0.00043, so diminishing returns, duplicated negatives, and increased runtime materially limit expected utility."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 6,
+      "utility_score": 0.56,
+      "rationale": "Increasing the epoch ceiling is a narrow, safe optimization check because existing early stopping remains active. Its evidence is weak because there is no indication that the retained run was epoch-capped, and it adds moderate runtime."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 7,
+      "utility_score": 0.53,
+      "rationale": "A conservative one-order L2 increase is inexpensive and plausibly addresses the sparse-interaction sensitivity exposed by the failed user-by-tab expansion. The evidence is indirect because the retained additive model itself has not demonstrated overfitting."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 8,
+      "utility_score": 0.5,
+      "rationale": "Low-risk and easy to execute, but optimizer-step noise is speculative evidence for a learning-rate change. It is a generic tuning ablation with limited expected upside under one scarce experiment."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 9,
+      "utility_score": 0.47,
+      "rationale": "A clean and cheap test of whether K=4 is redundant, but it partially retraces the already positive K=1-to-K=4 direction with no evidence that excess negatives are harmful. Expected gain is small and the hypothesis is weakly supported."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 10,
+      "utility_score": 0.43,
+      "rationale": "Hard-negative mining has plausible top-rank motivation, but its support relies heavily on retrospective validation segments and it substantially changes training dynamics. Per-epoch score recomputation creates high runtime risk and hard-negative feedback can overfocus on noisy examples."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 11,
+      "utility_score": 0.35,
+      "rationale": "Lower regularization is weakly justified by warm-item volume rather than evidence of underfitting, while the recent sparse user-by-tab regression points in the opposite direction. It is cheap but has unfavorable risk-adjusted evidence."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 12,
+      "utility_score": 0.27,
+      "rationale": "This revisits factorization-machine interactions after the rank-16 FM underperformed the additive model. Pairwise training and lower rank do not sufficiently offset that negative architecture evidence, while runtime and scope are both higher than the compact interaction alternatives."
+    }
+  ]
+}

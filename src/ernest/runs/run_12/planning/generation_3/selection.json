@@ -1,0 +1,37 @@
+{
+  "winner": {
+    "text": "Train the additive five-field scorer with a within-user pairwise logistic ranking loss instead of pointwise BCE.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The official objective is entirely within-user ranking, while the current pointwise BCE model has GAUC 0.6689116170510226 but lower nDCG@5 of 0.5369580777053825. A pairwise objective directly targets positive-negative ordering without introducing unapproved features.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:6"
+    ],
+    "exact_ablation": "Replace pointwise BCE with a within-user positive-versus-negative logistic pairwise loss, keeping the additive five-field scorer, data, optimizer family, regularization, and stopping procedure unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.004 because each update directly rewards within-user positive-negative ordering.",
+      "nDCG@5": "Increase by 0.000 to 0.003 if improved pairwise ordering transfers to the first five positions; the effect may be smaller than GAUC."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  "selection_rationale": "Select c02: it preserves the proven additive five-field representation, directly aligns training with the official within-user ranking objective, has low leakage risk, and is the Consultant's top-ranked non-duplicate candidate. Its expected primary gain (0.002) and moderate runtime risk are preferable to novelty-heavy interaction or listwise alternatives; c01 is a known duplicate and should not consume the scarce experiment.",
+  "counted_experiments_consumed": 0
+}

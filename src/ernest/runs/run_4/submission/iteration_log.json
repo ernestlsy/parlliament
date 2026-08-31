@@ -1,0 +1,157 @@
+{
+  "manual_interventions": 0,
+  "attempts": [
+    {
+      "attempt_id": "881db943492f",
+      "experiment_id": 1,
+      "generation": 1,
+      "status": "scored",
+      "parent_experiment_id": 0,
+      "hypothesis": "Add impression-time request-context features tab, hour, and weekday to the neutral user/item additive model.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 8,
+        "evidence_ids": [
+          "screen:request_context",
+          "feature:request_context",
+          "feature:tab",
+          "feature:hourmin"
+        ],
+        "exact_ablation": "Ablate the neutral ID-only input by adding only impression-time tab, hour, and weekday fields; keep the additive architecture, BCE loss, optimizer, and training schedule unchanged.",
+        "expected_effect": {
+          "GAUC": "Increase by approximately +0.002 to +0.004, supported by the measured +0.002213 primary lift and warm-user/item GAUC of 0.6312.",
+          "nDCG@5": "Increase by approximately +0.0005 to +0.0025; the gain may be smaller than GAUC because screened nDCG@5 was 0.5076."
+        },
+        "expected_primary_gain": 0.0023,
+        "leakage_risk": "low",
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -1,7 +1,9 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Neutral additive data contract with user, item, and request-context fields.\"\"\"\n \n import csv\n+import datetime\n import os\n+import re\n \n import numpy as np\n \n@@ -12,7 +14,37 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n+\n+\n+def _weekday(value):\n+    text = str(value)\n+    for parser in (\n+        lambda: datetime.datetime.strptime(text, \"%Y%m%d\").weekday(),\n+        lambda: datetime.datetime.strptime(text, \"%Y-%m-%d\").weekday(),\n+    ):\n+        try:\n+            return str(parser())\n+        except ValueError:\n+            pass\n+    return \"\"\n+\n+\n+def _hour(row):\n+    for key in (\"hour\", \"hour_min\", \"hourmin\", \"time\", \"timestamp\"):\n+        value = row.get(key)\n+        if value is None or value == \"\":\n+            continue\n+        text = str(value).strip()\n+        match = re.search(r\"(?:T|\\s|^)(\\d{1,2})(?::|$)\", text)\n+        if match is not None:\n+            return str(int(match.group(1)))\n+        if key == \"hour\":\n+            try:\n+                return str(int(float(text)))\n+            except ValueError:\n+                return text\n+    return \"\"\n \n \n def load(data_dir, max_rows_per_split=None):\n@@ -23,8 +55,15 @@\n     ):\n         with open(os.path.join(data_dir, filename), encoding=\"utf-8\") as handle:\n             for row in csv.DictReader(handle):\n+                date = int(row[\"date\"])\n+                tab = row.get(\"tab\", row.get(\"tab_id\", \"\"))\n                 rows.append((\n-                    int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n+                    date,\n+                    row[\"user_id\"],\n+                    row[\"video_id\"],\n+                    tab,\n+                    _hour(row),\n+                    _weekday(date),\n                     1 if row[LABEL] != \"0\" else 0,\n                 ))\n     result = {}\n@@ -38,8 +77,9 @@\n     train = splits[\"train\"]\n     if not train:\n         raise ValueError(\"training split is empty\")\n+\n     def raw(row):\n-        return [row[1], row[2]]\n+        return [row[1], row[2], row[3], row[4], row[5]]\n \n     vocabs = [dict() for _ in FIELDS]\n     for row in train:\n@@ -59,7 +99,7 @@\n                 features[row_index, field_index] = (\n                     vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n                 )\n-            labels[row_index] = row[3]\n+            labels[row_index] = row[6]\n             users[row_index] = row[1]\n         encoded[name] = (features, labels, users)\n     return encoded, int(sum(dimensions))\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6691805131784498,
+        "classification": {
+          "accuracy": 0.6680303260773843,
+          "balanced_accuracy": 0.694556026893204,
+          "confusion_matrix": {
+            "false_negative": 9173,
+            "false_positive": 32293,
+            "true_negative": 53484,
+            "true_positive": 29959
+          },
+          "f1": 0.5910005523554012,
+          "matthews_correlation": 0.3609646564407274,
+          "precision": 0.4812536143417079,
+          "predicted_positive_rate": 0.4983788197808004,
+          "recall": 0.7655882653582745,
+          "specificity": 0.6235237884281334,
+          "threshold": -0.7228886485099792,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.6191163063049316,
+          "score_mean": -0.9862696632425196,
+          "score_min": -7.0049591064453125,
+          "score_std": 1.3886982841598186
+        },
+        "nDCG@5": 0.536436334841699,
+        "primary": 0.6028084240100744,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6769450775349689,
+          "MAP@5": 0.48512341541165943,
+          "MRR@5": 0.5421280779371733,
+          "Precision@5": 0.3750070757176129,
+          "Recall@5": 0.5997511104824844,
+          "average_precision": 0.571692339753129,
+          "global_AUC": 0.7650143368806208
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 68.93744104700454,
+      "sandbox": "D:\\tehpengagent\\src\\ernest\\runs\\run_4\\experiment_1"
+    },
+    {
+      "attempt_id": "11a9a6b59654",
+      "experiment_id": 2,
+      "generation": 2,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Replace pointwise BCE with within-user pairwise BPR while retaining user ID, video ID, tab, hour, weekday, optimizer, and training schedule.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 6,
+        "evidence_ids": [
+          "experiment:1:metrics",
+          "screen:request_context"
+        ],
+        "exact_ablation": "Ablate BCE and use only within-user BPR pairwise loss; keep the parent model architecture, features, optimizer, sampling budget, and schedule unchanged.",
+        "expected_effect": {
+          "GAUC": "Increase approximately +0.003 to +0.008, targeting 0.6722 to 0.6772.",
+          "nDCG@5": "Increase approximately +0.004 to +0.012, targeting 0.5404 to 0.5484."
+        },
+        "expected_primary_gain": 0.006,
+        "leakage_risk": "low",
+        "runtime_risk": "medium"
+      },
+      "code_diff": {
+        "model.py": "--- model.py\n+++ model.py\n@@ -1,4 +1,4 @@\n-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n+\"\"\"Fresh-start additive ID model trained with within-user BPR ranking loss.\"\"\"\n \n import numpy as np\n \n@@ -23,11 +23,36 @@\n     def step(self, features, labels):\n         size = len(labels)\n         logits = self.logits(features)\n-        probabilities = sigmoid(logits)\n-        gradient = ((probabilities - labels) / size).astype(np.float32)\n+        row_gradient = np.zeros(size, dtype=np.float32)\n+        pair_count = 0\n+        loss_total = 0.0\n+\n+        users, inverse = np.unique(features[:, 0], return_inverse=True)\n+        for user_index in range(len(users)):\n+            rows = np.flatnonzero(inverse == user_index)\n+            positive = rows[labels[rows] > 0.5]\n+            negative = rows[labels[rows] <= 0.5]\n+            if not len(positive) or not len(negative):\n+                continue\n+\n+            pair_count += len(positive) * len(negative)\n+            negative_scores = logits[negative]\n+            for positive_row in positive:\n+                differences = logits[positive_row] - negative_scores\n+                loss_total += np.logaddexp(0.0, -differences).sum()\n+                pair_probability = sigmoid(-differences).astype(np.float32)\n+                row_gradient[positive_row] -= pair_probability.sum()\n+                np.add.at(row_gradient, negative, pair_probability)\n+\n         grad_weights = np.zeros_like(self.weights)\n-        np.add.at(grad_weights, features, gradient[:, None])\n+        if pair_count:\n+            row_gradient /= np.float32(pair_count)\n+            loss = loss_total / pair_count\n+        else:\n+            loss = 0.0\n+        np.add.at(grad_weights, features, row_gradient[:, None])\n         grad_weights += self.l2 * self.weights\n+\n         self.step_number += 1\n         beta1, beta2, epsilon = 0.9, 0.999, 1e-8\n         self.first_moment *= beta1\n@@ -37,11 +62,8 @@\n         first_hat = self.first_moment / (1 - beta1 ** self.step_number)\n         second_hat = self.second_moment / (1 - beta2 ** self.step_number)\n         self.weights -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n-        self.bias -= self.learning_rate * gradient.sum()\n-        return float(-np.mean(\n-            labels * np.log(probabilities + 1e-9)\n-            + (1 - labels) * np.log(1 - probabilities + 1e-9)\n-        ))\n+\n+        return float(loss)\n \n     def predict(self, features, batch_size=200_000):\n         return np.concatenate([\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6664210072780321,
+        "classification": {
+          "accuracy": 0.5593672193356763,
+          "balanced_accuracy": 0.6409935548295193,
+          "confusion_matrix": {
+            "false_negative": 5495,
+            "false_positive": 49544,
+            "true_negative": 36233,
+            "true_positive": 33637
+          },
+          "f1": 0.55001512512979,
+          "matthews_correlation": 0.2773031810517604,
+          "precision": 0.4043832125124728,
+          "predicted_positive_rate": 0.6659327990777286,
+          "recall": 0.8595778391086579,
+          "specificity": 0.42240927055038063,
+          "threshold": 0.781059980392456,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.7935068607330322,
+          "score_mean": 0.7462565458439162,
+          "score_min": -4.1736979484558105,
+          "score_std": 1.088966034969374
+        },
+        "nDCG@5": 0.5352482104970204,
+        "primary": 0.6008346088875263,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6761853689055727,
+          "MAP@5": 0.4837627673255801,
+          "MRR@5": 0.5399778045910287,
+          "Precision@5": 0.3748819472374774,
+          "Recall@5": 0.5993878516774676,
+          "average_precision": 0.46746665226092066,
+          "global_AUC": 0.6964995309795596
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 96.46670461700705,
+      "sandbox": "D:\\tehpengagent\\src\\ernest\\runs\\run_4\\experiment_2"
+    }
+  ]
+}

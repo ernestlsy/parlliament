@@ -136,11 +136,23 @@ class JournalTests(unittest.TestCase):
     def test_convergence_is_strict_at_epsilon(self):
         with tempfile.TemporaryDirectory() as directory:
             journal = Journal(Path(directory) / "journal.jsonl")
-            for index, score in enumerate((0.5, 0.501, 0.502), 1):
+            for index, score in enumerate((0.5, 0.502, 0.501, 0.5015), 1):
                 journal.append(record(index, score))
             self.assertFalse(journal.converged(0.002, 3))
-            journal.append(record(4, 0.5025))
+
+    def test_convergence_compares_three_following_scores_to_one_anchor(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Journal(Path(directory) / "journal.jsonl")
+            for index, score in enumerate((0.5, 0.501, 0.5015, 0.5019), 1):
+                journal.append(record(index, score))
             self.assertTrue(journal.converged(0.002, 3))
+
+    def test_any_following_score_reaching_anchor_threshold_prevents_stop(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Journal(Path(directory) / "journal.jsonl")
+            for index, score in enumerate((0.5, 0.501, 0.5021, 0.5019), 1):
+                journal.append(record(index, score))
+            self.assertFalse(journal.converged(0.002, 3))
 
 
 class SandboxTests(unittest.TestCase):

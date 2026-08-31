@@ -1,0 +1,22 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:6:metrics",
+        "experiment:6:segment:tab:0",
+        "experiment:6:segment:tab:6",
+        "experiment:6:segment:tab:8"
+      ],
+      "finding": "Prioritize request_context (tab, hour, weekday) as the only screened group with positive training-only temporal-holdout primary lift (+0.00221), full coverage, and positive lift on each reported holdout day. This is modest relative to daily variability (std 0.00580), so it supports retaining and carefully regularizing the existing context signal rather than funding a broad feature expansion. Post-score diagnostics identify tab as the dominant weakness: tab 8 has both poor within-user ranking (GAUC 0.3519) and extremely weak top-five quality (nDCG@5 0.0263); tabs 0 and 6 have substantial traffic and weak top-five quality as well.",
+      "recommended_action": "Keep request-context features and allocate at most one narrowly scoped follow-up: tab-aware calibration or interaction treatment with conservative regularization, selected by validation primary under the strict early-stopping rule. Require improvement in primary and nDCG@5 on material weak tabs, especially 0 and 6; treat tab 8 as a monitored sparse/problem segment rather than optimizing to its small sample alone. Preserve experiment 6's validation-primary checkpoint because its primary is 0.60450 despite GAUC 0.67071; do not substitute GAUC-only selection."
+    }
+  ],
+  "avoid": [
+    "Do not add user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response: each had non-positive training-only temporal-holdout primary lift, with particularly large and consistently negative results for historical author/item response. Evidence: screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response.",
+    "Reject all current-impression outcome fields, including click, engagement, view, dwell, and play-time outcomes, because they are unavailable at ranking time and would leak. Do not use aggregate video-statistic snapshot features without per-impression availability timestamps; they remain quarantined.",
+    "Do not interpret user_positive_count=zero as a ranker defect or optimize features against it: its zero validation positives mechanically produce zero top-five metrics, and it is explicitly retrospective label-based analysis. Evidence: experiment:6:segment:user_positive_count:zero.",
+    "Do not overreact to tiny segments such as tab 14, tab 13, item_frequency:cold_0, or rare_1_4; their estimates are sample-limited. Evidence: experiment:6:segment:tab:14, experiment:6:segment:tab:13, experiment:6:segment:item_frequency:cold_0, experiment:6:segment:item_frequency:rare_1_4."
+  ],
+  "metric_diagnosis": "Experiment 6 has credible global within-user ranking evidence (GAUC 0.67071) and primary 0.60450, but its top-five effectiveness remains materially uneven across request contexts. The main issue is not a global GAUC failure: several weak segments show acceptable-to-good GAUC with poor nDCG@5, indicating that candidate ordering near the top five, rather than pairwise discrimination alone, is the actionable problem. Examples include tab 6 (GAUC 0.5989, nDCG@5 0.1056), hour 16 (GAUC 0.6255, nDCG@5 0.3563), and hour 14 (GAUC 0.6276, nDCG@5 0.3630). Tab 8 is more severe because both GAUC and top-five ranking collapse. The global primary plateau is also consistent with strict stopping: experiment 6 matched experiment 4's primary rather than improving it, while experiment 5 declined. Therefore, retain the validation-primary checkpoint, pursue only the single context-focused follow-up, and stop further feature-budget expansion unless it produces a clear primary gain without degrading top-five quality in the material weak segments. Evidence: experiment:6:metrics, experiment:6:segment:tab:8, experiment:6:segment:tab:6, experiment:6:segment:hour:16, experiment:6:segment:hour:14, experiment:4:metrics, experiment:5:metrics."
+}

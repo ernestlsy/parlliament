@@ -1,0 +1,389 @@
+[
+  {
+    "text": "Add a single video_id-by-tab interaction term to the additive scorer so that the same video can receive a tab-specific adjustment.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "Request context was the only screened feature family with a positive, stable train-only lift, while tab 0 and tab 6 have especially weak top-five results in official diagnostics. A video-by-tab term directly tests whether context should alter item ordering rather than only shifting all scores in a tab.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:tab:6",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Keep every current feature, optimizer, BCE loss, and training setting unchanged; add only a regularized categorical interaction weight for the (video_id, tab) pair to the additive logit.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.004 through better within-user item ordering when video preference differs by tab.",
+      "nDCG@5": "Increase by 0.002 to 0.006 because the interaction can promote tab-appropriate videos into the top five."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a single video_id-by-hour interaction term to make item effects vary by impression hour.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The hour slices show large and systematic top-five weakness, including hour 16 with 6,858 rows and nDCG@5 of 0.3570, suggesting that a global item effect may not capture time-dependent item appeal.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:hour:16",
+      "experiment:1:segment:hour:11",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Keep the parent model and all training settings unchanged; add only a regularized categorical interaction weight for the (video_id, hour) pair.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.003 if hourly shifts change relative item preference within users.",
+      "nDCG@5": "Increase by 0.001 to 0.005 by correcting hour-specific top-rank misorders."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Add a single user_id-by-tab interaction term to personalize request-context effects.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The current additive tab effect is common to all users, yet official diagnostics show sharply different tab quality and the task is evaluated by within-user ordering. A user-tab term is a bounded personalization test using only existing impression-time fields.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:tab:0",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Keep the parent model, feature set, BCE objective, and optimization schedule unchanged; add only a regularized categorical interaction weight for the (user_id, tab) pair.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.004 because user-specific tab preferences can change relative item scores.",
+      "nDCG@5": "Increase by 0.001 to 0.004 if personalization corrects top-five ordering in weak tabs."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace the additive linear scorer with a second-order factorization machine over the existing user, video, tab, hour, and weekday fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The parent contains only additive field weights, so it cannot model any user-item or item-context interaction. The positive context screen supports retaining these fields while testing compact shared interaction capacity instead of adding rejected feature families.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:6"
+    ],
+    "exact_ablation": "Replace only the additive logit with a rank-16 second-order factorization-machine logit over exactly the current five categorical fields; retain BCE, train/validation splits, optimizer family, and early-stopping procedure.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.002 to 0.007 because user-video and video-context interactions can improve within-user discrimination.",
+      "nDCG@5": "Increase by 0.002 to 0.008 when those interactions move relevant items into the first five ranks."
+    },
+    "expected_primary_gain": 0.0045,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer with an embedding-plus-MLP pointwise ranker using only the existing five categorical fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The measured parent has adequate GAUC but leaves substantial top-five weakness in large context slices. A compact nonlinear scorer can represent interactions among the already approved ID and request-context inputs without importing screened-rejected or unavailable signals.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:hour:16"
+    ],
+    "exact_ablation": "Replace only the additive scorer with separate embeddings for user_id, video_id, tab, hour, and weekday concatenated into a two-layer MLP; keep the same inputs, BCE objective, temporal splits, and training-example population.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.006 from nonlinear user-item-context ordering effects.",
+      "nDCG@5": "Increase by 0.001 to 0.007 if nonlinear effects improve the ordering near rank five."
+    },
+    "expected_primary_gain": 0.0035,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Use a one-layer explicit cross network on embeddings of the current five fields, with the parent pointwise BCE retained.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The parent and screen evidence indicate that approved context has value, but an additive model cannot express bounded field crosses. A single cross layer is a smaller and more interpretable interaction-capacity test than a broad deep model.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8"
+    ],
+    "exact_ablation": "Replace only the additive scorer with embeddings of the existing five fields followed by exactly one DCN-style explicit cross layer and a linear output head; retain pointwise BCE and all data construction rules.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.005 if low-order user-video-context crosses are ranking-relevant.",
+      "nDCG@5": "Increase by 0.001 to 0.006 if these crosses repair top-five mistakes in poor tab slices."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Change the pointwise BCE reduction to inverse-training-user-impression-count weighting.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "Official GAUC and nDCG@5 are within-user metrics, while the parent trains on row-averaged BCE. The validation population includes 22,377 users over 124,909 rows, so prolific users can receive disproportionate training influence under row averaging.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_frequency:medium_5_19",
+      "experiment:1:segment:user_frequency:warm_20_plus"
+    ],
+    "exact_ablation": "Keep the parent additive model, inputs, optimizer, batch size, and checkpoint rule unchanged; multiply each training-row BCE loss by the inverse number of training impressions for that row's user and normalize by total weight.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.004 because optimization weight more closely reflects per-user ranking evaluation.",
+      "nDCG@5": "Change by -0.001 to 0.003; equal-user weighting may help typical users but does not directly optimize top-five ranks."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add L2 regularization specifically to the tab embeddings/weights by increasing the shared L2 penalty tenfold.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "Several low-support tabs have extremely poor diagnostics, including tab 8 with 547 rows and tab 3 with 177 rows. Stronger regularization is a clean robustness ablation for sparse context categories without changing feature availability.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:tab:3",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Keep the parent additive architecture, data, optimizer, and all settings unchanged except increase L2 regularization from 1e-6 to 1e-5.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to 0.002; reduced memorization may modestly improve temporal generalization but can underfit IDs.",
+      "nDCG@5": "Change by -0.001 to 0.003; regularization may stabilize sparse-tab rankings but can flatten useful score differences."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Increase the additive model's maximum training epochs from 10 to 20 while preserving the existing GAUC-proxy early stopping and patience.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 3,
+      "feasibility": 10
+    },
+    "rationale": "This is a low-risk optimization-depth check before more complex capacity changes. The parent was trained with a maximum of only 10 epochs, and no measured epoch-convergence evidence is available to show that this cap is sufficient.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Keep the parent data pipeline, additive model, loss, optimizer, learning rate, seed, and patience unchanged; change only max_epochs from 10 to 20.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to 0.002 depending on whether the parent stopped before converging or begins to overfit.",
+      "nDCG@5": "Change by -0.001 to 0.002 because additional pointwise fitting may not improve top-five order."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Select checkpoints by the mean of validation GAUC proxy and validation nDCG@5 proxy rather than GAUC proxy alone.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 8
+    },
+    "rationale": "The official objective averages GAUC and nDCG@5, but parent training early-stops on GAUC proxy only. The measured parent has GAUC 0.6689 versus nDCG@5 0.5370, so aligning checkpoint selection with the fixed dual-metric objective is a direct top-five-oriented training ablation.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:6",
+      "experiment:1:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Keep the parent model, data, loss, optimizer, and epoch budget unchanged; replace the early-stopping checkpoint score from validation GAUC proxy alone to the arithmetic mean of validation GAUC proxy and validation nDCG@5 proxy.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to 0.002 because a checkpoint with better top-five behavior may sacrifice some pairwise ordering.",
+      "nDCG@5": "Increase by 0.001 to 0.004 by selecting checkpoints aligned with the official top-five component."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a single train-frequency bucket for video_id as an additional categorical feature.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "Rare and medium-frequency items have substantially weaker nDCG@5 than warm items, while their raw item IDs may be too sparse to learn reliably. A train-only frequency bucket can share a shrinkage-like correction across items without using outcome-derived or untimestamped statistics.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:segment:item_frequency:rare_1_4",
+      "experiment:1:segment:item_frequency:medium_5_19",
+      "experiment:1:segment:item_frequency:warm_20_plus",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Keep the parent additive scorer and training settings unchanged; add only one categorical feature equal to a video_id's bucketed count of appearances in the training split, with an explicit unseen-item bucket.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.003 by improving score reliability for sparsely observed videos.",
+      "nDCG@5": "Increase by 0.001 to 0.004 if frequency-aware shrinkage reduces poor rare-item top-five placements."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a single interaction between video_id and weekday to model day-specific item preference.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "Weekday is an already approved request-context field with full screen coverage, but its current contribution is globally additive. This narrow interaction tests recurring day-level variation while avoiding all screened-rejected metadata and history features.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:hour:20"
+    ],
+    "exact_ablation": "Keep the parent model, inputs, loss, optimizer, and training schedule unchanged; add only a regularized categorical interaction weight for the (video_id, weekday) pair.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.003 if weekday changes video preference ordering within a user.",
+      "nDCG@5": "Increase by 0.000 to 0.004 if weekday-specific video effects influence the top five."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  }
+]

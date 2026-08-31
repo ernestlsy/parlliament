@@ -1,0 +1,650 @@
+{
+  "manual_interventions": 0,
+  "attempts": [
+    {
+      "attempt_id": "8d75c77f6ae2",
+      "experiment_id": 1,
+      "generation": 1,
+      "status": "scored",
+      "parent_experiment_id": 0,
+      "hypothesis": "Add impression-time request context (tab, hour, weekday) to the additive user/video-ID scorer.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 7,
+        "evidence_ids": [
+          "screen:request_context"
+        ],
+        "exact_ablation": "Extend the seed feature encoder with train-fitted categorical fields tab, hour derived from hourmin, and weekday derived from date; retain the additive model, BCE loss, optimizer, and all other settings unchanged.",
+        "expected_effect": {
+          "GAUC": "Increase by approximately 0.001 to 0.004 because context can alter video ordering within a user.",
+          "nDCG@5": "Increase by approximately 0.000 to 0.003; the screen supports broad ranking lift more strongly than top-five lift."
+        },
+        "expected_primary_gain": 0.002,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "evaluation.within_user_metrics",
+          "task.leakage_policy"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -1,7 +1,8 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Data contract for additive user, item, and request-context identifiers.\"\"\"\n \n import csv\n import os\n+from datetime import datetime\n \n import numpy as np\n \n@@ -12,7 +13,7 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n \n \n def load(data_dir, max_rows_per_split=None):\n@@ -23,8 +24,25 @@\n     ):\n         with open(os.path.join(data_dir, filename), encoding=\"utf-8\") as handle:\n             for row in csv.DictReader(handle):\n+                date_value = row[\"date\"]\n+                user_id = row[\"user_id\"]\n+                video_id = row[\"video_id\"]\n+                tab = row[\"tab\"]\n+                hourmin = row[\"hourmin\"]\n+\n+                date = int(date_value)\n+                hour = int(float(hourmin) // 100)\n+                if not 0 <= hour <= 23:\n+                    raise ValueError(\"hour derived from hourmin must be in 0..23\")\n+                weekday = datetime.strptime(date_value, \"%Y%m%d\").date().weekday()\n+\n                 rows.append((\n-                    int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n+                    date,\n+                    user_id,\n+                    video_id,\n+                    tab,\n+                    hour,\n+                    weekday,\n                     1 if row[LABEL] != \"0\" else 0,\n                 ))\n     result = {}\n@@ -38,8 +56,9 @@\n     train = splits[\"train\"]\n     if not train:\n         raise ValueError(\"training split is empty\")\n+\n     def raw(row):\n-        return [row[1], row[2]]\n+        return [row[1], row[2], row[3], row[4], row[5]]\n \n     vocabs = [dict() for _ in FIELDS]\n     for row in train:\n@@ -59,7 +78,7 @@\n                 features[row_index, field_index] = (\n                     vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n                 )\n-            labels[row_index] = row[3]\n+            labels[row_index] = row[6]\n             users[row_index] = row[1]\n         encoded[name] = (features, labels, users)\n     return encoded, int(sum(dimensions))\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6689116170510226,
+        "classification": {
+          "accuracy": 0.6704560920350014,
+          "balanced_accuracy": 0.6945295994593694,
+          "confusion_matrix": {
+            "false_negative": 9431,
+            "false_positive": 31732,
+            "true_negative": 54045,
+            "true_positive": 29701
+          },
+          "f1": 0.5906826430666733,
+          "matthews_correlation": 0.36096201255412097,
+          "precision": 0.483469796363518,
+          "predicted_positive_rate": 0.4918220464498155,
+          "recall": 0.7589951957477257,
+          "specificity": 0.6300640031710132,
+          "threshold": -0.697097897529602,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.845848321914673,
+          "score_mean": -0.9800092612058329,
+          "score_min": -7.238213539123535,
+          "score_std": 1.4085754551020575
+        },
+        "nDCG@5": 0.5369580777053825,
+        "primary": 0.6029348473782026,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6772578987353086,
+          "MAP@5": 0.48565604315939687,
+          "MRR@5": 0.542483353443273,
+          "Precision@5": 0.375364585660858,
+          "Recall@5": 0.6002686181792386,
+          "average_precision": 0.5714958062082477,
+          "global_AUC": 0.7650263756079765
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 72.85033751399897,
+      "sandbox": "/mnt/d/tehpengagent/src/ernest/runs/run_12/experiment_1"
+    },
+    {
+      "attempt_id": "9321bc15ca75",
+      "experiment_id": 2,
+      "generation": 2,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Replace the additive linear scorer with a second-order factorization machine over the existing user, video, tab, hour, and weekday fields.",
+      "hypothesis_rationale": {
+        "candidate_id": "c04",
+        "confidence": 7,
+        "evidence_ids": [
+          "screen:request_context",
+          "experiment:1:metrics",
+          "experiment:1:segment:tab:6"
+        ],
+        "exact_ablation": "Replace only the additive logit with a rank-16 second-order factorization-machine logit over exactly the current five categorical fields; retain BCE, train/validation splits, optimizer family, and early-stopping procedure.",
+        "expected_effect": {
+          "GAUC": "Increase by 0.002 to 0.007 because user-video and video-context interactions can improve within-user discrimination.",
+          "nDCG@5": "Increase by 0.002 to 0.008 when those interactions move relevant items into the first five ranks."
+        },
+        "expected_primary_gain": 0.0045,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "architecture.deep_cross_ranker",
+          "architecture.embedding_mlp_ranker"
+        ],
+        "runtime_risk": "medium"
+      },
+      "code_diff": {
+        "model.py": "--- model.py\n+++ model.py\n@@ -1,4 +1,4 @@\n-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n+\"\"\"Second-order factorization-machine model over encoded categorical IDs.\"\"\"\n \n import numpy as np\n \n@@ -8,49 +8,120 @@\n \n \n class Model:\n-    def __init__(self, dimension, learning_rate=0.01, l2=1e-6):\n+    def __init__(self, dimension, learning_rate=0.01, l2=1e-6, factor_rank=None):\n+        if factor_rank is None:\n+            raise ValueError(\"factor_rank must be provided\")\n+        if factor_rank <= 0:\n+            raise ValueError(\"factor_rank must be positive\")\n+\n         self.weights = np.zeros(dimension, dtype=np.float32)\n+        rng = np.random.RandomState(0)\n+        self.factors = rng.normal(\n+            loc=0.0, scale=0.01, size=(dimension, factor_rank)\n+        ).astype(np.float32)\n         self.bias = np.float32(0.0)\n         self.learning_rate = learning_rate\n         self.l2 = l2\n+\n         self.first_moment = np.zeros_like(self.weights)\n         self.second_moment = np.zeros_like(self.weights)\n+        self.factor_first_moment = np.zeros_like(self.factors)\n+        self.factor_second_moment = np.zeros_like(self.factors)\n+        self.bias_first_moment = np.float32(0.0)\n+        self.bias_second_moment = np.float32(0.0)\n         self.step_number = 0\n \n     def logits(self, features):\n-        return self.bias + self.weights[features].sum(1)\n+        selected_weights = self.weights[features]\n+        selected_factors = self.factors[features]\n+        factor_sums = selected_factors.sum(axis=1)\n+        interactions = np.float32(0.5) * (\n+            (factor_sums * factor_sums).sum(axis=1)\n+            - (selected_factors * selected_factors).sum(axis=(1, 2))\n+        )\n+        return self.bias + selected_weights.sum(axis=1) + interactions\n \n     def step(self, features, labels):\n         size = len(labels)\n         logits = self.logits(features)\n         probabilities = sigmoid(logits)\n         gradient = ((probabilities - labels) / size).astype(np.float32)\n+\n         grad_weights = np.zeros_like(self.weights)\n         np.add.at(grad_weights, features, gradient[:, None])\n         grad_weights += self.l2 * self.weights\n+\n+        selected_factors = self.factors[features]\n+        factor_sums = selected_factors.sum(axis=1)\n+        selected_factor_gradients = (\n+            gradient[:, None, None]\n+            * (factor_sums[:, None, :] - selected_factors)\n+        )\n+        grad_factors = np.zeros_like(self.factors)\n+        np.add.at(grad_factors, features, selected_factor_gradients)\n+        grad_factors += self.l2 * self.factors\n+        grad_bias = np.float32(gradient.sum())\n+\n         self.step_number += 1\n         beta1, beta2, epsilon = 0.9, 0.999, 1e-8\n+\n         self.first_moment *= beta1\n         self.first_moment += (1 - beta1) * grad_weights\n         self.second_moment *= beta2\n         self.second_moment += (1 - beta2) * (grad_weights * grad_weights)\n-        first_hat = self.first_moment / (1 - beta1 ** self.step_number)\n-        second_hat = self.second_moment / (1 - beta2 ** self.step_number)\n+\n+        self.factor_first_moment *= beta1\n+        self.factor_first_moment += (1 - beta1) * grad_factors\n+        self.factor_second_moment *= beta2\n+        self.factor_second_moment += (1 - beta2) * (grad_factors * grad_factors)\n+\n+        self.bias_first_moment = np.float32(\n+            beta1 * self.bias_first_moment + (1 - beta1) * grad_bias\n+        )\n+        self.bias_second_moment = np.float32(\n+            beta2 * self.bias_second_moment + (1 - beta2) * grad_bias * grad_bias\n+        )\n+\n+        correction1 = 1 - beta1 ** self.step_number\n+        correction2 = 1 - beta2 ** self.step_number\n+        first_hat = self.first_moment / correction1\n+        second_hat = self.second_moment / correction2\n+        factor_first_hat = self.factor_first_moment / correction1\n+        factor_second_hat = self.factor_second_moment / correction2\n+        bias_first_hat = self.bias_first_moment / correction1\n+        bias_second_hat = self.bias_second_moment / correction2\n+\n         self.weights -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n-        self.bias -= self.learning_rate * gradient.sum()\n+        self.factors -= (\n+            self.learning_rate\n+            * factor_first_hat\n+            / (np.sqrt(factor_second_hat) + epsilon)\n+        )\n+        self.bias = np.float32(\n+            self.bias\n+            - self.learning_rate\n+            * bias_first_hat\n+            / (np.sqrt(bias_second_hat) + epsilon)\n+        )\n+\n         return float(-np.mean(\n             labels * np.log(probabilities + 1e-9)\n             + (1 - labels) * np.log(1 - probabilities + 1e-9)\n         ))\n \n     def predict(self, features, batch_size=200_000):\n+        if len(features) == 0:\n+            return np.empty(0, dtype=np.float32)\n         return np.concatenate([\n             self.logits(features[index:index + batch_size])\n             for index in range(0, len(features), batch_size)\n         ])\n \n     def state(self):\n-        return self.weights.copy(), np.float32(self.bias)\n+        return self.weights.copy(), self.factors.copy(), np.float32(self.bias)\n \n     def load_state(self, state):\n-        self.weights, self.bias = state\n+        weights, factors, bias = state\n+        self.weights = np.asarray(weights, dtype=np.float32).copy()\n+        self.factors = np.asarray(factors, dtype=np.float32).copy()\n+        self.bias = np.float32(bias)\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -1,4 +1,4 @@\n-\"\"\"Train the neutral seed scaffold and emit validation scores for fixed evaluation.\"\"\"\n+\"\"\"Train the configured factorization machine and emit validation and test scores.\"\"\"\n \n import argparse\n import json\n@@ -48,19 +48,20 @@\n     encoded, dimension = encode(splits)\n     train_features, train_labels, _ = encoded[\"train\"]\n     valid_features, valid_labels, valid_users = encoded[\"valid\"]\n-    test_features, test_labels, _ = encoded[\"test\"]\n+    test_features, _, _ = encoded[\"test\"]\n     model = Model(\n         dimension,\n         learning_rate=config[\"learning_rate\"],\n         l2=config[\"l2\"],\n+        factor_rank=config[\"factor_rank\"],\n     )\n     if args.contract_check:\n         probe_size = min(8, len(train_labels))\n         if probe_size == 0 or len(valid_labels) == 0:\n             raise ValueError(\"contract probe requires non-empty train and validation slices\")\n         loss = model.step(train_features[:probe_size], train_labels[:probe_size])\n-        probe_scores = model.predict(valid_features[:probe_size])\n-        if probe_scores.ndim != 1 or len(probe_scores) != min(probe_size, len(valid_features)):\n+        probe_scores = model.predict(valid_features)\n+        if probe_scores.ndim != 1 or len(probe_scores) != len(valid_features):\n             raise ValueError(\"model prediction shape violates the interface contract\")\n         if not np.isfinite(loss) or not np.all(np.isfinite(probe_scores)):\n             raise ValueError(\"model produced NaN or infinity during contract probe\")\n@@ -86,14 +87,16 @@\n     if best_state is None:\n         raise RuntimeError(\"training produced no checkpoint\")\n     model.load_state(best_state)\n+    output_dir = Path(args.output).parent\n+    output_dir.mkdir(parents=True, exist_ok=True)\n     np.savez(\n-        args.output,\n-        row_ids=np.arange(len(valid_labels), dtype=np.int64),\n+        output_dir / \"predictions_valid.npz\",\n+        row_ids=np.arange(len(valid_features), dtype=np.int64),\n         scores=model.predict(valid_features),\n     )\n     np.savez(\n-        Path(args.output).with_name(\"predictions_test.npz\"),\n-        row_ids=np.arange(len(test_labels), dtype=np.int64),\n+        output_dir / \"predictions_test.npz\",\n+        row_ids=np.arange(len(test_features), dtype=np.int64),\n         scores=model.predict(test_features),\n     )\n \n"
+      },
+      "config_diff": "--- config.json\n+++ config.json\n@@ -2,6 +2,7 @@\n   \"seed\": 0,\n   \"learning_rate\": 0.01,\n   \"l2\": 0.000001,\n+  \"factor_rank\": 16,\n   \"batch_size\": 8192,\n   \"max_epochs\": 10,\n   \"patience\": 3,\n",
+      "metrics": {
+        "GAUC": 0.6658897820004246,
+        "classification": {
+          "accuracy": 0.6600805386321242,
+          "balanced_accuracy": 0.6912760615559681,
+          "confusion_matrix": {
+            "false_negative": 8812,
+            "false_positive": 33647,
+            "true_negative": 52130,
+            "true_positive": 30320
+          },
+          "f1": 0.5881725331962482,
+          "matthews_correlation": 0.35498150187257477,
+          "precision": 0.4739944033642347,
+          "predicted_positive_rate": 0.5121088152174783,
+          "recall": 0.7748134519063682,
+          "specificity": 0.6077386712055679,
+          "threshold": -0.8370391726493835,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 3.9790091514587402,
+          "score_mean": -0.9364506611351413,
+          "score_min": -5.002923488616943,
+          "score_std": 1.2609438610672188
+        },
+        "nDCG@5": 0.5350294342803582,
+        "primary": 0.6004596081403915,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.676542878848818,
+          "MAP@5": 0.4833857184708547,
+          "MRR@5": 0.5397878774336797,
+          "Precision@5": 0.3747568187573409,
+          "Recall@5": 0.59962194489923,
+          "average_precision": 0.5648735048488971,
+          "global_AUC": 0.761531120246214
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 328.0749205430038,
+      "sandbox": "/mnt/d/tehpengagent/src/ernest/runs/run_12/experiment_2"
+    },
+    {
+      "attempt_id": "7c5c5537d89a",
+      "experiment_id": 3,
+      "generation": 3,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Train the additive five-field scorer with a within-user pairwise logistic ranking loss instead of pointwise BCE.",
+      "hypothesis_rationale": {
+        "candidate_id": "c02",
+        "confidence": 5,
+        "evidence_ids": [
+          "experiment:1:metrics",
+          "experiment:2:metrics",
+          "experiment:2:segment:tab:6"
+        ],
+        "exact_ablation": "Replace pointwise BCE with a within-user positive-versus-negative logistic pairwise loss, keeping the additive five-field scorer, data, optimizer family, regularization, and stopping procedure unchanged.",
+        "expected_effect": {
+          "GAUC": "Increase by 0.001 to 0.004 because each update directly rewards within-user positive-negative ordering.",
+          "nDCG@5": "Increase by 0.000 to 0.003 if improved pairwise ordering transfers to the first five positions; the effect may be smaller than GAUC."
+        },
+        "expected_primary_gain": 0.002,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "evaluation.within_user_metrics",
+          "task.kuairand_ranking"
+        ],
+        "runtime_risk": "medium"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -16,8 +16,9 @@\n FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n \n \n-def load(data_dir, max_rows_per_split=None):\n+def load(data_dir, max_rows_per_split=None, include_test_labels=False):\n     rows = []\n+    test_low, test_high = SPLITS[\"test\"]\n     for filename in (\n         \"log_standard_4_08_to_4_21_pure.csv\",\n         \"log_standard_4_22_to_5_08_pure.csv\",\n@@ -35,6 +36,10 @@\n                 if not 0 <= hour <= 23:\n                     raise ValueError(\"hour derived from hourmin must be in 0..23\")\n                 weekday = datetime.strptime(date_value, \"%Y%m%d\").date().weekday()\n+                if test_low <= date <= test_high and not include_test_labels:\n+                    label = None\n+                else:\n+                    label = 1 if row[LABEL] != \"0\" else 0\n \n                 rows.append((\n                     date,\n@@ -43,7 +48,7 @@\n                     tab,\n                     hour,\n                     weekday,\n-                    1 if row[LABEL] != \"0\" else 0,\n+                    label,\n                 ))\n     result = {}\n     for name, (low, high) in SPLITS.items():\n@@ -71,14 +76,17 @@\n     encoded = {}\n     for name, rows in splits.items():\n         features = np.empty((len(rows), len(FIELDS)), dtype=np.int32)\n-        labels = np.empty(len(rows), dtype=np.float32)\n+        labels = None if name == \"test\" and all(row[6] is None for row in rows) else np.empty(\n+            len(rows), dtype=np.float32\n+        )\n         users = np.empty(len(rows), dtype=\"U32\")\n         for row_index, row in enumerate(rows):\n             for field_index, value in enumerate(raw(row)):\n                 features[row_index, field_index] = (\n                     vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n                 )\n-            labels[row_index] = row[6]\n+            if labels is not None:\n+                labels[row_index] = row[6]\n             users[row_index] = row[1]\n         encoded[name] = (features, labels, users)\n     return encoded, int(sum(dimensions))\n",
+        "model.py": "--- model.py\n+++ model.py\n@@ -20,14 +20,33 @@\n     def logits(self, features):\n         return self.bias + self.weights[features].sum(1)\n \n-    def step(self, features, labels):\n-        size = len(labels)\n-        logits = self.logits(features)\n-        probabilities = sigmoid(logits)\n-        gradient = ((probabilities - labels) / size).astype(np.float32)\n+    def step(self, positive_features, negative_features):\n+        positive_features = np.asarray(positive_features)\n+        negative_features = np.asarray(negative_features)\n+        if positive_features.ndim != 2 or negative_features.ndim != 2:\n+            raise ValueError(\"positive_features and negative_features must be two-dimensional\")\n+        if positive_features.shape != negative_features.shape:\n+            raise ValueError(\"positive_features and negative_features must have the same shape\")\n+        if positive_features.shape[1] != 5:\n+            raise ValueError(\"pair feature matrices must have five columns\")\n+        pair_count = positive_features.shape[0]\n+        if pair_count == 0:\n+            raise ValueError(\"pair batches must not be empty\")\n+\n+        positive_logits = self.logits(positive_features)\n+        negative_logits = self.logits(negative_features)\n+        delta = positive_logits - negative_logits\n+        pair_losses = np.logaddexp(np.float32(0.0), -delta)\n+        loss = float(np.mean(pair_losses, dtype=np.float64))\n+        gradient = (-sigmoid(-delta) / np.float32(pair_count)).astype(np.float32)\n+\n         grad_weights = np.zeros_like(self.weights)\n-        np.add.at(grad_weights, features, gradient[:, None])\n+        np.add.at(grad_weights, positive_features, gradient[:, None])\n+        np.add.at(grad_weights, negative_features, -gradient[:, None])\n         grad_weights += self.l2 * self.weights\n+        if not np.isfinite(loss) or not np.all(np.isfinite(grad_weights)):\n+            raise ValueError(\"pairwise loss and gradients must be finite\")\n+\n         self.step_number += 1\n         beta1, beta2, epsilon = 0.9, 0.999, 1e-8\n         self.first_moment *= beta1\n@@ -37,11 +56,7 @@\n         first_hat = self.first_moment / (1 - beta1 ** self.step_number)\n         second_hat = self.second_moment / (1 - beta2 ** self.step_number)\n         self.weights -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n-        self.bias -= self.learning_rate * gradient.sum()\n-        return float(-np.mean(\n-            labels * np.log(probabilities + 1e-9)\n-            + (1 - labels) * np.log(1 - probabilities + 1e-9)\n-        ))\n+        return loss\n \n     def predict(self, features, batch_size=200_000):\n         return np.concatenate([\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -1,4 +1,4 @@\n-\"\"\"Train the neutral seed scaffold and emit validation scores for fixed evaluation.\"\"\"\n+\"\"\"Train the additive five-field scorer and emit canonical prediction archives.\"\"\"\n \n import argparse\n import json\n@@ -11,7 +11,7 @@\n \n \n def within_user_auc(user_ids, labels, scores):\n-    \"\"\"Training-only early-stop proxy; final scoring is owned by the Experimentor.\"\"\"\n+    \"\"\"Validation-only early-stop proxy.\"\"\"\n     grouped = {}\n     for user, label, score in zip(user_ids, labels, scores):\n         grouped.setdefault(str(user), []).append((float(score), int(label)))\n@@ -35,6 +35,30 @@\n     return numerator / denominator if denominator else 0.5\n \n \n+def build_train_pairs(train_features, train_labels, train_users, rng):\n+    \"\"\"Sample one same-user negative for each eligible positive training row.\"\"\"\n+    del train_features\n+    grouped = {}\n+    for index, user in enumerate(train_users):\n+        grouped.setdefault(str(user), []).append(index)\n+\n+    positive_indices = []\n+    negative_indices = []\n+    for indices in grouped.values():\n+        positives = [index for index in indices if train_labels[index] == 1]\n+        negatives = [index for index in indices if train_labels[index] == 0]\n+        if not positives or not negatives:\n+            continue\n+        for positive_index in positives:\n+            positive_indices.append(positive_index)\n+            negative_indices.append(rng.choice(negatives))\n+\n+    return (\n+        np.asarray(positive_indices, dtype=np.int64),\n+        np.asarray(negative_indices, dtype=np.int64),\n+    )\n+\n+\n def main():\n     parser = argparse.ArgumentParser()\n     parser.add_argument(\"--config\", required=True)\n@@ -42,38 +66,80 @@\n     parser.add_argument(\"--output\", required=True)\n     parser.add_argument(\"--contract-check\", action=\"store_true\")\n     args = parser.parse_args()\n+\n     with open(args.config, encoding=\"utf-8\") as handle:\n         config = json.load(handle)\n-    splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n+\n+    splits = load(\n+        args.data_dir,\n+        max_rows_per_split=64 if args.contract_check else None,\n+        include_test_labels=False,\n+    )\n     encoded, dimension = encode(splits)\n-    train_features, train_labels, _ = encoded[\"train\"]\n+    train_features, train_labels, train_users = encoded[\"train\"]\n     valid_features, valid_labels, valid_users = encoded[\"valid\"]\n-    test_features, test_labels, _ = encoded[\"test\"]\n+    test_features, test_labels, test_users = encoded[\"test\"]\n+    assert test_labels is None\n+\n     model = Model(\n         dimension,\n         learning_rate=config[\"learning_rate\"],\n         l2=config[\"l2\"],\n     )\n+\n     if args.contract_check:\n+        if len(train_labels) == 0 or len(valid_labels) == 0:\n+            raise ValueError(\"contract probe requires non-empty train and validation slices\")\n         probe_size = min(8, len(train_labels))\n-        if probe_size == 0 or len(valid_labels) == 0:\n-            raise ValueError(\"contract probe requires non-empty train and validation slices\")\n-        loss = model.step(train_features[:probe_size], train_labels[:probe_size])\n-        probe_scores = model.predict(valid_features[:probe_size])\n-        if probe_scores.ndim != 1 or len(probe_scores) != min(probe_size, len(valid_features)):\n+        probe_rng = np.random.default_rng(config[\"seed\"])\n+        positive_indices, negative_indices = build_train_pairs(\n+            train_features[:probe_size],\n+            train_labels[:probe_size],\n+            train_users[:probe_size],\n+            probe_rng,\n+        )\n+        if len(positive_indices) == 0:\n+            positive_indices, negative_indices = build_train_pairs(\n+                train_features,\n+                train_labels,\n+                train_users,\n+                probe_rng,\n+            )\n+        if len(positive_indices) == 0:\n+            raise ValueError(\n+                \"contract probe requires a same-user positive-negative pair in the capped training split\"\n+            )\n+        probe_pairs = min(8, len(positive_indices))\n+        loss = model.step(\n+            train_features[positive_indices[:probe_pairs]],\n+            train_features[negative_indices[:probe_pairs]],\n+        )\n+        probe_scores = model.predict(valid_features)\n+        if probe_scores.ndim != 1 or len(probe_scores) != len(valid_features):\n             raise ValueError(\"model prediction shape violates the interface contract\")\n         if not np.isfinite(loss) or not np.all(np.isfinite(probe_scores)):\n             raise ValueError(\"model produced NaN or infinity during contract probe\")\n         print(json.dumps({\"contract\": \"ok\", \"feature_shape\": list(train_features.shape)}))\n         return\n-    rng = np.random.default_rng(config[\"seed\"])\n+\n     best_score, best_state, stale = -1.0, None, 0\n     for epoch in range(1, config[\"max_epochs\"] + 1):\n-        order = rng.permutation(len(train_labels))\n+        epoch_rng = np.random.default_rng(config[\"seed\"] + epoch)\n+        positive_indices, negative_indices = build_train_pairs(\n+            train_features, train_labels, train_users, epoch_rng\n+        )\n+        if len(positive_indices) == 0:\n+            raise ValueError(\"training split contains no same-user positive-negative pairs\")\n+        order = epoch_rng.permutation(len(positive_indices))\n         losses = []\n         for index in range(0, len(order), config[\"batch_size\"]):\n-            batch = order[index:index + config[\"batch_size\"]]\n-            losses.append(model.step(train_features[batch], train_labels[batch]))\n+            batch_positions = order[index:index + config[\"batch_size\"]]\n+            losses.append(\n+                model.step(\n+                    train_features[positive_indices[batch_positions]],\n+                    train_features[negative_indices[batch_positions]],\n+                )\n+            )\n         predictions = model.predict(valid_features)\n         proxy = within_user_auc(valid_users, valid_labels, predictions)\n         print(f\"epoch={epoch} loss={np.mean(losses):.6f} valid_gauc_proxy={proxy:.6f}\")\n@@ -83,17 +149,20 @@\n             stale += 1\n             if stale >= config[\"patience\"]:\n                 break\n+\n     if best_state is None:\n         raise RuntimeError(\"training produced no checkpoint\")\n     model.load_state(best_state)\n+\n+    output_path = Path(args.output)\n     np.savez(\n-        args.output,\n-        row_ids=np.arange(len(valid_labels), dtype=np.int64),\n+        output_path.with_name(\"predictions_valid.npz\"),\n+        row_ids=np.arange(len(valid_features), dtype=np.int64),\n         scores=model.predict(valid_features),\n     )\n     np.savez(\n-        Path(args.output).with_name(\"predictions_test.npz\"),\n-        row_ids=np.arange(len(test_labels), dtype=np.int64),\n+        output_path.with_name(\"predictions_test.npz\"),\n+        row_ids=np.arange(len(test_features), dtype=np.int64),\n         scores=model.predict(test_features),\n     )\n \n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6705985549046443,
+        "classification": {
+          "accuracy": 0.5670368027924328,
+          "balanced_accuracy": 0.6429786356414701,
+          "confusion_matrix": {
+            "false_negative": 6013,
+            "false_positive": 48068,
+            "true_negative": 37709,
+            "true_positive": 33119
+          },
+          "f1": 0.5505198680175202,
+          "matthews_correlation": 0.27807332909183063,
+          "precision": 0.4079347678815574,
+          "predicted_positive_rate": 0.6499691775612646,
+          "recall": 0.8463405908208116,
+          "specificity": 0.43961668046212854,
+          "threshold": 0.711296021938324,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.603055953979492,
+          "score_mean": 0.6623347303423399,
+          "score_min": -3.1553332805633545,
+          "score_std": 1.0054518521867535
+        },
+        "nDCG@5": 0.5375321904955523,
+        "primary": 0.6040653727000983,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6769897662778745,
+          "MAP@5": 0.48655356690649926,
+          "MRR@5": 0.54281181570363,
+          "Precision@5": 0.375364585660859,
+          "Recall@5": 0.6002857039934647,
+          "average_precision": 0.4709525205146412,
+          "global_AUC": 0.6994159585981155
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 138.53932044799876,
+      "sandbox": "/mnt/d/tehpengagent/src/ernest/runs/run_12/experiment_3"
+    },
+    {
+      "attempt_id": "2ff66e4d0931",
+      "experiment_id": 4,
+      "generation": 4,
+      "status": "scored",
+      "parent_experiment_id": 3,
+      "hypothesis": "Increase same-user negative sampling from one to four negatives per eligible positive in the pairwise logistic objective.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 6,
+        "evidence_ids": [
+          "experiment:1:metrics",
+          "experiment:3:metrics",
+          "experiment:3:segment:tab:0",
+          "experiment:3:segment:tab:6"
+        ],
+        "exact_ablation": "Change only the pair constructor so each eligible positive training row samples K=4 same-user negative rows uniformly without replacement when possible, instead of K=1; retain the additive five-field scorer, pairwise logistic loss, optimizer, learning rate, regularization, epoch budget, and stopping rule.",
+        "expected_effect": {
+          "GAUC": "Increase by 0.0005 to 0.0025 because each positive receives broader same-user negative comparisons.",
+          "nDCG@5": "Increase by 0.0005 to 0.0030 if additional comparisons correct top-five inversions; the effect may be concentrated in low-performing tabs."
+        },
+        "expected_primary_gain": 0.0015,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "objective.within_user_ranknet_pairwise_loss"
+        ],
+        "runtime_risk": "medium"
+      },
+      "code_diff": {
+        "train.py": "--- train.py\n+++ train.py\n@@ -36,8 +36,9 @@\n \n \n def build_train_pairs(train_features, train_labels, train_users, rng):\n-    \"\"\"Sample one same-user negative for each eligible positive training row.\"\"\"\n+    \"\"\"Sample K=4 same-user negatives uniformly without replacement when possible, using all available negatives when fewer than four exist.\"\"\"\n     del train_features\n+    k = 4\n     grouped = {}\n     for index, user in enumerate(train_users):\n         grouped.setdefault(str(user), []).append(index)\n@@ -49,9 +50,14 @@\n         negatives = [index for index in indices if train_labels[index] == 0]\n         if not positives or not negatives:\n             continue\n+        sample_size = min(k, len(negatives))\n         for positive_index in positives:\n-            positive_indices.append(positive_index)\n-            negative_indices.append(rng.choice(negatives))\n+            sampled_negatives = rng.choice(\n+                negatives, size=sample_size, replace=False\n+            )\n+            for negative_index in sampled_negatives:\n+                positive_indices.append(positive_index)\n+                negative_indices.append(negative_index)\n \n     return (\n         np.asarray(positive_indices, dtype=np.int64),\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6707057443888901,
+        "classification": {
+          "accuracy": 0.5571415990841333,
+          "balanced_accuracy": 0.6426943125968518,
+          "confusion_matrix": {
+            "false_negative": 5017,
+            "false_positive": 50300,
+            "true_negative": 35477,
+            "true_positive": 34115
+          },
+          "f1": 0.5522594640096481,
+          "matthews_correlation": 0.28280231261949607,
+          "precision": 0.404134336314636,
+          "predicted_positive_rate": 0.6758119911295423,
+          "recall": 0.8717929060615354,
+          "specificity": 0.4135957191321683,
+          "threshold": 0.751691460609436,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 3.3330821990966797,
+          "score_mean": 0.7553988013332783,
+          "score_min": -4.369772911071777,
+          "score_std": 1.1577905221238267
+        },
+        "nDCG@5": 0.5382868021095627,
+        "primary": 0.6044962732492264,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6775707199356482,
+          "MAP@5": 0.4873199664337925,
+          "MRR@5": 0.5432594479450694,
+          "Precision@5": 0.37595447706721336,
+          "Recall@5": 0.6011855747956856,
+          "average_precision": 0.4698266933668232,
+          "global_AUC": 0.6999384200602483
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 150.49029058900487,
+      "sandbox": "/mnt/d/tehpengagent/src/ernest/runs/run_12/experiment_4"
+    },
+    {
+      "attempt_id": "cc322ea4020b",
+      "experiment_id": 5,
+      "generation": 5,
+      "status": "scored",
+      "parent_experiment_id": 4,
+      "hypothesis": "Add an explicit user-by-tab categorical interaction to the current additive five-field pairwise ranker.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 6,
+        "evidence_ids": [
+          "screen:request_context",
+          "experiment:4:metrics",
+          "experiment:4:segment:tab:0",
+          "experiment:4:segment:tab:6"
+        ],
+        "exact_ablation": "Append exactly one train-fitted categorical feature formed by the pair (user_id, tab), with an unknown bucket, while retaining the additive scorer, five existing fields, K=4 uniform same-user negative sampling, pairwise logistic loss, optimizer, regularization, and stopping rule.",
+        "expected_effect": {
+          "GAUC": "Increase by 0.0003 to 0.0015 because user-specific tab preferences can correct within-user positive-negative inversions.",
+          "nDCG@5": "Increase by 0.0005 to 0.0020 if user-tab preferences move relevant impressions upward in the weak tab slices."
+        },
+        "expected_primary_gain": 0.001,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "task.leakage_policy",
+          "evaluation.within_user_metrics"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -13,7 +13,7 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\", \"user_id_tab\"]\n \n \n def load(data_dir, max_rows_per_split=None, include_test_labels=False):\n@@ -63,7 +63,7 @@\n         raise ValueError(\"training split is empty\")\n \n     def raw(row):\n-        return [row[1], row[2], row[3], row[4], row[5]]\n+        return [row[1], row[2], row[3], row[4], row[5], (row[1], row[3])]\n \n     vocabs = [dict() for _ in FIELDS]\n     for row in train:\n",
+        "model.py": "--- model.py\n+++ model.py\n@@ -27,8 +27,8 @@\n             raise ValueError(\"positive_features and negative_features must be two-dimensional\")\n         if positive_features.shape != negative_features.shape:\n             raise ValueError(\"positive_features and negative_features must have the same shape\")\n-        if positive_features.shape[1] != 5:\n-            raise ValueError(\"pair feature matrices must have five columns\")\n+        if positive_features.shape[1] != 6:\n+            raise ValueError(\"pair feature matrices must have six columns\")\n         pair_count = positive_features.shape[0]\n         if pair_count == 0:\n             raise ValueError(\"pair batches must not be empty\")\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6685006427875048,
+        "classification": {
+          "accuracy": 0.534477099328311,
+          "balanced_accuracy": 0.6291104632426019,
+          "confusion_matrix": {
+            "false_negative": 4597,
+            "false_positive": 53551,
+            "true_negative": 32226,
+            "true_positive": 34535
+          },
+          "f1": 0.5429263154585043,
+          "matthews_correlation": 0.26268172249396626,
+          "precision": 0.3920600322412188,
+          "predicted_positive_rate": 0.7052013866094516,
+          "recall": 0.882525810078708,
+          "specificity": 0.3756951164064959,
+          "threshold": 0.4781010150909424,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 3.3739583492279053,
+          "score_mean": 0.6783819723712113,
+          "score_min": -4.337320804595947,
+          "score_std": 1.1483825510149055
+        },
+        "nDCG@5": 0.5363084065155106,
+        "primary": 0.6024045246515077,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6775707199356482,
+          "MAP@5": 0.48478669814740394,
+          "MRR@5": 0.5409587224978086,
+          "Precision@5": 0.3755344028839,
+          "Recall@5": 0.6003691670629393,
+          "average_precision": 0.45850231207945513,
+          "global_AUC": 0.685567718568445
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 80.84775617800187,
+      "sandbox": "/mnt/d/tehpengagent/src/ernest/runs/run_12/experiment_5"
+    },
+    {
+      "attempt_id": "6c4950bcc304",
+      "experiment_id": 6,
+      "generation": 6,
+      "status": "scored",
+      "parent_experiment_id": 4,
+      "hypothesis": "Select the early-stopping checkpoint by validation primary instead of validation GAUC.",
+      "hypothesis_rationale": {
+        "candidate_id": "c09",
+        "confidence": 5,
+        "evidence_ids": [
+          "experiment:4:metrics",
+          "experiment:3:metrics"
+        ],
+        "exact_ablation": "Change only checkpoint selection and early stopping from validation within-user GAUC to validation primary, computed as the mean of official GAUC and nDCG@5; retain all data, features, model parameters, pair sampling, loss, optimizer, and patience.",
+        "expected_effect": {
+          "GAUC": "Change by -0.0005 to 0.0005 because primary selection may accept a slightly lower-GAUC checkpoint.",
+          "nDCG@5": "Increase by 0.0002 to 0.0015 because selection explicitly values top-five ranking."
+        },
+        "expected_primary_gain": 0.0006,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "evaluation.within_user_metrics",
+          "task.kuairand_ranking"
+        ],
+        "runtime_risk": "medium"
+      },
+      "code_diff": {
+        "train.py": "--- train.py\n+++ train.py\n@@ -35,6 +35,34 @@\n     return numerator / denominator if denominator else 0.5\n \n \n+def within_user_ndcg_at_5(user_ids, labels, scores):\n+    \"\"\"Compute unweighted validation NDCG@5 with canonical-order tie breaking.\"\"\"\n+    grouped = {}\n+    for position, (user, label, score) in enumerate(zip(user_ids, labels, scores)):\n+        grouped.setdefault(str(user), []).append((float(score), int(label), position))\n+\n+    ndcgs = []\n+    for rows in grouped.values():\n+        labels_for_user = [label for _, label, _ in rows]\n+        if not any(labels_for_user):\n+            continue\n+\n+        ranked_rows = sorted(rows, key=lambda row: (-row[0], row[2]))\n+        dcg = sum(\n+            (2 ** label - 1) / np.log2(rank + 1)\n+            for rank, (_, label, _) in enumerate(ranked_rows[:5], start=1)\n+        )\n+        ideal_labels = sorted(labels_for_user, reverse=True)\n+        ideal_dcg = sum(\n+            (2 ** label - 1) / np.log2(rank + 1)\n+            for rank, label in enumerate(ideal_labels[:5], start=1)\n+        )\n+        if ideal_dcg > 0:\n+            ndcgs.append(dcg / ideal_dcg)\n+\n+    return float(np.mean(ndcgs)) if ndcgs else 0.0\n+\n+\n def build_train_pairs(train_features, train_labels, train_users, rng):\n     \"\"\"Sample K=4 same-user negatives uniformly without replacement when possible, using all available negatives when fewer than four exist.\"\"\"\n     del train_features\n@@ -147,10 +175,20 @@\n                 )\n             )\n         predictions = model.predict(valid_features)\n-        proxy = within_user_auc(valid_users, valid_labels, predictions)\n-        print(f\"epoch={epoch} loss={np.mean(losses):.6f} valid_gauc_proxy={proxy:.6f}\")\n-        if proxy > best_score + 1e-5:\n-            best_score, best_state, stale = proxy, model.state(), 0\n+        valid_gauc = within_user_auc(valid_users, valid_labels, predictions)\n+        valid_ndcg_at_5 = within_user_ndcg_at_5(\n+            valid_users, valid_labels, predictions\n+        )\n+        valid_primary = 0.5 * (valid_gauc + valid_ndcg_at_5)\n+        print(\n+            f\"epoch={epoch} loss={np.mean(losses):.6f} \"\n+            f\"valid_gauc={valid_gauc:.6f} \"\n+            f\"valid_ndcg_at_5={valid_ndcg_at_5:.6f} \"\n+            f\"valid_primary={valid_primary:.6f} \"\n+            f\"checkpoint_selection_metric=valid_primary\"\n+        )\n+        if valid_primary > best_score + 1e-5:\n+            best_score, best_state, stale = valid_primary, model.state(), 0\n         else:\n             stale += 1\n             if stale >= config[\"patience\"]:\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6707057443888901,
+        "classification": {
+          "accuracy": 0.5571415990841333,
+          "balanced_accuracy": 0.6426943125968518,
+          "confusion_matrix": {
+            "false_negative": 5017,
+            "false_positive": 50300,
+            "true_negative": 35477,
+            "true_positive": 34115
+          },
+          "f1": 0.5522594640096481,
+          "matthews_correlation": 0.28280231261949607,
+          "precision": 0.404134336314636,
+          "predicted_positive_rate": 0.6758119911295423,
+          "recall": 0.8717929060615354,
+          "specificity": 0.4135957191321683,
+          "threshold": 0.751691460609436,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 3.3330821990966797,
+          "score_mean": 0.7553988013332783,
+          "score_min": -4.369772911071777,
+          "score_std": 1.1577905221238267
+        },
+        "nDCG@5": 0.5382868021095627,
+        "primary": 0.6044962732492264,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6775707199356482,
+          "MAP@5": 0.4873199664337925,
+          "MRR@5": 0.5432594479450694,
+          "Precision@5": 0.37595447706721336,
+          "Recall@5": 0.6011855747956856,
+          "average_precision": 0.4698266933668232,
+          "global_AUC": 0.6999384200602483
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 82.4816707620048,
+      "sandbox": "/mnt/d/tehpengagent/src/ernest/runs/run_12/experiment_6"
+    },
+    {
+      "attempt_id": "2d80571efdcb",
+      "experiment_id": 7,
+      "generation": 7,
+      "status": "scored",
+      "parent_experiment_id": 6,
+      "hypothesis": "Use a 50/50 uniform and hard-negative sampler within each user's training impressions.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 5,
+        "evidence_ids": [
+          "experiment:3:metrics",
+          "experiment:4:metrics",
+          "experiment:6:metrics",
+          "experiment:6:segment:tab:0",
+          "experiment:6:segment:tab:6"
+        ],
+        "exact_ablation": "Change only same-user negative sampling: for each positive, retain K=4 negatives but sample two uniformly and two from the highest-scoring available same-user negatives under the frozen model at the start of each epoch; keep the additive five-field scorer, pairwise logistic loss, optimizer, L2, checkpoint selection, and all other training settings unchanged.",
+        "expected_effect": {
+          "GAUC": "Increase by 0.0002 to 0.0012 because difficult within-user inversions receive more training weight.",
+          "nDCG@5": "Increase by 0.0005 to 0.0020 because high-scoring negative impressions are the most likely to displace positives from the top five."
+        },
+        "expected_primary_gain": 0.0009,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "objective.within_user_ranknet_pairwise_loss"
+        ],
+        "runtime_risk": "medium"
+      },
+      "code_diff": {
+        "train.py": "--- train.py\n+++ train.py\n@@ -63,8 +63,10 @@\n     return float(np.mean(ndcgs)) if ndcgs else 0.0\n \n \n-def build_train_pairs(train_features, train_labels, train_users, rng):\n-    \"\"\"Sample K=4 same-user negatives uniformly without replacement when possible, using all available negatives when fewer than four exist.\"\"\"\n+def build_train_pairs(\n+    train_features, train_labels, train_users, frozen_train_scores, rng\n+):\n+    \"\"\"Sample frozen hard and uniform same-user negatives without replacement.\"\"\"\n     del train_features\n     k = 4\n     grouped = {}\n@@ -78,12 +80,28 @@\n         negatives = [index for index in indices if train_labels[index] == 0]\n         if not positives or not negatives:\n             continue\n-        sample_size = min(k, len(negatives))\n+\n+        ranked_negatives = sorted(\n+            negatives, key=lambda index: (-frozen_train_scores[index], index)\n+        )\n+        hard_count = min(2, len(negatives))\n+        hard_negatives = ranked_negatives[:hard_count]\n+        remaining_negatives = [\n+            index for index in negatives if index not in set(hard_negatives)\n+        ]\n+        uniform_count = min(k - hard_count, len(remaining_negatives))\n+\n         for positive_index in positives:\n-            sampled_negatives = rng.choice(\n-                negatives, size=sample_size, replace=False\n-            )\n-            for negative_index in sampled_negatives:\n+            if uniform_count:\n+                uniform_negatives = rng.choice(\n+                    remaining_negatives, size=uniform_count, replace=False\n+                )\n+            else:\n+                uniform_negatives = []\n+            for negative_index in hard_negatives:\n+                positive_indices.append(positive_index)\n+                negative_indices.append(negative_index)\n+            for negative_index in uniform_negatives:\n                 positive_indices.append(positive_index)\n                 negative_indices.append(negative_index)\n \n@@ -126,17 +144,21 @@\n             raise ValueError(\"contract probe requires non-empty train and validation slices\")\n         probe_size = min(8, len(train_labels))\n         probe_rng = np.random.default_rng(config[\"seed\"])\n+        probe_frozen_scores = model.predict(train_features[:probe_size])\n         positive_indices, negative_indices = build_train_pairs(\n             train_features[:probe_size],\n             train_labels[:probe_size],\n             train_users[:probe_size],\n+            probe_frozen_scores,\n             probe_rng,\n         )\n         if len(positive_indices) == 0:\n+            probe_frozen_scores = model.predict(train_features)\n             positive_indices, negative_indices = build_train_pairs(\n                 train_features,\n                 train_labels,\n                 train_users,\n+                probe_frozen_scores,\n                 probe_rng,\n             )\n         if len(positive_indices) == 0:\n@@ -159,8 +181,13 @@\n     best_score, best_state, stale = -1.0, None, 0\n     for epoch in range(1, config[\"max_epochs\"] + 1):\n         epoch_rng = np.random.default_rng(config[\"seed\"] + epoch)\n+        frozen_train_scores = model.predict(train_features)\n         positive_indices, negative_indices = build_train_pairs(\n-            train_features, train_labels, train_users, epoch_rng\n+            train_features,\n+            train_labels,\n+            train_users,\n+            frozen_train_scores,\n+            epoch_rng,\n         )\n         if len(positive_indices) == 0:\n             raise ValueError(\"training split contains no same-user positive-negative pairs\")\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6391794510641228,
+        "classification": {
+          "accuracy": 0.49580894891481,
+          "balanced_accuracy": 0.6098914458782928,
+          "confusion_matrix": {
+            "false_negative": 3311,
+            "false_positive": 59667,
+            "true_negative": 26110,
+            "true_positive": 35821
+          },
+          "f1": 0.5321794681325213,
+          "matthews_correlation": 0.24023828483559936,
+          "precision": 0.3751361427613941,
+          "predicted_positive_rate": 0.764460527263848,
+          "recall": 0.9153889399979557,
+          "specificity": 0.30439395175862993,
+          "threshold": 0.2735346853733063,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 3.1739089488983154,
+          "score_mean": 0.805770581503762,
+          "score_min": -3.092003345489502,
+          "score_std": 0.9828767306041559
+        },
+        "nDCG@5": 0.5258758731018784,
+        "primary": 0.5825276620830007,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6740849979890066,
+          "MAP@5": 0.47285341347514875,
+          "MRR@5": 0.5310884688147112,
+          "Precision@5": 0.37063651666143854,
+          "Recall@5": 0.5923446726815823,
+          "average_precision": 0.42818929747274787,
+          "global_AUC": 0.6574490034480355
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 82.0263567439979,
+      "sandbox": "/mnt/d/tehpengagent/src/ernest/runs/run_12/experiment_7"
+    },
+    {
+      "attempt_id": "c9edd06b9c58",
+      "experiment_id": 8,
+      "generation": 8,
+      "status": "scored",
+      "parent_experiment_id": 4,
+      "hypothesis": "Replace the raw 24-category hour feature with a train-fitted six-bin four-hour categorical feature.",
+      "hypothesis_rationale": {
+        "candidate_id": "c11",
+        "confidence": 4,
+        "evidence_ids": [
+          "experiment:4:metrics",
+          "experiment:7:segment:hour:2",
+          "experiment:7:segment:hour:15",
+          "experiment:7:segment:hour:18",
+          "screen:request_context"
+        ],
+        "exact_ablation": "Replace only the existing hour categorical field with floor(hour/4), yielding six train-fitted hour-bin categories and an unknown bucket; retain user_id, video_id, tab, weekday, additive architecture, K=4 uniform sampling, pairwise loss, optimizer, regularization, and all other settings unchanged.",
+        "expected_effect": {
+          "GAUC": "Change by -0.0003 to 0.0009 because pooling adjacent hours can reduce variance while sacrificing detail.",
+          "nDCG@5": "Change by -0.0003 to 0.0011 if more stable time effects improve top-five ordering."
+        },
+        "expected_primary_gain": 0.0004,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "task.leakage_policy",
+          "evaluation.within_user_metrics"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -13,7 +13,7 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour_bin\", \"weekday\"]\n \n \n def load(data_dir, max_rows_per_split=None, include_test_labels=False):\n@@ -35,6 +35,7 @@\n                 hour = int(float(hourmin) // 100)\n                 if not 0 <= hour <= 23:\n                     raise ValueError(\"hour derived from hourmin must be in 0..23\")\n+                hour_bin = hour // 4\n                 weekday = datetime.strptime(date_value, \"%Y%m%d\").date().weekday()\n                 if test_low <= date <= test_high and not include_test_labels:\n                     label = None\n@@ -46,7 +47,7 @@\n                     user_id,\n                     video_id,\n                     tab,\n-                    hour,\n+                    hour_bin,\n                     weekday,\n                     label,\n                 ))\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.670861646390768,
+        "classification": {
+          "accuracy": 0.5624734806939452,
+          "balanced_accuracy": 0.6433664045406764,
+          "confusion_matrix": {
+            "false_negative": 5479,
+            "false_positive": 49172,
+            "true_negative": 36605,
+            "true_positive": 33653
+          },
+          "f1": 0.5518830407438687,
+          "matthews_correlation": 0.28137765773131795,
+          "precision": 0.40631451856323575,
+          "predicted_positive_rate": 0.6630827242232346,
+          "recall": 0.8599867116426454,
+          "specificity": 0.42674609743870734,
+          "threshold": 0.7701455354690552,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 3.0523831844329834,
+          "score_mean": 0.7394136189181876,
+          "score_min": -4.189222812652588,
+          "score_std": 1.1422653001473755
+        },
+        "nDCG@5": 0.5375787910842658,
+        "primary": 0.6042202187375169,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6770791437636859,
+          "MAP@5": 0.4866357693663652,
+          "MRR@5": 0.5423984448317531,
+          "Precision@5": 0.3756059048725485,
+          "Recall@5": 0.6005516340308926,
+          "average_precision": 0.46974222322805553,
+          "global_AUC": 0.6995365156850721
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 69.38563552399864,
+      "sandbox": "/mnt/d/tehpengagent/src/ernest/runs/run_12/experiment_8"
+    }
+  ]
+}

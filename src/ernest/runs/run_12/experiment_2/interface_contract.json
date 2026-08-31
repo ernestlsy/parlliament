@@ -1,0 +1,54 @@
+{
+  "data_output": {
+    "description": "Unchanged data.encode(splits) returns (encoded, dimension). For each split, encoded[split] is (features, labels, users), where features is int32 shape [rows, 5] in canonical source-row split order. Feature columns are exactly [user_id, video_id, tab, hour, weekday]; hour is floor(numeric hourmin / 100) constrained to 0..23 and weekday is the calendar weekday from date with Monday=0 through Sunday=6. Vocabulary fitting remains train-only, with per-field unknown IDs and global offsets."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "factor_rank",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives features as a rank-2 integer array of globally offset categorical IDs with exactly five IDs per row, ordered user_id, video_id, tab, hour, weekday. Model logits are raw float scores in the same row order. The FM logit is bias plus first-order selected-ID weights plus all pairwise second-order interactions represented by rank-16 factor embeddings."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

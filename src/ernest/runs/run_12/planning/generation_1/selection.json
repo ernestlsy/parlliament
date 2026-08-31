@@ -1,0 +1,34 @@
+{
+  "winner": {
+    "text": "Add impression-time request context (tab, hour, weekday) to the additive user/video-ID scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "This is the only feature family with a positive, directionally consistent train-only temporal-screen lift: +0.00221 primary across all four reported days and full coverage. It is therefore the highest-information first official ablation.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Extend the seed feature encoder with train-fitted categorical fields tab, hour derived from hourmin, and weekday derived from date; retain the additive model, BCE loss, optimizer, and all other settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately 0.001 to 0.004 because context can alter video ordering within a user.",
+      "nDCG@5": "Increase by approximately 0.000 to 0.003; the screen supports broad ranking lift more strongly than top-five lift."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  "selection_rationale": "c01 is the strongest scarce-experiment choice because it is the only candidate directly supported by a completed measured screen: request context produced a +0.002213 primary lift with full coverage and positive lift on all four reported temporal holdout days. It offers a meaningful expected primary gain (~0.002), solid confidence (7), and low leakage and runtime risk while preserving the reliable additive scorer. The Consultant ranks it first (utility 0.87), ahead of interaction architectures whose upside is less directly evidenced and more speculative.",
+  "counted_experiments_consumed": 0
+}

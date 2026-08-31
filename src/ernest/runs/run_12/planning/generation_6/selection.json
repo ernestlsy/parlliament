@@ -1,0 +1,35 @@
+{
+  "winner": {
+    "text": "Select the early-stopping checkpoint by validation primary instead of validation GAUC.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 6,
+      "feasibility": 7
+    },
+    "rationale": "The official selection objective is primary, whereas the current trainer stops on a GAUC proxy. Since experiment 4's nDCG@5 is lower than its GAUC, matching checkpoint selection to primary may recover a better GAUC/nDCG trade-off without changing training updates.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:4:metrics",
+      "experiment:3:metrics"
+    ],
+    "exact_ablation": "Change only checkpoint selection and early stopping from validation within-user GAUC to validation primary, computed as the mean of official GAUC and nDCG@5; retain all data, features, model parameters, pair sampling, loss, optimizer, and patience.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0005 to 0.0005 because primary selection may accept a slightly lower-GAUC checkpoint.",
+      "nDCG@5": "Increase by 0.0002 to 0.0015 because selection explicitly values top-five ranking."
+    },
+    "expected_primary_gain": 0.0006,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  "selection_rationale": "c09 is the strongest risk-adjusted next experiment: it directly aligns early stopping and checkpoint selection with the official primary metric while preserving the proven experiment-4 data, features, pair construction, model, and optimization updates. It has low leakage risk, bounded runtime, confidence 5, and is ranked first by the Consultant (utility 0.79). This is a more reliable improvement path than broader feature, loss, or sampling changes, although results should be interpreted with awareness of modest validation-selection overfitting risk.",
+  "counted_experiments_consumed": 0
+}

@@ -1,0 +1,46 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "context-aware recommendation",
+      "factorization machines",
+      "sparse categorical features",
+      "ranking"
+    ],
+    "purpose": "Resolve the architecture choice for a bounded follow-up to the additive user/video/request-context scorer: whether a low-capacity, regularized interaction model can improve within-user top-five ordering without overfitting sparse tab values.",
+    "query": "Field-aware factorization machines and compact interaction models for sparse categorical user-item-context features in recommender ranking: compare pairwise interaction parameterizations, regularization, and behavior with rare context values.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "implicit feedback",
+      "within-user ranking",
+      "pairwise loss",
+      "top-k ranking",
+      "temporal evaluation"
+    ],
+    "purpose": "Resolve whether changing the training objective is justified for the observed gap between acceptable GAUC and weak nDCG@5 in several supported tab and item-frequency diagnostic slices, while retaining the fixed evaluator and leakage-safe temporal protocol.",
+    "query": "Pointwise binary cross-entropy versus pairwise ranking objectives (BPR, RankNet, LambdaRank-style) for implicit-feedback recommendation evaluated by within-user AUC and nDCG@K, including temporal implicit-feedback settings and practical negative-pair construction.",
+    "request_index": 2,
+    "round": 1
+  }
+]

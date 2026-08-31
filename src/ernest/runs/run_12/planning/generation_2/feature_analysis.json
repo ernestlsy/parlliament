@@ -1,0 +1,18 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:1:metrics"
+      ],
+      "finding": "Request context (tab, hour, weekday) is the only train-only screened group recommended for prioritization. Its primary lift is positive (0.00221) with full coverage and all four reported daily lifts positive, providing the strongest available stable evidence for incremental within-user ranking value. The deployed experiment also attains GAUC 0.6689 and nDCG@5 0.5370.",
+      "recommended_action": "Keep request-context features in the scorer and spend the next experiment budget on regularized context interactions or improved handling for sparse tab values, while preserving impression-time availability and temporal feature construction."
+    }
+  ],
+  "avoid": [
+    "Do not add screened groups marked reject: user profile, historical user-author affinity, upload recency, content duration, item metadata, historical author response, or historical item response; each has non-positive training-only primary lift. Evidence: screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response.",
+    "Do not use current-impression outcome fields or untimestamped aggregate video statistics; these are forbidden or quarantined for leakage risk.",
+    "Do not optimize against user_positive_count=zero as a ranking failure: its zero-label slice has undefined practical top-five opportunity and is explicitly retrospective diagnostic-only. Evidence: experiment:1:segment:user_positive_count:zero."
+  ],
+  "metric_diagnosis": "Global GAUC is acceptable, but top-five ranking is materially weak in several operational segments, so the next step should target ranking quality rather than claim a broad GAUC-only win. Tab 8 is the clearest actionable failure (GAUC 0.3519, nDCG@5 0.0263; evidence: experiment:1:segment:tab:8); tabs 0 and 6 are also large-volume weak top-five slices (nDCG@5 0.0622 and 0.1058; evidence: experiment:1:segment:tab:0, experiment:1:segment:tab:6). Rare items have poor top-five quality (nDCG@5 0.1717; evidence: experiment:1:segment:item_frequency:rare_1_4), whereas warm items are near global performance (evidence: experiment:1:segment:item_frequency:warm_20_plus). These post-score segments are diagnostics, not independent test estimates; use them to define guarded context/tab and item-frequency follow-ups, evaluated with within-user GAUC and nDCG@5 jointly."
+}

@@ -1,0 +1,38 @@
+{
+  "winner": {
+    "text": "Use a 50/50 uniform and hard-negative sampler within each user's training impressions.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The current K=4 uniform pairwise ranker improved primary from 0.60407 to 0.60450, but material tab-0 and tab-6 top-five quality remains weak. Sampling current high-scoring negatives targets inversions most likely to affect top ranks while retaining half uniform negatives for coverage.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:4:metrics",
+      "experiment:6:metrics",
+      "experiment:6:segment:tab:0",
+      "experiment:6:segment:tab:6"
+    ],
+    "exact_ablation": "Change only same-user negative sampling: for each positive, retain K=4 negatives but sample two uniformly and two from the highest-scoring available same-user negatives under the frozen model at the start of each epoch; keep the additive five-field scorer, pairwise logistic loss, optimizer, L2, checkpoint selection, and all other training settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0002 to 0.0012 because difficult within-user inversions receive more training weight.",
+      "nDCG@5": "Increase by 0.0005 to 0.0020 because high-scoring negative impressions are the most likely to displace positives from the top five."
+    },
+    "expected_primary_gain": 0.0009,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training",
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss"
+    ]
+  },
+  "selection_rationale": "c01 is the strongest single next experiment: it directly extends the only validated training change, preserves the established pairwise objective and K=4 comparison budget, and reallocates supervision toward likely within-user inversions that affect both GAUC and nDCG@5. It has the highest expected primary gain (0.0009), moderate confidence, low leakage risk, and bounded downside relative to broader objective or architecture changes. The consultant ranks it first (utility 0.67); the added epoch-wise scoring cost and hard-negative-noise risk are acceptable for this focused, evidence-grounded ablation.",
+  "counted_experiments_consumed": 0
+}

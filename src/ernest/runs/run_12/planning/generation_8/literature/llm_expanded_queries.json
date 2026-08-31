@@ -1,0 +1,14 @@
+[
+  {
+    "alternative_queries": [
+      "(\"LambdaRank\" OR \"LambdaLoss\" OR \"lambda loss\") AND (\"NDCG@5\" OR \"NDCG at 5\" OR \"top-k NDCG\") AND \"implicit feedback\" AND \"logged impressions\" AND \"within-user\" recommendation",
+      "(\"listwise learning to rank\" OR \"direct NDCG optimization\" OR \"differentiable NDCG\") AND recommender systems AND binary relevance AND \"variable-length\" (queries OR groups) AND implementation",
+      "(\"LambdaRank\" OR \"LambdaMART\" OR \"rank-aware loss\") AND recommendation AND \"per-user ranking\" AND impressions AND (\"pairwise logistic\" OR RankNet OR BPR) comparison",
+      "(\"top-k ranking loss\" OR \"NDCG surrogate\" OR \"NDCG-consistent\" OR \"LambdaLoss\") AND \"implicit-feedback recommendation\" AND \"temporal split\" AND evaluation",
+      "(\"learning to rank\" AND \"grouped ranking\" AND \"variable sized groups\") AND (LambdaRank OR listwise OR \"NDCG loss\") AND recommendation AND practical training stability"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  }
+]

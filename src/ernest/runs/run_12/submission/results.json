@@ -1,0 +1,34 @@
+{
+  "result": {
+    "benchmark": "KuaiRand-Pure",
+    "best_experiment_id": 4,
+    "validation_GAUC": 0.6707057443888901,
+    "baseline_GAUC": 0.6674,
+    "absolute_delta_GAUC": 0.003305744388890086,
+    "validation_nDCG@5": 0.5382868021095627,
+    "baseline_nDCG@5": 0.5357,
+    "absolute_delta_nDCG@5": 0.002586802109562747,
+    "validation_primary": 0.6044962732492264,
+    "baseline_primary": 0.6016,
+    "absolute_delta_primary": 0.0028962732492263665
+  },
+  "resources": {
+    "token_consumption": {
+      "input_tokens": 3627142,
+      "output_tokens": 89403,
+      "total_tokens": 3716545,
+      "llm_calls": 87,
+      "failed_llm_calls": 5,
+      "calls_with_usage": 82,
+      "complete": true,
+      "note": "Provider-reported usage covers every successful LLM call."
+    },
+    "agent_wall_clock_seconds": null,
+    "agent_wall_clock_complete": false,
+    "agent_wall_clock_note": "Wall-clock timing is unavailable or incomplete for this legacy run.",
+    "iterations": 8,
+    "attempts": 8,
+    "manual_interventions": 0,
+    "manual_intervention_summary": "None"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "text": "Increase same-user negative sampling from one to four negatives per eligible positive in the pairwise logistic objective.",
+  "parent_experiment_id": 3,
+  "scores": {
+    "interestingness": 8,
+    "novelty": 6,
+    "feasibility": 8
+  },
+  "rationale": "Experiment 3 improved both official components over the pointwise parent (GAUC 0.67060 versus 0.66891; nDCG@5 0.53753 versus 0.53696), so increasing negative coverage is a focused way to strengthen the already validated ordering signal. The largest remaining nDCG weakness is on tab 0 and tab 6, where more within-user alternatives may improve discrimination.",
+  "candidate_id": "c01",
+  "evidence_ids": [
+    "experiment:1:metrics",
+    "experiment:3:metrics",
+    "experiment:3:segment:tab:0",
+    "experiment:3:segment:tab:6"
+  ],
+  "exact_ablation": "Change only the pair constructor so each eligible positive training row samples K=4 same-user negative rows uniformly without replacement when possible, instead of K=1; retain the additive five-field scorer, pairwise logistic loss, optimizer, learning rate, regularization, epoch budget, and stopping rule.",
+  "expected_effect": {
+    "GAUC": "Increase by 0.0005 to 0.0025 because each positive receives broader same-user negative comparisons.",
+    "nDCG@5": "Increase by 0.0005 to 0.0030 if additional comparisons correct top-five inversions; the effect may be concentrated in low-performing tabs."
+  },
+  "expected_primary_gain": 0.0015,
+  "confidence": 6,
+  "leakage_risk": "low",
+  "runtime_risk": "medium",
+  "active_components": [
+    "training",
+    "loss"
+  ],
+  "literature_document_ids": [
+    "objective.within_user_ranknet_pairwise_loss"
+  ]
+}

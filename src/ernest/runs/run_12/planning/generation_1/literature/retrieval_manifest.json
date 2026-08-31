@@ -1,0 +1,87 @@
+{
+  "cache_status": [
+    "built",
+    "memory_hit"
+  ],
+  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 6666,
+      "id": "architecture.embedding_mlp_ranker",
+      "path": "20_architectures/embedding_mlp_ranker.md",
+      "sha256": "c81739cefc5d550399a927013519688953b21ea274c3211bcfc5316593a569be",
+      "source_characters": 8308,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 6666,
+      "id": "architecture.deep_cross_ranker",
+      "path": "20_architectures/deep_cross_ranker.md",
+      "sha256": "db004648e9c7b63e0f9bc0954691dbcf9fe572c134fa90b309e12eee9d590cb8",
+      "source_characters": 7634,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 6667,
+      "id": "objective.user_normalized_binary_cross_entropy",
+      "path": "30_objectives/user_normalized_binary_cross_entropy.md",
+      "sha256": "c366a83c3c5da5d8076ea1d3d8b00acc3006b64c9a45f2f8d7959e346defe485",
+      "source_characters": 9067,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 6667,
+      "id": "objective.within_user_ranknet_pairwise_loss",
+      "path": "30_objectives/within_user_ranknet_pairwise_loss.md",
+      "sha256": "6216278cdf2db9cbda95e1b4c7bd3dc1c0d5f56ec944bc787e1ffce628dc8c57",
+      "source_characters": 7726,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 6667,
+      "id": "objective.bce_lambdarank_ndcg5_hybrid",
+      "path": "30_objectives/bce_lambdarank_ndcg5_hybrid.md",
+      "sha256": "48f2455f2d5620a3b9548e5d66c4ef2249f048e19be4023f4d958e67901489a0",
+      "source_characters": 10000,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 6242,
+      "id": "objective.mixed_group_listnet_top1_loss",
+      "path": "30_objectives/mixed_group_listnet_top1_loss.md",
+      "sha256": "35f46aa8c8e1061fe7b968980537bb4a9d2a7a01aea803ffa38bb0c69cb14c27",
+      "source_characters": 6242,
+      "truncated": false
+    },
+    {
+      "fetched_characters": 212,
+      "id": "dataset.interaction_log_schema",
+      "path": "05_dataset/interaction_log_schema.md",
+      "sha256": "4a4952b941858ffcf43333cbb3aaa569a2380c5e35e59703ed10ed46f21ec499",
+      "source_characters": 2299,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 213,
+      "id": "dataset.inventory_and_splits",
+      "path": "05_dataset/inventory_and_splits.md",
+      "sha256": "e4589b5e77f581c2ef664a276c6115441604f93d9eac989bc7bb6ba3ad01d183",
+      "source_characters": 2265,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 2,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "architecture.embedding_mlp_ranker",
+    "architecture.deep_cross_ranker",
+    "objective.user_normalized_binary_cross_entropy",
+    "objective.within_user_ranknet_pairwise_loss",
+    "objective.bce_lambdarank_ndcg5_hybrid",
+    "objective.mixed_group_listnet_top1_loss",
+    "dataset.interaction_log_schema",
+    "dataset.inventory_and_splits"
+  ],
+  "total_fetched_characters": 40000
+}

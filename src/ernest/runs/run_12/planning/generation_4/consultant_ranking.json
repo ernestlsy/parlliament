@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.86,
+      "rationale": "Best focused follow-up to the only validated improvement: it preserves the successful pairwise formulation while moderately reducing negative-sampling variance. K=4 is materially safer and cheaper than exhaustive coverage, with low leakage risk and a credible path to both GAUC and nDCG@5 lift."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 2,
+      "utility_score": 0.7,
+      "rationale": "A low-runtime, isolated robustness test of the only screened-in feature family. Weak-hour diagnostics support smoothing, although those diagnostics are retrospective and do not establish that hour granularity is the cause."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 3,
+      "utility_score": 0.65,
+      "rationale": "Small, controlled loss modification with low runtime risk and a concrete motivation from the large global-AUC deterioration under pure pairwise training. Expected ranking gain is modest and the auxiliary BCE may dilute the objective that already improved primary."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 4,
+      "utility_score": 0.59,
+      "rationale": "Uses only approved request-time fields and directly tests recurring temporal context. It is clean and cheap, but combines hour and weekday into a much sparser field without direct evidence that their interaction is stable."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 5,
+      "utility_score": 0.54,
+      "rationale": "Very safe, inexpensive regularization check after the higher-capacity FM failed. Evidence for the specific 10x L2 value is weak, so upside is likely small despite strong feasibility."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 6,
+      "utility_score": 0.51,
+      "rationale": "Operationally safe single-hyperparameter ablation, but has little positive evidence and fixed epoch budget confounds lower learning rate with undertraining. Lower expected information value than regularization or feature smoothing."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 7,
+      "utility_score": 0.48,
+      "rationale": "Potentially useful for correcting difficult local inversions, but hard-negative selection increases implementation and optimization sensitivity. Segment-driven top-rank motivation is retrospective, and mining can overfocus on noisy or unrepresentative train pairs."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 8,
+      "utility_score": 0.42,
+      "rationale": "Targets nDCG@5 directly, but has low feasibility and substantial validation-overfitting risk because train-time ranks and swap deltas can be unstable for sparse, non-contemporaneous user candidate groups. It also risks sacrificing the broadly improved GAUC."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 9,
+      "utility_score": 0.36,
+      "rationale": "Largely duplicates c01 while increasing negative count far more aggressively. K=16 has diminishing-return and runtime risks, so it is strictly dominated by the more diagnostic K=4 experiment under one-experiment scarcity."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 10,
+      "utility_score": 0.3,
+      "rationale": "Cheap subtractive check, but it removes part of the only feature family with positive temporal-holdout evidence. The claim that weekday is unstable is not supported by an isolated weekday ablation."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 11,
+      "utility_score": 0.24,
+      "rationale": "Broad replacement of the validated pairwise objective with a listwise loss has weak supporting evidence, lower feasibility, and uncertain correspondence between each user's historical train rows and an actual recommendation slate. Scope and optimization risk are too high for the scarce experiment."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 12,
+      "utility_score": 0.18,
+      "rationale": "Architecture expansion is directly weakened by the negative rank-16 FM result. Reducing rank does not cleanly isolate capacity from interaction effects, while retaining added runtime and sparse-interaction overfitting risk."
+    }
+  ]
+}

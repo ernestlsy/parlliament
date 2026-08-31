@@ -53,7 +53,7 @@
     "robustness.clipped_ips_within_group_rank_loss": "5dbff2e7c750a7bca686849b56ce56fef6791aefe746fbd22c3169014794cfbc",
     "robustness.doubly_robust_exposure_debiased_ranking": "03e759d88dfb19b84cb1d8e2a90f65a17c01ace44b794d104f13cd348eec5da0",
     "robustness.recency_weighted_causal_ranking_training": "01659cc8a2c87fd62ae3112660817ef4f15647a3ecc267b670538c2886fa7f7b",
-    "task.experiment_protocol": "09ad60878b890af0f675cffe83c6352d8e3f3cd1bc168f2554cbdee76005f21a",
+    "task.experiment_protocol": "f222b21606fcacfb6547240c2b01a830693947b7db4d5bd5f5e8f8f87915e796",
     "task.kuairand_ranking": "3afb9551e568ab5697843640e75bf5c1b03d85c14700919619a4b16588c2073d",
     "task.leakage_policy": "2349c37fe36c7539b44967a775ce47fd44c150b1887e60e4a1aed1a1fa5b48d9",
     "task.prediction_artifact": "36859957ee6e7126069aa0a0829e956675578f83c4dc8c61cec633993dde2a31",

@@ -1,0 +1,18 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:3:metrics"
+      ],
+      "finding": "Request context (tab, hour, weekday) is the only train-only screened group with positive aggregate primary lift (+0.00221) and positive lift on all four temporal holdout days. Experiment 3's pairwise ranking objective achieved GAUC 0.67060 and primary 0.60407, supporting continued emphasis on within-user ranking rather than broader feature expansion.",
+      "recommended_action": "Retain and, if not already fully represented, prioritize the request-context fields in the next minimal additive scorer iteration. Do not add any rejected screened group under the strict early-stopping budget."
+    }
+  ],
+  "avoid": [
+    "Do not pursue user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response: each had non-positive training-only screening lift. Evidence: screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response.",
+    "Do not use current-impression outcome fields or quarantined aggregate video snapshots; they are unavailable at ranking time or lack per-impression availability timestamps, creating leakage risk.",
+    "Do not optimize directly against user_positive_count=zero: it is a retrospective validation-label diagnostic rather than an online-available ranking feature. Evidence: experiment:3:segment:user_positive_count:zero."
+  ],
+  "metric_diagnosis": "Within-user ranking is materially credible globally (GAUC 0.67060), but top-five quality has concentrated weaknesses rather than a general GAUC failure. Large tab slices show severe top-five degradation: tab 0 has GAUC 0.54586 but nDCG@5 0.06247, while tab 6 has GAUC 0.57326 and nDCG@5 0.10520; tab 8 is worst on both (GAUC 0.37037, nDCG@5 0.02634). Item-frequency rare_1_4 also has uninformative GAUC 0.5 and weak nDCG@5 0.17111. Conversely, medium-frequency items have strong GAUC 0.71380 but only nDCG@5 0.24494, indicating that pair ordering does not reliably translate into top-five placement in that slice. Treat these as post-score diagnostic targets for request-context analysis and ranking-list construction, not evidence for leakage-prone feature additions. Evidence: experiment:3:metrics, experiment:3:segment:tab:0, experiment:3:segment:tab:6, experiment:3:segment:tab:8, experiment:3:segment:item_frequency:rare_1_4, experiment:3:segment:item_frequency:medium_5_19."
+}

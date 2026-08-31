@@ -1,0 +1,49 @@
+[
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "efficiency",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "learning-to-rank",
+      "BPR",
+      "listwise-ranking",
+      "negative-sampling",
+      "nDCG"
+    ],
+    "purpose": "Experiment 3 improved primary only modestly while the current one-negative within-user logistic loss leaves a material uncertainty about whether its sampling/objective mismatch limits top-five placement, particularly in weak tab and item-frequency slices. Retrieve evidence needed to choose a single efficient objective or sampling change rather than guessing.",
+    "query": "Empirical and theoretical recommender-ranking literature comparing one-negative BPR/pairwise logistic training with multi-negative pairwise or listwise softmax objectives for optimizing nDCG@5 in implicit-feedback, per-user candidate-set ranking. Focus on conclusions that support a minimal objective-only ablation, including negative sampling choices, temperature, and computational cost.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "dataset",
+      "objectives",
+      "training"
+    ],
+    "max_documents": 3,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "KuaiRand-Pure",
+      "interaction-log-schema",
+      "candidate-grouping",
+      "within-user-ranking",
+      "leakage"
+    ],
+    "purpose": "Experiment 3 improved primary with a same-user pairwise loss, but the retrieved RankNet/ListNet guidance requires a genuine within-request candidate-group identifier. Resolving whether such groups can be reconstructed is material before proposing another pairwise/listwise objective, hard-negative curriculum, or group-complete batching experiment.",
+    "query": "KuaiRand-Pure interaction-log schema and ranking-decision grouping: determine whether the supplied standard-exposure logs contain a stable request, session, slate, impression-batch, timestamp, position, or event identifier that can reconstruct candidates jointly eligible at one ranking decision; document field availability at impression time and any cautions against treating all rows for a user as one candidate group.",
+    "request_index": 1,
+    "round": 2
+  }
+]

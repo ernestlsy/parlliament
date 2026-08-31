@@ -1,0 +1,250 @@
+{
+  "manual_interventions": 0,
+  "attempts": [
+    {
+      "attempt_id": "2bc43f358c6a",
+      "experiment_id": 1,
+      "generation": 1,
+      "status": "scored",
+      "parent_experiment_id": 0,
+      "hypothesis": "Add leakage-safe request-context categorical fields tab, hour, and weekday to the five-field FM baseline.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 4,
+        "evidence_ids": [
+          "screen:request_context"
+        ],
+        "exact_ablation": "Add exactly three train-vocabulary categorical FM fields\u2014tab, hour derived from impression time, and weekday derived from impression date\u2014while leaving the FM architecture, loss, optimizer, seed, and all existing five fields unchanged.",
+        "expected_effect": {
+          "GAUC": "+0.002 to +0.005 from better within-user contextual ordering.",
+          "nDCG@5": "+0.001 to +0.004 from placing context-appropriate items nearer the top five."
+        },
+        "expected_primary_gain": 0.003,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "task.leakage_policy",
+          "evaluation.within_user_metrics",
+          "task.kuairand_ranking"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -1,6 +1,8 @@\n-\"\"\"KuaiRand five-field baseline data loader adapted to Ernest's fixed contract.\"\"\"\n+\"\"\"KuaiRand seven-field request-context FM data loader.\"\"\"\n \n import csv\n+from datetime import datetime\n+import math\n import os\n \n import numpy as np\n@@ -12,7 +14,7 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\", \"author_id\", \"tab\", \"dur_bucket\"]\n+FIELDS = [\"user_id\", \"video_id\", \"author_id\", \"tab\", \"dur_bucket\", \"hour\", \"weekday\"]\n \n \n def load(data_dir, max_rows_per_split=None):\n@@ -38,6 +40,8 @@\n                     row[\"tab\"],\n                     float(row[\"duration_ms\"]),\n                     1 if row[LABEL] != \"0\" else 0,\n+                    row[\"hourmin\"],\n+                    row[\"date\"],\n                 ))\n     result = {}\n     for name, (low, high) in SPLITS.items():\n@@ -62,9 +66,15 @@\n     edges = _bucket_edges([row[5] for row in train])\n \n     def raw(row):\n+        hour = math.floor(float(row[7]) / 100)\n+        if not 0 <= hour <= 23:\n+            raise ValueError(\"invalid hour derived from hourmin: {}\".format(row[7]))\n+        weekday = datetime.strptime(str(int(row[8])), \"%Y%m%d\").weekday()\n         return [\n             row[1], row[2], row[3], row[4],\n             str(int(np.searchsorted(edges, row[5]))),\n+            str(hour),\n+            str(weekday),\n         ]\n \n     vocabularies = [dict() for _ in FIELDS]\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6670174915586686,
+        "classification": {
+          "accuracy": 0.6599604512084798,
+          "balanced_accuracy": 0.6930993800594197,
+          "confusion_matrix": {
+            "false_negative": 8537,
+            "false_positive": 33937,
+            "true_negative": 51840,
+            "true_positive": 30595
+          },
+          "f1": 0.5902724185831146,
+          "matthews_correlation": 0.35845859355035004,
+          "precision": 0.4741058699559908,
+          "predicted_positive_rate": 0.5166321081747512,
+          "recall": 0.7818409485842789,
+          "specificity": 0.6043578115345606,
+          "threshold": -0.784909725189209,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 3.943233013153076,
+          "score_mean": -0.9362360805850211,
+          "score_min": -5.451788902282715,
+          "score_std": 1.3280880623812916
+        },
+        "nDCG@5": 0.5358419331326125,
+        "primary": 0.6014297123456406,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6769003887920633,
+          "MAP@5": 0.4842685694140343,
+          "MRR@5": 0.5409475503120824,
+          "Precision@5": 0.3753467101636961,
+          "Recall@5": 0.5999780226578271,
+          "average_precision": 0.5683719004151065,
+          "global_AUC": 0.764049178736458
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 83.93697788799909,
+      "sandbox": "D:\\tehpengagent\\src\\ernest\\runs\\run_11\\experiment_1"
+    },
+    {
+      "attempt_id": "4502465faa58",
+      "experiment_id": 2,
+      "generation": 2,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Add one leakage-safe categorical cross field formed as tab\u00d7hour to let the FM model assign distinct interaction effects to request surface and time of day.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 4,
+        "evidence_ids": [
+          "screen:request_context",
+          "experiment:1:metrics",
+          "experiment:1:segment:tab:0",
+          "experiment:1:segment:tab:6",
+          "experiment:1:segment:hour:3",
+          "experiment:1:segment:hour:4"
+        ],
+        "exact_ablation": "Add exactly one train-vocabulary categorical FM field, tab_hour, defined by concatenating the existing impression-time tab and derived hour values; retain all seven existing fields, FM dimension, loss, optimizer, seed, and training schedule unchanged.",
+        "expected_effect": {
+          "GAUC": "+0.001 to +0.004 by improving within-user discrimination when tab effects vary by hour.",
+          "nDCG@5": "+0.002 to +0.006 by correcting context-specific top-five inversions, especially on large weak tabs."
+        },
+        "expected_primary_gain": 0.003,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "evaluation.within_user_metrics",
+          "task.leakage_policy"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -1,4 +1,4 @@\n-\"\"\"KuaiRand seven-field request-context FM data loader.\"\"\"\n+\"\"\"KuaiRand eight-field request-context FM data loader.\"\"\"\n \n import csv\n from datetime import datetime\n@@ -14,7 +14,7 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\", \"author_id\", \"tab\", \"dur_bucket\", \"hour\", \"weekday\"]\n+FIELDS = [\"user_id\", \"video_id\", \"author_id\", \"tab\", \"dur_bucket\", \"hour\", \"weekday\", \"tab_hour\"]\n \n \n def load(data_dir, max_rows_per_split=None):\n@@ -75,6 +75,7 @@\n             str(int(np.searchsorted(edges, row[5]))),\n             str(hour),\n             str(weekday),\n+            row[4] + \"\\t\" + str(hour),\n         ]\n \n     vocabularies = [dict() for _ in FIELDS]\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -107,7 +107,7 @@\n         print(json.dumps({\n             \"contract\": \"ok\",\n             \"feature_shape\": list(train_features.shape),\n-            \"fields\": 5,\n+            \"fields\": 8,\n             \"interaction_dimension\": config[\"interaction_dimension\"],\n         }))\n         return\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.665599963961718,
+        "classification": {
+          "accuracy": 0.6649400763756015,
+          "balanced_accuracy": 0.6931189456912568,
+          "confusion_matrix": {
+            "false_negative": 9056,
+            "false_positive": 32796,
+            "true_negative": 52981,
+            "true_positive": 30076
+          },
+          "f1": 0.5897023646131525,
+          "matthews_correlation": 0.35830452635327725,
+          "precision": 0.47836874920473343,
+          "predicted_positive_rate": 0.5033424332914361,
+          "recall": 0.7685781457630584,
+          "specificity": 0.6176597456194551,
+          "threshold": -0.7568091750144958,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 4.362990856170654,
+          "score_mean": -0.9514932237545058,
+          "score_min": -5.670861721038818,
+          "score_std": 1.3878054940289528
+        },
+        "nDCG@5": 0.5356908783200283,
+        "primary": 0.6006454211408732,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6768557000491576,
+          "MAP@5": 0.4841268564448644,
+          "MRR@5": 0.5403926650876706,
+          "Precision@5": 0.3752483949293036,
+          "Recall@5": 0.6002248699602485,
+          "average_precision": 0.5662357148669391,
+          "global_AUC": 0.7627747457029139
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 244.35823399199944,
+      "sandbox": "D:\\tehpengagent\\src\\ernest\\runs\\run_11\\experiment_2"
+    },
+    {
+      "attempt_id": "625a77b4b510",
+      "experiment_id": 3,
+      "generation": 3,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Use inverse user-impression-count weights in binary cross-entropy so highly active users do not dominate training updates.",
+      "hypothesis_rationale": {
+        "candidate_id": "c09",
+        "confidence": 2,
+        "evidence_ids": [
+          "experiment:1:metrics",
+          "experiment:2:metrics",
+          "experiment:2:segment:user_frequency:medium_5_19",
+          "experiment:2:segment:user_frequency:warm_20_plus"
+        ],
+        "exact_ablation": "Replace only unweighted binary cross-entropy in experiment 1 with binary cross-entropy weighted by the reciprocal of each user's count of training impressions, normalized to mean weight one; retain all model, feature, optimizer, seed, and schedule settings unchanged.",
+        "expected_effect": {
+          "GAUC": "-0.0003 to +0.0015 because user balancing may trade dominant-user fit for macro ordering.",
+          "nDCG@5": "+0.0000 to +0.0020 because the training weighting better matches macro per-user top-five evaluation."
+        },
+        "expected_primary_gain": 0.0008,
+        "leakage_risk": "low",
+        "literature_document_ids": [
+          "task.kuairand_ranking",
+          "evaluation.within_user_metrics"
+        ],
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "model.py": "--- model.py\n+++ model.py\n@@ -43,13 +43,29 @@\n             summed,\n         )\n \n-    def step(self, features, labels):\n+    def step(self, features, labels, sample_weights=None):\n         size = len(labels)\n         if size == 0:\n             return 0.0\n+        if sample_weights is not None:\n+            try:\n+                sample_weights = np.asarray(sample_weights, dtype=np.float32)\n+            except (TypeError, ValueError) as error:\n+                raise ValueError(\"sample_weights must be a float32-compatible vector\") from error\n+            if sample_weights.ndim != 1 or len(sample_weights) != size:\n+                raise ValueError(\"sample_weights must be one-dimensional and match labels\")\n+            if not np.all(np.isfinite(sample_weights)):\n+                raise ValueError(\"sample_weights must be finite\")\n+            if np.any(sample_weights < 0.0):\n+                raise ValueError(\"sample_weights must be nonnegative\")\n         logits, field_embeddings, summed = self.logits(features)\n         probabilities = sigmoid(logits)\n-        gradient = ((probabilities - labels) / size).astype(np.float32)\n+        if sample_weights is None:\n+            gradient = ((probabilities - labels) / size).astype(np.float32)\n+        else:\n+            gradient = (\n+                (probabilities - labels) * sample_weights / size\n+            ).astype(np.float32)\n         embedding_gradient = np.zeros_like(self.embeddings)\n         weight_gradient = np.zeros_like(self.weights)\n         np.add.at(weight_gradient, features, gradient[:, None])\n@@ -86,10 +102,15 @@\n             second_hat = second / (1.0 - beta2 ** self.step_number)\n             parameter -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n         self.bias -= self.learning_rate * gradient.sum()\n-        return float(-np.mean(\n+        if sample_weights is None:\n+            return float(-np.mean(\n+                labels * np.log(probabilities + 1e-9)\n+                + (1.0 - labels) * np.log(1.0 - probabilities + 1e-9)\n+            ))\n+        return float(np.mean(sample_weights * -(\n             labels * np.log(probabilities + 1e-9)\n             + (1.0 - labels) * np.log(1.0 - probabilities + 1e-9)\n-        ))\n+        )))\n \n     def predict(self, features, batch_size=200_000):\n         if len(features) == 0:\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -70,6 +70,23 @@\n     return gauc, ndcg, (gauc + ndcg) / 2.0\n \n \n+def _train_weights(train_users):\n+    if len(train_users) == 0:\n+        raise ValueError(\"training data must be non-empty for user weighting\")\n+    user_counts = collections.Counter(train_users.tolist())\n+    train_weights = np.asarray(\n+        [1.0 / user_counts[user] for user in train_users.tolist()],\n+        dtype=np.float32,\n+    )\n+    if not np.all(np.isfinite(train_weights)) or not np.all(train_weights > 0):\n+        raise ValueError(\"training weights must be finite and positive\")\n+    mean_weight = train_weights.mean()\n+    if not np.isfinite(mean_weight) or mean_weight <= 0:\n+        raise ValueError(\"training weight mean must be finite and positive\")\n+    train_weights /= mean_weight\n+    return train_weights\n+\n+\n def main():\n     parser = argparse.ArgumentParser()\n     parser.add_argument(\"--config\", required=True)\n@@ -82,7 +99,8 @@\n \n     splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n     encoded, dimension = encode(splits)\n-    train_features, train_labels, _ = encoded[\"train\"]\n+    train_features, train_labels, train_users = encoded[\"train\"]\n+    train_weights = _train_weights(train_users)\n     valid_features, valid_labels, valid_users = encoded[config[\"split\"]]\n     model = Model(\n         dimension,\n@@ -96,7 +114,11 @@\n         probe_size = min(8, len(train_labels))\n         if probe_size == 0 or len(valid_labels) == 0:\n             raise ValueError(\"contract probe requires non-empty train and validation slices\")\n-        loss = model.step(train_features[:probe_size], train_labels[:probe_size])\n+        loss = model.step(\n+            train_features[:probe_size],\n+            train_labels[:probe_size],\n+            train_weights[:probe_size],\n+        )\n         probe_scores = model.predict(valid_features[:probe_size])\n         if probe_scores.ndim != 1 or len(probe_scores) != min(\n             probe_size, len(valid_features)\n@@ -119,7 +141,11 @@\n         losses = []\n         for index in range(0, len(order), config[\"batch_size\"]):\n             batch = order[index:index + config[\"batch_size\"]]\n-            losses.append(model.step(train_features[batch], train_labels[batch]))\n+            losses.append(\n+                model.step(\n+                    train_features[batch], train_labels[batch], train_weights[batch]\n+                )\n+            )\n         scores = model.predict(valid_features)\n         gauc, ndcg, primary = training_selection_metrics(\n             valid_users, valid_labels, scores\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6593875977895494,
+        "classification": {
+          "accuracy": 0.6582151806515143,
+          "balanced_accuracy": 0.6908350507932912,
+          "confusion_matrix": {
+            "false_negative": 8680,
+            "false_positive": 34012,
+            "true_negative": 51765,
+            "true_positive": 30452
+          },
+          "f1": 0.5878991466852003,
+          "matthews_correlation": 0.354242589128622,
+          "precision": 0.47238768925291635,
+          "predicted_positive_rate": 0.5160877118542299,
+          "recall": 0.7781866503117653,
+          "specificity": 0.6034834512748173,
+          "threshold": -0.6736340522766113,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 3.286597967147827,
+          "score_mean": -0.7869122342595942,
+          "score_min": -4.3917388916015625,
+          "score_std": 1.190951276976542
+        },
+        "nDCG@5": 0.5327619814212058,
+        "primary": 0.5960747896053775,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6764535013630066,
+          "MAP@5": 0.4807842377838383,
+          "MRR@5": 0.5366298729350135,
+          "Precision@5": 0.3744261220598396,
+          "Recall@5": 0.5982687127357303,
+          "average_precision": 0.5643245621568654,
+          "global_AUC": 0.7608503836086496
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 855.889040479,
+      "sandbox": "D:\\tehpengagent\\src\\ernest\\runs\\run_11\\experiment_3"
+    }
+  ]
+}

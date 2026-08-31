@@ -1,0 +1,17 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context"
+      ],
+      "finding": "Request context is the only prioritized train-only feature group, with positive primary lift (+0.00221) on all four reported temporal-holdout days. Its warm-user-and-item GAUC is 0.6312 while nDCG@5 is 0.5076; retain it for within-user ranking evaluation, but do not infer a top-five gain from GAUC alone.",
+      "recommended_action": "Advance tab, hour, and weekday as the sole low-cost feature addition. Validate with user-grouped GAUC and nDCG@5 separately, and early-stop unless both the aggregate lift and top-five metric improve on a fresh temporal holdout."
+    }
+  ],
+  "avoid": [
+    "Do not advance user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response: each has non-positive aggregate primary lift in train-only screening.",
+    "Reject current-impression outcome fields at ranking time, including click, engagement, watch-time, and long-view outcomes; they are forbidden leakage sources.",
+    "Keep aggregate video-statistics snapshot fields quarantined until per-impression availability timestamps establish that they are point-in-time safe."
+  ],
+  "metric_diagnosis": "The available train-only evidence supports only request_context as a modest, directionally stable candidate. Its reported warm-segment GAUC (0.6312) exceeds its nDCG@5 (0.5076), so within-user discrimination evidence is stronger than evidence for top-five ranking quality. Cold-item results are based on only 8 rows and are not decision-grade. No post-score weakest-segment evidence is available, so no segment-specific expansion is justified. Evidence: screen:request_context."
+}

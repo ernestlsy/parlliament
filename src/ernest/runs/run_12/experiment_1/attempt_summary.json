@@ -1,0 +1,23 @@
+{
+  "attempt_id": "8d75c77f6ae2",
+  "status": "scored",
+  "generation": 1,
+  "mode": "draft",
+  "parent_experiment_id": 0,
+  "hypothesis_text": "Add impression-time request context (tab, hour, weekday) to the additive user/video-ID scorer.",
+  "active_sub_agents": [
+    "feature_engineer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 72.85033751399897,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

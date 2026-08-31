@@ -1,0 +1,38 @@
+{
+  "winner": {
+    "text": "Add an explicit user-by-tab categorical interaction to the current additive five-field pairwise ranker.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The current model already contains request context, but it is additive and cannot express that different users respond differently to the same tab. Tab 0 and tab 6 have large supported top-five deficits, while request context was the only positively screened feature family.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:4:metrics",
+      "experiment:4:segment:tab:0",
+      "experiment:4:segment:tab:6"
+    ],
+    "exact_ablation": "Append exactly one train-fitted categorical feature formed by the pair (user_id, tab), with an unknown bucket, while retaining the additive scorer, five existing fields, K=4 uniform same-user negative sampling, pairwise logistic loss, optimizer, regularization, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0003 to 0.0015 because user-specific tab preferences can correct within-user positive-negative inversions.",
+      "nDCG@5": "Increase by 0.0005 to 0.0020 if user-tab preferences move relevant impressions upward in the weak tab slices."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  "selection_rationale": "c01 is the strongest next scarce experiment: it has the highest expected primary gain (0.0010), highest confidence among the leading candidates (6), low leakage and runtime risk, and is ranked first by the Consultant (utility 0.72). It is a tightly controlled single-feature interaction that extends the only positively screened feature family and directly targets the large, well-supported tab 0 and tab 6 deficits while preserving the current validated pairwise training setup. This offers a more reliable, attributable improvement path than the more optimization-sensitive hard-negative alternative or sparser video-context interactions.",
+  "counted_experiments_consumed": 0
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Context-aware learning-to-rank recommender systems low-cardinality request context tab hour weekday conditioning temporal split within-user pairwise ranking GAUC nDCG@5",
+      "Context-aware recommendation context-conditioned ranking request-time context feature interactions low-cardinality categorical context shared embeddings versus explicit feature crosses regularization temporal evaluation GAUC nDCG@5",
+      "Recommender learning-to-rank user-context interaction overfitting high-cardinality user-by-context cross feature embedding factorization machine shrinkage regularization within-user ranking temporal validation GAUC nDCG@5",
+      "Context-aware recommender systems factorization machines field-aware embeddings explicit user-by-tab interaction context gating regularization ranking loss temporal train-test split GAUC nDCG@5",
+      "Temporal context-aware ranking recommendation hour weekday tab robust top-k ranking nDCG@5 segment performance pairwise loss context conditioning without user-context memorization GAUC"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "implicit-feedback recommendation within-user candidate sets top-k ranking objective pairwise RankNet logistic negative sampling versus listwise loss nDCG@5 GAUC temporal holdout sparse positives",
+      "learning-to-rank recommender systems sampled implicit feedback top-k-aligned objectives LambdaRank LambdaLoss SoftRank ApproxNDCG comparison with pairwise logistic loss and same-user negative sampling",
+      "listwise recommendation losses for sparse implicit positives within-session or within-user impression candidate sets robustness negative sampling nDCG@5 temporal evaluation",
+      "top-k weighted pairwise ranking loss recommender implicit feedback WARP BPR weighted BPR RankNet hard negative sampling effects on NDCG@K versus AUC/GAUC",
+      "unbiased leakage-safe temporal offline evaluation of top-k recommender ranking objectives implicit feedback impression logs within-user candidates pairwise versus listwise nDCG@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

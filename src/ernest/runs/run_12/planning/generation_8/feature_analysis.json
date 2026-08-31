@@ -1,0 +1,22 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:7:segment:tab:0",
+        "experiment:7:segment:tab:6",
+        "experiment:7:segment:hour:2",
+        "experiment:7:segment:hour:15"
+      ],
+      "finding": "Request context is the sole train-only feature group with positive primary lift (+0.00221), full coverage, and positive lift on all four temporal holdout days. Post-score diagnostics show broad top-five weakness by tab (notably tabs 0 and 6) and hour (notably hours 2 and 15), making tab/hour context the most evidence-supported, rank-relevant next feature investment.",
+      "recommended_action": "If another experiment is permitted after early-stop review, run exactly one tightly scoped ablation adding only tab, hour, and weekday with time-safe encoding and no outcome-derived aggregates. Evaluate within-user GAUC and nDCG@5 jointly, with explicit tab/hour slice checks; do not proceed unless the lift is reproducible across temporal days and improves top-five ranking in high-volume weak slices."
+    }
+  ],
+  "avoid": [
+    "Do not continue the 50/50 uniform and hard-negative sampler line: experiment 7 primary fell by 0.02197 versus its parent despite GAUC 0.639, indicating that acceptable within-user discrimination did not translate to sufficient top-five ranking quality. [experiment:7:metrics]",
+    "Do not prioritize user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response; all had non-positive train-only primary lift. [screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response]",
+    "Reject current-impression outcomes and aggregate snapshots without per-impression availability timestamps as leakage or temporally unverifiable signals; do not use them for ranking features.",
+    "Do not optimize against user_positive_count=zero: its zero top-five metrics are a retrospective label-defined diagnostic, not an online-available serving segment. [experiment:7:segment:user_positive_count:zero]"
+  ],
+  "metric_diagnosis": "Experiment 7 has moderate within-user ranking evidence (GAUC 0.639) but weaker top-five performance (nDCG@5 0.526), and the primary metric is substantially below the parent experiment. The clearest operational issue is concentrated top-five failure across meaningful traffic slices: tab 0 has 13,726 rows with nDCG@5 0.063, tab 6 has 5,170 rows with nDCG@5 0.105, and several hour slices have nDCG@5 near 0.36-0.39. These are top-five ranking and context-coverage weaknesses, not justification for leakage-prone response aggregates. Apply strict early stopping to the sampler hypothesis; only the independently screened request-context feature group merits a single, controlled, time-safe follow-up. [experiment:7:metrics, experiment:7:segment:tab:0, experiment:7:segment:tab:6, experiment:7:segment:hour:2, experiment:7:segment:hour:15, screen:request_context]"
+}

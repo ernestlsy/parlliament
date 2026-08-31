@@ -1,0 +1,400 @@
+[
+  {
+    "text": "Add an explicit user-by-tab categorical interaction to the current additive five-field pairwise ranker.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The current model already contains request context, but it is additive and cannot express that different users respond differently to the same tab. Tab 0 and tab 6 have large supported top-five deficits, while request context was the only positively screened feature family.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:4:metrics",
+      "experiment:4:segment:tab:0",
+      "experiment:4:segment:tab:6"
+    ],
+    "exact_ablation": "Append exactly one train-fitted categorical feature formed by the pair (user_id, tab), with an unknown bucket, while retaining the additive scorer, five existing fields, K=4 uniform same-user negative sampling, pairwise logistic loss, optimizer, regularization, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0003 to 0.0015 because user-specific tab preferences can correct within-user positive-negative inversions.",
+      "nDCG@5": "Increase by 0.0005 to 0.0020 if user-tab preferences move relevant impressions upward in the weak tab slices."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add an explicit video-by-tab categorical interaction to the current additive five-field pairwise ranker.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The large performance heterogeneity by tab suggests that the same video can have different relevance by surface. A video-tab feature is available at request time and directly targets this conditional ranking mechanism without using metadata or outcomes.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:4:metrics",
+      "experiment:4:segment:tab:0",
+      "experiment:4:segment:tab:6"
+    ],
+    "exact_ablation": "Append exactly one train-fitted categorical feature formed by the pair (video_id, tab), with an unknown bucket, while retaining the additive scorer, five existing fields, K=4 uniform same-user negative sampling, pairwise logistic loss, optimizer, regularization, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0002 to 0.0014 because item appeal may vary by request surface within a user.",
+      "nDCG@5": "Increase by 0.0004 to 0.0018 if surface-conditioned item effects improve first-five ordering."
+    },
+    "expected_primary_gain": 0.0009,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add an explicit video-by-hour categorical interaction to the current additive five-field pairwise ranker.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Hours 3 and 4 have weak GAUC and nDCG@5, and the current additive hour effect cannot distinguish videos whose relevance varies by time of day.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:4:metrics",
+      "experiment:4:segment:hour:3",
+      "experiment:4:segment:hour:4"
+    ],
+    "exact_ablation": "Append exactly one train-fitted categorical feature formed by the pair (video_id, hour), with an unknown bucket, while retaining the additive scorer, five existing fields, K=4 uniform same-user negative sampling, pairwise logistic loss, optimizer, regularization, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0002 to 0.0013 through time-conditioned item ordering, particularly in weak early-hour slices.",
+      "nDCG@5": "Increase by 0.0003 to 0.0017 if time-specific video effects promote relevant items into the first five ranks."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Increase uniform same-user negative sampling from K=4 to K=8 per eligible positive.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "The K=1 to K=4 change produced a small positive primary delta of 0.000431, including gains in both GAUC and nDCG@5. Testing a larger but bounded negative set isolates whether coverage, rather than a feature change, remains limiting.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:4:metrics"
+    ],
+    "exact_ablation": "Change only the pair constructor from K=4 to K=8 uniformly sampled same-user negatives without replacement per eligible positive, retaining the current fields, additive scorer, pairwise logistic loss, optimizer, regularization, epoch budget, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0000 to 0.0008 because additional comparisons may expose more within-user inversions.",
+      "nDCG@5": "Increase by -0.0001 to 0.0008; broader comparisons may help top-five order but can dilute emphasis on difficult pairs."
+    },
+    "expected_primary_gain": 0.0004,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use same-user hard-negative sampling instead of uniform negative sampling.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The current pairwise objective samples negatives uniformly, so many updates may involve already easy comparisons. Selecting the currently highest-scoring same-user negative focuses learning on inversions nearest the ranking frontier.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:4:metrics",
+      "experiment:4:segment:tab:0",
+      "experiment:4:segment:tab:6"
+    ],
+    "exact_ablation": "Replace K=4 uniform same-user negative sampling with K=4 highest-current-score same-user negatives per eligible positive, recomputed from the model at each epoch; retain all features, additive scorer, pairwise logistic loss, optimizer, regularization, epoch budget, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0003 to 0.0014 because updates concentrate on hard within-user negative comparisons.",
+      "nDCG@5": "Increase by 0.0004 to 0.0018 because hard negatives are more likely to compete for top-five positions."
+    },
+    "expected_primary_gain": 0.0009,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace the logistic pairwise loss with a margin hinge ranking loss.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Pairwise logistic training improved over pointwise BCE, establishing direct within-user ranking optimization as useful. A margin objective is a clean loss-only test of whether explicitly separating positive-negative scores improves top-five ranks further.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:4:metrics"
+    ],
+    "exact_ablation": "Replace only the pairwise logistic loss with a unit-margin pairwise hinge loss on the identical K=4 sampled pairs, retaining the current fields, additive scorer, optimizer, regularization, epoch budget, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0004 to 0.0009 because a margin can improve close comparisons but discards gradients for sufficiently separated pairs.",
+      "nDCG@5": "Change by -0.0003 to 0.0012 because margin pressure may improve frontier ordering but can be less smooth than logistic training."
+    },
+    "expected_primary_gain": 0.0003,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use a mixed pointwise-plus-pairwise objective to retain item calibration while ranking within users.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "Pairwise training improved official ranking relative to the pointwise parent, but its row-level global AUC is much lower than the pointwise model. A fixed mixed objective can test whether auxiliary pointwise supervision regularizes item and context effects without abandoning ranking optimization.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:4:metrics"
+    ],
+    "exact_ablation": "Replace the pure pairwise logistic objective with a fixed 0.8 pairwise-logistic plus 0.2 pointwise-BCE objective computed on the same training rows and K=4 pairs, retaining the current fields, additive scorer, optimizer, regularization, epoch budget, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0002 to 0.0010 because pointwise regularization may stabilize effects but partially dilutes direct ordering optimization.",
+      "nDCG@5": "Change by 0.0000 to 0.0014 if the auxiliary signal improves score quality among top-five candidates."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Increase L2 regularization for the current pairwise additive ranker.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "The observed K=4 gain was smaller than predicted, and the current model has many sparse ID parameters. A single regularization adjustment is a low-risk test for temporal generalization without expanding features.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:4:metrics",
+      "experiment:4:segment:item_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Change only the L2 coefficient from 0.000001 to 0.00001, retaining the current fields, additive scorer, K=4 uniform pair sampling, pairwise logistic loss, optimizer, learning rate, epoch budget, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0003 to 0.0008 because stronger shrinkage may reduce sparse-ID overfitting but can underfit preferences.",
+      "nDCG@5": "Change by -0.0002 to 0.0009 because regularization may stabilize top ranks but reduce useful score separation."
+    },
+    "expected_primary_gain": 0.0003,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Apply recency weighting to training pairs so later eligible training dates receive greater weight.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The task uses a temporal split, so later training observations are closer to validation and test. This changes training emphasis only and avoids all disallowed outcome and snapshot features.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:4:metrics",
+      "screen:request_context",
+      "experiment:4:segment:hour:3",
+      "experiment:4:segment:hour:4"
+    ],
+    "exact_ablation": "Multiply each pairwise loss by an exponential training-date weight with half-life seven days, normalized to mean weight one, while retaining the current fields, additive scorer, K=4 uniform pair sampling, pairwise logistic loss form, optimizer, regularization, epoch budget, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0002 to 0.0011 because recent interactions may better reflect the validation ordering distribution.",
+      "nDCG@5": "Change by -0.0001 to 0.0013 if recency improves contemporary context-conditioned top-five ordering."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training",
+      "loss"
+    ],
+    "literature_document_ids": [
+      "dataset.inventory_and_splits",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace additive scoring with a low-rank factorization machine trained on the current pairwise objective.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 6
+    },
+    "rationale": "The prior rank-16 factorization machine under pointwise BCE underperformed the additive pointwise model, so unrestricted interactions are risky. However, pairwise optimization was beneficial and could change the utility of interactions; this is a distinct model-family retry with the current stronger objective.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:metrics",
+      "experiment:4:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the additive logit with a rank-8 second-order factorization-machine logit over exactly user_id, video_id, tab, hour, and weekday, retaining K=4 uniform pair sampling, pairwise logistic loss, optimizer family, regularization coefficient, epoch budget, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0010 to 0.0012 because interactions may capture context-conditional preferences but previously hurt under pointwise training.",
+      "nDCG@5": "Change by -0.0008 to 0.0015 because interaction capacity may repair top-five inversions but can overfit sparse combinations."
+    },
+    "expected_primary_gain": 0.0003,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Use a temperature-scaled pairwise logistic loss to concentrate updates on close score comparisons.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "The model already optimizes pairwise order, but official performance indicates limited top-five gains. Increasing pairwise loss sharpness is a bounded loss-only way to prioritize ambiguous comparisons without changing sampling or features.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:4:metrics",
+      "experiment:4:segment:tab:0",
+      "experiment:4:segment:tab:6"
+    ],
+    "exact_ablation": "Replace the pairwise loss log(1+exp(-(s_positive-s_negative))) with log(1+exp(-2*(s_positive-s_negative))), retaining the current fields, additive scorer, K=4 uniform pair sampling, optimizer, regularization, epoch budget, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0002 to 0.0010 because sharper gradients can resolve near ties but may destabilize updates.",
+      "nDCG@5": "Change by 0.0000 to 0.0013 because resolving close comparisons can affect the first five ranks disproportionately."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Early-stop using validation nDCG@5 instead of validation GAUC proxy.",
+    "parent_experiment_id": 4,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 7
+    },
+    "rationale": "The official objective averages GAUC and nDCG@5, but the current training checkpoint is selected by GAUC proxy alone. nDCG@5 is the weaker and more heterogeneous component in tab slices, so checkpoint selection may be misaligned with the official objective.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:4:metrics",
+      "experiment:4:segment:tab:0",
+      "experiment:4:segment:tab:6",
+      "experiment:4:segment:hour:3"
+    ],
+    "exact_ablation": "Change only checkpoint selection and patience monitoring from validation within-user GAUC proxy to validation nDCG@5, retaining the current fields, additive scorer, K=4 uniform pair sampling, pairwise logistic loss, optimizer, regularization, and epoch budget.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0005 to 0.0005 because selecting for nDCG@5 can sacrifice broad pairwise ordering.",
+      "nDCG@5": "Increase by 0.0002 to 0.0015 because the selected checkpoint is directly aligned to top-five ranking."
+    },
+    "expected_primary_gain": 0.0004,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  }
+]

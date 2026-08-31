@@ -1,0 +1,85 @@
+{
+  "active_agents": [
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "Unchanged interface from data.py: load returns canonical date-filtered train, valid, and test source-row sequences; test labels are withheld when include_test_labels=False. encode returns encoded[split] = (features, labels, users), with features shaped (N, 5) and ordered as [user_id, video_id, tab, hour, weekday]. Raw fields are exactly user_id, video_id, tab, hourmin, and date; hour is floor(numeric hourmin / 100) constrained to 0..23, and weekday is the Monday=0 through Sunday=6 calendar weekday from YYYYMMDD date. Validation and test prediction row order is this unchanged encoded split order."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Unchanged Model interface: Model.step receives aligned nonempty positive_features and negative_features arrays of equal shape (pair_count, 5). train.py must construct these by indexing training features with aligned int64 positive_indices and negative_indices. For each eligible training positive, build up to four pairs against distinct same-user training negatives, uniformly sampled without replacement when at least four negatives exist; otherwise use all available same-user negatives once. Model.predict receives a (N, 5) feature matrix and returns one score per input row."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "trainer": {
+      "objective": "Implement the exact K=4 same-user-negative sampling ablation in train.py only, so every eligible positive training row contributes up to four distinct same-user negative comparisons per epoch.",
+      "required_changes": [
+        "In train.py, change build_train_pairs so that for each user group with at least one train_labels[index] == 1 and at least one train_labels[index] == 0, each positive index is paired with K=4 negative indices sampled uniformly without replacement from that same group's negative index list when the group has at least four negatives.",
+        "When a user group has fewer than four negatives, pair each eligible positive with every available same-user negative exactly once; do not sample with replacement and do not duplicate a negative for the same positive in an epoch.",
+        "Append the positive index once for each sampled negative and append the corresponding sampled negative index, preserving aligned int64 positive_indices and negative_indices arrays. Use the supplied rng for all sampling.",
+        "Update the build_train_pairs docstring to state K=4, uniform sampling without replacement when possible, and use of all available negatives when fewer than four exist.",
+        "Do not change config.json; K=4 is the fixed ablation constant in the pair constructor for this experiment."
+      ],
+      "preserve": [
+        "Keep data.py and model.py unchanged.",
+        "Keep the additive five-field feature matrices unchanged: columns remain user_id, video_id, tab, hour derived as floor(numeric hourmin / 100) constrained to 0..23, and weekday derived from date as Monday=0 through Sunday=6.",
+        "Keep the pairwise logistic model.step objective, Adam settings, learning rate, L2 regularization, batch size, max epoch budget, seed schedule, and patience stopping rule unchanged.",
+        "Continue constructing pairs exclusively from the training split and train_labels; do not use validation or test labels in pair construction, optimization, checkpoint selection, or early stopping.",
+        "Keep validation-only within_user_auc as the checkpoint-selection and early-stopping proxy.",
+        "Keep fixed-command output behavior: emit predictions_valid.npz and predictions_test.npz adjacent to the requested output path, each containing exactly row_ids and scores; row_ids must be np.arange of the corresponding split length in canonical encoded validation or test row order, and scores must align exactly to that order.",
+        "Preserve contract-check behavior, including its fallback from the capped probe slice to all training rows and its finite-loss/prediction checks."
+      ],
+      "coordination_notes": [
+        "No other agent is active. The existing encode interface remains encoded[split] = (features, labels, users), where features has exactly five int32 global-ID columns, labels for test are None because load is called with include_test_labels=False, and users is the raw user_id string array used solely to form same-user training groups and validation proxy groups.",
+        "The sampling implementation must not introduce source columns, aliases, joins, features, model parameters, loss weighting, or configuration keys. This experiment changes only multiplicity and distinctness of sampled same-user training negatives.",
+        "Use a local constant K = 4 inside build_train_pairs (or an equivalently unambiguous fixed constant in train.py) rather than modifying model defaults or config.json."
+      ]
+    }
+  },
+  "reasoning": "The requested ablation changes only the training pair constructor. trainer is the sole necessary active agent because trainer owns train.py and config.json; config.json does not need an edit because K=4 is a fixed pair-construction behavior rather than a requested configurable hyperparameter. The sampling must remain train-only and preserve all parent model, feature, validation-only selection, and canonical prediction-output contracts."
+}

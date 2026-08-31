@@ -1,0 +1,23 @@
+{
+  "attempt_id": "6c4950bcc304",
+  "status": "scored",
+  "generation": 6,
+  "mode": "improve",
+  "parent_experiment_id": 4,
+  "hypothesis_text": "Select the early-stopping checkpoint by validation primary instead of validation GAUC.",
+  "active_sub_agents": [
+    "trainer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 82.4816707620048,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

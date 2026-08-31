@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "data.load returns the existing split dictionaries with canonical source-row order. Each loaded row retains its existing positional structure, except feature position row[4] is hour_bin in 0..5 rather than raw hour. data.encode returns (encoded, dimension), where encoded[split] is (features, labels, users); features is an int32 array of shape (row_count, 5) with globally offset, train-vocabulary categorical IDs in the order user_id, video_id, tab, hour_bin, weekday. Every field, including hour_bin, has one train-fitted unknown bucket."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives the unchanged five-column encoded categorical matrix. Column 3 (zero-based) is the train-fitted six-bin hour_bin categorical ID instead of the former train-fitted 24-category hour ID. No model architecture, loss, sampling, optimizer, regularization, checkpoint rule, or configuration value changes."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "memory_hit"
+  ],
+  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.embedding_mlp_ranker",
+      "path": "20_architectures/embedding_mlp_ranker.md",
+      "sha256": "c81739cefc5d550399a927013519688953b21ea274c3211bcfc5316593a569be",
+      "source_characters": 8308,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.deep_cross_ranker",
+      "path": "20_architectures/deep_cross_ranker.md",
+      "sha256": "db004648e9c7b63e0f9bc0954691dbcf9fe572c134fa90b309e12eee9d590cb8",
+      "source_characters": 7634,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.causal_sequence_transformer_ranker",
+      "path": "20_architectures/causal_sequence_transformer_ranker.md",
+      "sha256": "7263a238ebec15e080520b17b2b5f3dffab4f16d94495b1acc604a923fbb6c80",
+      "source_characters": 9286,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.candidate_conditioned_history_attention",
+      "path": "20_architectures/candidate_conditioned_history_attention.md",
+      "sha256": "8af9df6ddd83a2541965a247a7f0bd0fcae609e2e632217224d1ab96efa324b6",
+      "source_characters": 8180,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "paper.mmoe_auxiliary_behavior_ranker",
+      "path": "90_papers/mmoe_auxiliary_behavior_ranker.md",
+      "sha256": "5d45195d5d49c0db72f89743f867510ee2e6b29d2761bd379146b785e98dd982",
+      "source_characters": 9900,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.user_normalized_binary_cross_entropy",
+      "path": "30_objectives/user_normalized_binary_cross_entropy.md",
+      "sha256": "c366a83c3c5da5d8076ea1d3d8b00acc3006b64c9a45f2f8d7959e346defe485",
+      "source_characters": 9067,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.within_user_ranknet_pairwise_loss",
+      "path": "30_objectives/within_user_ranknet_pairwise_loss.md",
+      "sha256": "6216278cdf2db9cbda95e1b4c7bd3dc1c0d5f56ec944bc787e1ffce628dc8c57",
+      "source_characters": 7726,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.bce_lambdarank_ndcg5_hybrid",
+      "path": "30_objectives/bce_lambdarank_ndcg5_hybrid.md",
+      "sha256": "48f2455f2d5620a3b9548e5d66c4ef2249f048e19be4023f4d958e67901489a0",
+      "source_characters": 10000,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "architecture.embedding_mlp_ranker",
+    "architecture.deep_cross_ranker",
+    "architecture.causal_sequence_transformer_ranker",
+    "architecture.candidate_conditioned_history_attention",
+    "paper.mmoe_auxiliary_behavior_ranker",
+    "objective.user_normalized_binary_cross_entropy",
+    "objective.within_user_ranknet_pairwise_loss",
+    "objective.bce_lambdarank_ndcg5_hybrid"
+  ],
+  "total_fetched_characters": 40000
+}

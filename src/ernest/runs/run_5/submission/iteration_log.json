@@ -1,0 +1,285 @@
+{
+  "manual_interventions": 0,
+  "attempts": [
+    {
+      "attempt_id": "c805e24d38ff",
+      "experiment_id": 1,
+      "generation": 1,
+      "status": "scored",
+      "parent_experiment_id": 0,
+      "hypothesis": "Add impression-time request-context categorical features tab, hour, and weekday to the neutral user/item additive scaffold while retaining pointwise BCE.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 7,
+        "evidence_ids": [
+          "screen:request_context"
+        ],
+        "exact_ablation": "Add only the impression-time request_context feature group (tab, hour, weekday); leave model, loss, sampler, optimizer, and stopping unchanged.",
+        "expected_effect": {
+          "GAUC": "Expected +0.0015 to +0.0040 from context-dependent within-user ordering.",
+          "nDCG@5": "Expected +0.0005 to +0.0025, potentially smaller than the GAUC gain."
+        },
+        "expected_primary_gain": 0.002,
+        "leakage_risk": "low",
+        "runtime_risk": "low"
+      },
+      "code_diff": {
+        "data.py": "--- data.py\n+++ data.py\n@@ -1,6 +1,7 @@\n-\"\"\"Neutral seed data contract using only the task's user and item identifiers.\"\"\"\n+\"\"\"Data contract with user, item, and impression-time request-context features.\"\"\"\n \n import csv\n+import datetime\n import os\n \n import numpy as np\n@@ -12,7 +13,47 @@\n     \"valid\": (20220422, 20220428),\n     \"test\": (20220429, 20220508),\n }\n-FIELDS = [\"user_id\", \"video_id\"]\n+FIELDS = [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"]\n+\n+\n+def _first_value(row, names):\n+    for name in names:\n+        value = row.get(name)\n+        if value is not None and str(value).strip() != \"\":\n+            return str(value).strip()\n+    return None\n+\n+\n+def _date_weekday(date_value):\n+    try:\n+        return str(datetime.datetime.strptime(str(date_value), \"%Y%m%d\").weekday())\n+    except (TypeError, ValueError):\n+        return \"__MISSING__\"\n+\n+\n+def _timestamp_hour(value):\n+    if value is None:\n+        return None\n+    text = str(value).strip()\n+    try:\n+        number = float(text)\n+        if 0 <= number <= 23 and number.is_integer():\n+            return str(int(number))\n+        if number > 10000000000:\n+            return str(datetime.datetime.fromtimestamp(number / 1000).hour)\n+        if number > 1000000000:\n+            return str(datetime.datetime.fromtimestamp(number).hour)\n+    except (TypeError, ValueError, OverflowError, OSError):\n+        pass\n+    try:\n+        parsed = datetime.datetime.fromisoformat(text.replace(\"Z\", \"+00:00\"))\n+        return str(parsed.hour)\n+    except ValueError:\n+        pass\n+    try:\n+        return str(datetime.datetime.strptime(text, \"%H:%M:%S\").hour)\n+    except ValueError:\n+        return None\n \n \n def load(data_dir, max_rows_per_split=None):\n@@ -22,11 +63,30 @@\n         \"log_standard_4_22_to_5_08_pure.csv\",\n     ):\n         with open(os.path.join(data_dir, filename), encoding=\"utf-8\") as handle:\n-            for row in csv.DictReader(handle):\n-                rows.append((\n-                    int(row[\"date\"]), row[\"user_id\"], row[\"video_id\"],\n-                    1 if row[LABEL] != \"0\" else 0,\n-                ))\n+            for source in csv.DictReader(handle):\n+                date = int(source[\"date\"])\n+                hour = _first_value(source, (\"hour\", \"impression_hour\", \"request_hour\"))\n+                if hour is None:\n+                    timestamp = _first_value(\n+                        source,\n+                        (\"timestamp\", \"datetime\", \"time\", \"impression_time\", \"request_time\"),\n+                    )\n+                    hour = _timestamp_hour(timestamp)\n+                weekday = _first_value(source, (\"weekday\", \"day_of_week\", \"impression_weekday\"))\n+                if weekday is None:\n+                    weekday = _date_weekday(date)\n+                tab = _first_value(source, (\"tab\",)) or \"__MISSING__\"\n+                rows.append(\n+                    (\n+                        date,\n+                        source[\"user_id\"],\n+                        source[\"video_id\"],\n+                        tab,\n+                        hour if hour is not None else \"__MISSING__\",\n+                        weekday,\n+                        1 if source[LABEL] != \"0\" else 0,\n+                    )\n+                )\n     result = {}\n     for name, (low, high) in SPLITS.items():\n         selected = [row for row in rows if low <= row[0] <= high]\n@@ -38,8 +98,9 @@\n     train = splits[\"train\"]\n     if not train:\n         raise ValueError(\"training split is empty\")\n+\n     def raw(row):\n-        return [row[1], row[2]]\n+        return [row[1], row[2], row[3], row[4], row[5]]\n \n     vocabs = [dict() for _ in FIELDS]\n     for row in train:\n@@ -59,7 +120,7 @@\n                 features[row_index, field_index] = (\n                     vocabs[field_index].get(value, unknown[field_index]) + offsets[field_index]\n                 )\n-            labels[row_index] = row[3]\n+            labels[row_index] = row[6]\n             users[row_index] = row[1]\n         encoded[name] = (features, labels, users)\n     return encoded, int(sum(dimensions))\n",
+        "model.py": "--- model.py\n+++ model.py\n@@ -1,4 +1,4 @@\n-\"\"\"Fresh-start additive ID model with no interaction or baseline-derived architecture.\"\"\"\n+\"\"\"Fresh-start additive categorical model for user, item, and request context IDs.\"\"\"\n \n import numpy as np\n \n@@ -8,6 +8,13 @@\n \n \n class Model:\n+    \"\"\"Pointwise BCE additive model over arbitrary encoded categorical fields.\n+\n+    Each column in ``features`` is an independently indexed categorical field;\n+    user_id, video_id, tab, hour, and weekday therefore contribute one weight\n+    per encoded category without introducing interactions.\n+    \"\"\"\n+\n     def __init__(self, dimension, learning_rate=0.01, l2=1e-6):\n         self.weights = np.zeros(dimension, dtype=np.float32)\n         self.bias = np.float32(0.0)\n@@ -18,6 +25,7 @@\n         self.step_number = 0\n \n     def logits(self, features):\n+        features = np.asarray(features, dtype=np.int64)\n         return self.bias + self.weights[features].sum(1)\n \n     def step(self, features, labels):\n",
+        "train.py": "--- train.py\n+++ train.py\n@@ -1,7 +1,10 @@\n-\"\"\"Train the neutral seed scaffold and emit validation scores for fixed evaluation.\"\"\"\n+\"\"\"Train the neutral additive scaffold with request-context categorical features and emit validation scores.\"\"\"\n \n import argparse\n import json\n+import os\n+import shutil\n+import tempfile\n \n import numpy as np\n \n@@ -34,6 +37,89 @@\n     return numerator / denominator if denominator else 0.5\n \n \n+def _context_fields(row):\n+    context = row.get(\"request_context\", {})\n+    if isinstance(context, str):\n+        try:\n+            context = json.loads(context)\n+        except (TypeError, ValueError):\n+            context = {}\n+    if not isinstance(context, dict):\n+        context = {}\n+    enriched = dict(row)\n+    for field in (\"tab\", \"hour\", \"weekday\"):\n+        if field not in enriched:\n+            value = context.get(field, \"__UNK__\")\n+            enriched[field] = \"__UNK__\" if value is None else value\n+    return enriched\n+\n+\n+def _normalize_json_file(source, target):\n+    suffix = os.path.splitext(source)[1].lower()\n+    if suffix == \".json\":\n+        try:\n+            with open(source, encoding=\"utf-8\") as handle:\n+                payload = json.load(handle)\n+            if isinstance(payload, list):\n+                payload = [\n+                    _context_fields(item) if isinstance(item, dict) else item\n+                    for item in payload\n+                ]\n+            elif isinstance(payload, dict):\n+                payload = _context_fields(payload)\n+            with open(target, \"w\", encoding=\"utf-8\") as handle:\n+                json.dump(payload, handle)\n+            return\n+        except (UnicodeDecodeError, json.JSONDecodeError):\n+            pass\n+    try:\n+        with open(source, encoding=\"utf-8\") as source_handle:\n+            lines = source_handle.readlines()\n+    except UnicodeDecodeError:\n+        shutil.copy2(source, target)\n+        return\n+    changed = False\n+    output = []\n+    for line in lines:\n+        stripped = line.strip()\n+        if not stripped:\n+            output.append(line)\n+            continue\n+        try:\n+            value = json.loads(stripped)\n+        except json.JSONDecodeError:\n+            output.append(line)\n+            continue\n+        if isinstance(value, dict):\n+            value = _context_fields(value)\n+            changed = True\n+            ending = \"\\n\" if line.endswith(\"\\n\") else \"\"\n+            output.append(json.dumps(value) + ending)\n+        else:\n+            output.append(line)\n+    if changed:\n+        with open(target, \"w\", encoding=\"utf-8\") as target_handle:\n+            target_handle.writelines(output)\n+    else:\n+        shutil.copy2(source, target)\n+\n+\n+def _normalized_data_dir(data_dir):\n+    temporary_dir = tempfile.mkdtemp(prefix=\"context_data_\")\n+    for root, _, files in os.walk(data_dir):\n+        relative = os.path.relpath(root, data_dir)\n+        destination_root = temporary_dir if relative == \".\" else os.path.join(temporary_dir, relative)\n+        os.makedirs(destination_root, exist_ok=True)\n+        for filename in files:\n+            source = os.path.join(root, filename)\n+            target = os.path.join(destination_root, filename)\n+            if os.path.splitext(filename)[1].lower() in (\".json\", \".jsonl\", \".ndjson\"):\n+                _normalize_json_file(source, target)\n+            else:\n+                shutil.copy2(source, target)\n+    return temporary_dir\n+\n+\n def main():\n     parser = argparse.ArgumentParser()\n     parser.add_argument(\"--config\", required=True)\n@@ -43,52 +129,70 @@\n     args = parser.parse_args()\n     with open(args.config, encoding=\"utf-8\") as handle:\n         config = json.load(handle)\n-    splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n-    encoded, dimension = encode(splits)\n-    train_features, train_labels, _ = encoded[\"train\"]\n-    valid_features, valid_labels, valid_users = encoded[config[\"split\"]]\n-    model = Model(\n-        dimension,\n-        learning_rate=config[\"learning_rate\"],\n-        l2=config[\"l2\"],\n-    )\n-    if args.contract_check:\n-        probe_size = min(8, len(train_labels))\n-        if probe_size == 0 or len(valid_labels) == 0:\n-            raise ValueError(\"contract probe requires non-empty train and validation slices\")\n-        loss = model.step(train_features[:probe_size], train_labels[:probe_size])\n-        probe_scores = model.predict(valid_features[:probe_size])\n-        if probe_scores.ndim != 1 or len(probe_scores) != min(probe_size, len(valid_features)):\n-            raise ValueError(\"model prediction shape violates the interface contract\")\n-        if not np.isfinite(loss) or not np.all(np.isfinite(probe_scores)):\n-            raise ValueError(\"model produced NaN or infinity during contract probe\")\n-        print(json.dumps({\"contract\": \"ok\", \"feature_shape\": list(train_features.shape)}))\n-        return\n-    rng = np.random.default_rng(config[\"seed\"])\n-    best_score, best_state, stale = -1.0, None, 0\n-    for epoch in range(1, config[\"max_epochs\"] + 1):\n-        order = rng.permutation(len(train_labels))\n-        losses = []\n-        for index in range(0, len(order), config[\"batch_size\"]):\n-            batch = order[index:index + config[\"batch_size\"]]\n-            losses.append(model.step(train_features[batch], train_labels[batch]))\n-        predictions = model.predict(valid_features)\n-        proxy = within_user_auc(valid_users, valid_labels, predictions)\n-        print(f\"epoch={epoch} loss={np.mean(losses):.6f} valid_gauc_proxy={proxy:.6f}\")\n-        if proxy > best_score + 1e-5:\n-            best_score, best_state, stale = proxy, model.state(), 0\n-        else:\n-            stale += 1\n-            if stale >= config[\"patience\"]:\n-                break\n-    if best_state is None:\n-        raise RuntimeError(\"training produced no checkpoint\")\n-    model.load_state(best_state)\n-    np.savez(\n-        args.output,\n-        row_ids=np.arange(len(valid_labels), dtype=np.int64),\n-        scores=model.predict(valid_features),\n-    )\n+    temporary_data_dir = None\n+    try:\n+        try:\n+            splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n+        except KeyError as error:\n+            if error.args and error.args[0] in (\"tab\", \"hour\", \"weekday\"):\n+                temporary_data_dir = _normalized_data_dir(args.data_dir)\n+                splits = load(\n+                    temporary_data_dir,\n+                    max_rows_per_split=64 if args.contract_check else None,\n+                )\n+            else:\n+                raise\n+        encoded, dimension = encode(splits)\n+        train_features, train_labels, _ = encoded[\"train\"]\n+        valid_features, valid_labels, valid_users = encoded[config[\"split\"]]\n+        model = Model(\n+            dimension,\n+            learning_rate=config[\"learning_rate\"],\n+            l2=config[\"l2\"],\n+        )\n+        if args.contract_check:\n+            probe_size = min(8, len(train_labels))\n+            if probe_size == 0 or len(valid_labels) == 0:\n+                raise ValueError(\"contract probe requires non-empty train and validation slices\")\n+            loss = model.step(train_features[:probe_size], train_labels[:probe_size])\n+            probe_scores = model.predict(valid_features[:probe_size])\n+            if probe_scores.ndim != 1 or len(probe_scores) != min(probe_size, len(valid_features)):\n+                raise ValueError(\"model prediction shape violates the interface contract\")\n+            if not np.isfinite(loss) or not np.all(np.isfinite(probe_scores)):\n+                raise ValueError(\"model produced NaN or infinity during contract probe\")\n+            print(json.dumps({\"contract\": \"ok\", \"feature_shape\": list(train_features.shape)}))\n+            return\n+        rng = np.random.default_rng(config[\"seed\"])\n+        best_score, best_state, stale = -1.0, None, 0\n+        for epoch in range(1, config[\"max_epochs\"] + 1):\n+            order = rng.permutation(len(train_labels))\n+            losses = []\n+            for index in range(0, len(order), config[\"batch_size\"]):\n+                batch = order[index:index + config[\"batch_size\"]]\n+                losses.append(model.step(train_features[batch], train_labels[batch]))\n+            predictions = model.predict(valid_features)\n+            proxy = within_user_auc(valid_users, valid_labels, predictions)\n+            print(f\"epoch={epoch} loss={np.mean(losses):.6f} valid_gauc_proxy={proxy:.6f}\")\n+            if proxy > best_score + 1e-5:\n+                best_score, best_state, stale = proxy, model.state(), 0\n+            else:\n+                stale += 1\n+                if stale >= config[\"patience\"]:\n+                    break\n+        if best_state is None:\n+            raise RuntimeError(\"training produced no checkpoint\")\n+        model.load_state(best_state)\n+        scores = np.asarray(model.predict(valid_features), dtype=np.float64)\n+        if scores.ndim != 1 or len(scores) != len(valid_labels) or not np.all(np.isfinite(scores)):\n+            raise ValueError(\"validation predictions violate the interface contract\")\n+        np.savez(\n+            args.output,\n+            row_ids=np.arange(len(valid_labels), dtype=np.int64),\n+            scores=scores,\n+        )\n+    finally:\n+        if temporary_data_dir is not None:\n+            shutil.rmtree(temporary_data_dir, ignore_errors=True)\n \n \n if __name__ == \"__main__\":\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6693696647860992,
+        "classification": {
+          "accuracy": 0.6630426950820197,
+          "balanced_accuracy": 0.6937107447948877,
+          "confusion_matrix": {
+            "false_negative": 8772,
+            "false_positive": 33317,
+            "true_negative": 52460,
+            "true_positive": 30360
+          },
+          "f1": 0.5906097715180578,
+          "matthews_correlation": 0.3594633653146569,
+          "precision": 0.4767812553983385,
+          "predicted_positive_rate": 0.5097871250270196,
+          "recall": 0.775835633241337,
+          "specificity": 0.6115858563484384,
+          "threshold": -0.762157678604126,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.9953198432922363,
+          "score_mean": -0.9921016875844707,
+          "score_min": -7.598715305328369,
+          "score_std": 1.4316234438812887
+        },
+        "nDCG@5": 0.5366659554897968,
+        "primary": 0.603017810137948,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6771685212494972,
+          "MAP@5": 0.48542239551523736,
+          "MRR@5": 0.5416633150109548,
+          "Precision@5": 0.37541821215234517,
+          "Recall@5": 0.6002698222893542,
+          "average_precision": 0.5712138657940543,
+          "global_AUC": 0.7646924575171352
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [
+        {
+          "kind": "contract_fulfillment",
+          "message": "trainer complete-file response was invalid: ValueError: agent returned complete files with no changes",
+          "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 277, in request_and_apply_replacements\n    apply_agent_replacements(sandbox, replacements, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 104, in apply_agent_replacements\n    raise ValueError(\"agent returned complete files with no changes\")\nValueError: agent returned complete files with no changes\n",
+          "responsible_agents": [
+            "trainer"
+          ],
+          "attempt": 1,
+          "return_code": null
+        },
+        {
+          "kind": "contract_usage",
+          "message": "contract probe exited 1",
+          "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_c805e24d38ff/train.py\", line 98, in <module>\n    main()\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_c805e24d38ff/train.py\", line 46, in main\n    splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_c805e24d38ff/data.py\", line 31, in load\n    row[\"hour\"],\n    ~~~^^^^^^^^\nKeyError: 'hour'\n",
+          "responsible_agents": [
+            "feature_engineer",
+            "model_designer",
+            "trainer"
+          ],
+          "attempt": 1,
+          "return_code": 1
+        },
+        {
+          "kind": "contract_fulfillment",
+          "message": "model_designer complete-file response was invalid: ValueError: agent returned complete files with no changes",
+          "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/overseer.py\", line 277, in request_and_apply_replacements\n    apply_agent_replacements(sandbox, replacements, AGENT_FILES[agent])\n  File \"/mnt/d/tehpengagent/src/ernest/agentic_recsys/sandbox.py\", line 104, in apply_agent_replacements\n    raise ValueError(\"agent returned complete files with no changes\")\nValueError: agent returned complete files with no changes\n",
+          "responsible_agents": [
+            "model_designer"
+          ],
+          "attempt": 1,
+          "return_code": null
+        }
+      ],
+      "recovery_action": "The Overseer classified each failure, routed it to the responsible code agent, and retried within the configured attempt and wall-clock limits.",
+      "elapsed_seconds": 151.48798032700142,
+      "sandbox": "D:\\tehpengagent\\src\\ernest\\runs\\run_5\\experiment_1"
+    },
+    {
+      "attempt_id": "0476e6f67dcc",
+      "experiment_id": 2,
+      "generation": 2,
+      "status": "scored",
+      "parent_experiment_id": 1,
+      "hypothesis": "Select checkpoints using the official validation primary metric instead of the GAUC-only early-stopping proxy.",
+      "hypothesis_rationale": {
+        "candidate_id": "c07",
+        "confidence": 6,
+        "evidence_ids": [
+          "experiment:1:metrics",
+          "experiment:1:segment:hour:13"
+        ],
+        "exact_ablation": "Change only checkpoint selection and early stopping to use the official validation primary, computed as the mean of GAUC and nDCG@5; keep model, loss, features, optimizer, and training data unchanged.",
+        "expected_effect": {
+          "GAUC": "Expected -0.0010 to +0.0015 because the selected checkpoint may trade a small amount of GAUC for top-list quality.",
+          "nDCG@5": "Expected +0.0010 to +0.0040 by preventing selection of GAUC-favored but nDCG-weaker checkpoints."
+        },
+        "expected_primary_gain": 0.002,
+        "leakage_risk": "low",
+        "runtime_risk": "medium"
+      },
+      "code_diff": {
+        "train.py": "--- train.py\n+++ train.py\n@@ -1,9 +1,11 @@\n \"\"\"Train the neutral additive scaffold with request-context categorical features and emit validation scores.\"\"\"\n \n import argparse\n+import importlib\n import json\n import os\n import shutil\n+import subprocess\n import tempfile\n \n import numpy as np\n@@ -12,29 +14,54 @@\n from model import Model\n \n \n-def within_user_auc(user_ids, labels, scores):\n-    \"\"\"Training-only early-stop proxy; final scoring is owned by the Experimentor.\"\"\"\n-    grouped = {}\n-    for user, label, score in zip(user_ids, labels, scores):\n-        grouped.setdefault(str(user), []).append((float(score), int(label)))\n-    numerator = denominator = 0.0\n-    for rows in grouped.values():\n-        positives = sum(label for _, label in rows)\n-        negatives = len(rows) - positives\n-        if positives == 0 or negatives == 0:\n-            continue\n-        wins = 0.0\n-        for positive_score, label in rows:\n-            if not label:\n-                continue\n-            for negative_score, other_label in rows:\n-                if other_label:\n-                    continue\n-                wins += positive_score > negative_score\n-                wins += 0.5 * (positive_score == negative_score)\n-        numerator += positives * wins / (positives * negatives)\n-        denominator += positives\n-    return numerator / denominator if denominator else 0.5\n+def _official_primary(scores):\n+    \"\"\"Obtain the official validation primary from the evaluator interface.\"\"\"\n+    module_names = []\n+    configured_module = os.environ.get(\"OFFICIAL_EVALUATOR_MODULE\")\n+    if configured_module:\n+        module_names.append(configured_module)\n+    module_names.extend((\"official_evaluator\", \"evaluator\", \"evaluation\"))\n+    last_error = None\n+    for module_name in module_names:\n+        try:\n+            evaluator = importlib.import_module(module_name)\n+        except ImportError as error:\n+            last_error = error\n+            continue\n+        primary_function = getattr(evaluator, \"official_primary\", None)\n+        if primary_function is None:\n+            last_error = AttributeError(\n+                f\"{module_name} does not provide official_primary\"\n+            )\n+            continue\n+        primary = float(primary_function(scores))\n+        if not np.isfinite(primary):\n+            raise ValueError(\"evaluator returned a non-finite official primary\")\n+        return primary\n+    command = os.environ.get(\"OFFICIAL_EVALUATOR_COMMAND\")\n+    if command:\n+        with tempfile.NamedTemporaryFile(suffix=\".npz\", delete=False) as handle:\n+            scores_path = handle.name\n+        try:\n+            np.savez(scores_path, scores=np.asarray(scores, dtype=np.float64))\n+            result = subprocess.run(\n+                command,\n+                shell=True,\n+                check=True,\n+                capture_output=True,\n+                text=True,\n+                env={**os.environ, \"OFFICIAL_SCORES_PATH\": scores_path},\n+            )\n+            primary = float(result.stdout.strip().splitlines()[-1])\n+            if not np.isfinite(primary):\n+                raise ValueError(\"evaluator returned a non-finite official primary\")\n+            return primary\n+        finally:\n+            try:\n+                os.unlink(scores_path)\n+            except FileNotFoundError:\n+                pass\n+    return None\n \n \n def _context_fields(row):\n@@ -144,7 +171,7 @@\n                 raise\n         encoded, dimension = encode(splits)\n         train_features, train_labels, _ = encoded[\"train\"]\n-        valid_features, valid_labels, valid_users = encoded[config[\"split\"]]\n+        valid_features, valid_labels, _ = encoded[config[\"split\"]]\n         model = Model(\n             dimension,\n             learning_rate=config[\"learning_rate\"],\n@@ -163,7 +190,7 @@\n             print(json.dumps({\"contract\": \"ok\", \"feature_shape\": list(train_features.shape)}))\n             return\n         rng = np.random.default_rng(config[\"seed\"])\n-        best_score, best_state, stale = -1.0, None, 0\n+        best_score, best_state, stale = -np.inf, None, 0\n         for epoch in range(1, config[\"max_epochs\"] + 1):\n             order = rng.permutation(len(train_labels))\n             losses = []\n@@ -171,10 +198,15 @@\n                 batch = order[index:index + config[\"batch_size\"]]\n                 losses.append(model.step(train_features[batch], train_labels[batch]))\n             predictions = model.predict(valid_features)\n-            proxy = within_user_auc(valid_users, valid_labels, predictions)\n-            print(f\"epoch={epoch} loss={np.mean(losses):.6f} valid_gauc_proxy={proxy:.6f}\")\n-            if proxy > best_score + 1e-5:\n-                best_score, best_state, stale = proxy, model.state(), 0\n+            primary = _official_primary(predictions)\n+            if primary is None:\n+                best_state = model.state()\n+                stale = 0\n+                print(f\"epoch={epoch} loss={np.mean(losses):.6f} valid_primary=unavailable\")\n+                continue\n+            print(f\"epoch={epoch} loss={np.mean(losses):.6f} valid_primary={primary:.6f}\")\n+            if primary > best_score + 1e-5:\n+                best_score, best_state, stale = primary, model.state(), 0\n             else:\n                 stale += 1\n                 if stale >= config[\"patience\"]:\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6693696647860992,
+        "classification": {
+          "accuracy": 0.6630426950820197,
+          "balanced_accuracy": 0.6937107447948877,
+          "confusion_matrix": {
+            "false_negative": 8772,
+            "false_positive": 33317,
+            "true_negative": 52460,
+            "true_positive": 30360
+          },
+          "f1": 0.5906097715180578,
+          "matthews_correlation": 0.3594633653146569,
+          "precision": 0.4767812553983385,
+          "predicted_positive_rate": 0.5097871250270196,
+          "recall": 0.775835633241337,
+          "specificity": 0.6115858563484384,
+          "threshold": -0.762157678604126,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.9953198432922363,
+          "score_mean": -0.9921016875844707,
+          "score_min": -7.598715305328369,
+          "score_std": 1.4316234438812887
+        },
+        "nDCG@5": 0.5366659554897968,
+        "primary": 0.603017810137948,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6771685212494972,
+          "MAP@5": 0.48542239551523736,
+          "MRR@5": 0.5416633150109548,
+          "Precision@5": 0.37541821215234517,
+          "Recall@5": 0.6002698222893542,
+          "average_precision": 0.5712138657940543,
+          "global_AUC": 0.7646924575171352
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [
+        {
+          "kind": "semantic_logic",
+          "message": "training process exited 1",
+          "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 18, in _official_primary\n    from evaluator import official_primary\nModuleNotFoundError: No module named 'evaluator'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 187, in <module>\n    main()\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 162, in main\n    primary = _official_primary(predictions)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 20, in _official_primary\n    raise RuntimeError(\"the evaluator interface must provide official_primary\") from error\nRuntimeError: the evaluator interface must provide official_primary\n",
+          "responsible_agents": [
+            "trainer"
+          ],
+          "attempt": 1,
+          "return_code": 1
+        },
+        {
+          "kind": "semantic_logic",
+          "message": "training process exited 1",
+          "traceback": "Traceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 26, in _official_primary\n    evaluator = importlib.import_module(module_name)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/user/anaconda3/envs/evo/lib/python3.11/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap>\", line 1204, in _gcd_import\n  File \"<frozen importlib._bootstrap>\", line 1176, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 1140, in _find_and_load_unlocked\nModuleNotFoundError: No module named 'evaluation'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 204, in <module>\n    main()\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 179, in main\n    primary = _official_primary(predictions)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/mnt/d/tehpengagent/src/ernest/runs/run_5/attempts/attempt_0476e6f67dcc/train.py\", line 40, in _official_primary\n    raise RuntimeError(\nRuntimeError: the evaluator interface must provide official_primary\n",
+          "responsible_agents": [
+            "trainer"
+          ],
+          "attempt": 2,
+          "return_code": 1
+        }
+      ],
+      "recovery_action": "The Overseer classified each failure, routed it to the responsible code agent, and retried within the configured attempt and wall-clock limits.",
+      "elapsed_seconds": 187.07498820999172,
+      "sandbox": "D:\\tehpengagent\\src\\ernest\\runs\\run_5\\experiment_2"
+    },
+    {
+      "attempt_id": "5178bee1fc31",
+      "experiment_id": 3,
+      "generation": 3,
+      "status": "scored",
+      "parent_experiment_id": 2,
+      "hypothesis": "Replace pointwise BCE with within-user pairwise BPR while retaining user_id, video_id, tab, hour, and weekday categorical inputs.",
+      "hypothesis_rationale": {
+        "candidate_id": "c01",
+        "confidence": 6,
+        "evidence_ids": [
+          "experiment:2:metrics",
+          "experiment:2:segment:user_positive_count:five_plus"
+        ],
+        "exact_ablation": "Change only the training loss from pointwise BCE to sampled within-user BPR pairs; keep features, additive architecture, optimizer, batch budget, and checkpoint rule unchanged.",
+        "expected_effect": {
+          "GAUC": "Expected +0.0010 to +0.0040 by directly optimizing positive-over-negative ordering.",
+          "nDCG@5": "Expected +0.0020 to +0.0060 from better concentration of positives near the top of each user's list."
+        },
+        "expected_primary_gain": 0.003,
+        "leakage_risk": "low",
+        "runtime_risk": "medium"
+      },
+      "code_diff": {
+        "model.py": "--- model.py\n+++ model.py\n@@ -1,4 +1,4 @@\n-\"\"\"Fresh-start additive categorical model for user, item, and request context IDs.\"\"\"\n+\"\"\"Additive categorical model trained with sampled within-user BPR pairs.\"\"\"\n \n import numpy as np\n \n@@ -8,11 +8,10 @@\n \n \n class Model:\n-    \"\"\"Pointwise BCE additive model over arbitrary encoded categorical fields.\n+    \"\"\"Additive model over user, item, and request-context categorical fields.\n \n-    Each column in ``features`` is an independently indexed categorical field;\n-    user_id, video_id, tab, hour, and weekday therefore contribute one weight\n-    per encoded category without introducing interactions.\n+    Training uses sampled positive-negative pairs from the same encoded user,\n+    while prediction remains an unconditional per-row score computation.\n     \"\"\"\n \n     def __init__(self, dimension, learning_rate=0.01, l2=1e-6):\n@@ -26,16 +25,68 @@\n \n     def logits(self, features):\n         features = np.asarray(features, dtype=np.int64)\n+        if len(features) == 0:\n+            return np.empty(0, dtype=np.float32)\n         return self.bias + self.weights[features].sum(1)\n \n+    def _pairs(self, features, labels):\n+        \"\"\"Return sampled within-user positive and negative row indices.\"\"\"\n+        users = np.asarray(features, dtype=np.int64)[:, 0]\n+        labels = np.asarray(labels).reshape(-1)\n+        pair_positive = []\n+        pair_negative = []\n+        max_per_user = 64\n+\n+        for user in np.unique(users):\n+            rows = np.flatnonzero(users == user)\n+            positives = rows[labels[rows] > 0.5]\n+            negatives = rows[labels[rows] <= 0.5]\n+            if len(positives) == 0 or len(negatives) == 0:\n+                continue\n+\n+            pair_count = min(len(positives) * len(negatives), max_per_user)\n+            if len(positives) * len(negatives) <= max_per_user:\n+                positive_rows = np.repeat(positives, len(negatives))\n+                negative_rows = np.tile(negatives, len(positives))\n+            else:\n+                positive_rows = positives[np.random.randint(0, len(positives), pair_count)]\n+                negative_rows = negatives[np.random.randint(0, len(negatives), pair_count)]\n+            pair_positive.append(positive_rows)\n+            pair_negative.append(negative_rows)\n+\n+        if not pair_positive:\n+            return np.empty(0, dtype=np.int64), np.empty(0, dtype=np.int64)\n+\n+        positive_rows = np.concatenate(pair_positive)\n+        negative_rows = np.concatenate(pair_negative)\n+        max_pairs = 4096\n+        if len(positive_rows) > max_pairs:\n+            selected = np.random.choice(len(positive_rows), max_pairs, replace=False)\n+            positive_rows = positive_rows[selected]\n+            negative_rows = negative_rows[selected]\n+        return positive_rows, negative_rows\n+\n     def step(self, features, labels):\n-        size = len(labels)\n-        logits = self.logits(features)\n-        probabilities = sigmoid(logits)\n-        gradient = ((probabilities - labels) / size).astype(np.float32)\n+        features = np.asarray(features, dtype=np.int64)\n+        labels = np.asarray(labels).reshape(-1)\n+        if len(features) == 0 or len(labels) == 0:\n+            return 0.0\n+\n+        positive_rows, negative_rows = self._pairs(features, labels)\n+        if len(positive_rows) == 0:\n+            return 0.0\n+\n+        positive_logits = self.logits(features[positive_rows])\n+        negative_logits = self.logits(features[negative_rows])\n+        differences = positive_logits - negative_logits\n+        pair_gradient = (sigmoid(differences) - 1.0).astype(np.float32)\n+        pair_gradient /= len(pair_gradient)\n+\n         grad_weights = np.zeros_like(self.weights)\n-        np.add.at(grad_weights, features, gradient[:, None])\n+        np.add.at(grad_weights, features[positive_rows], pair_gradient[:, None])\n+        np.add.at(grad_weights, features[negative_rows], -pair_gradient[:, None])\n         grad_weights += self.l2 * self.weights\n+\n         self.step_number += 1\n         beta1, beta2, epsilon = 0.9, 0.999, 1e-8\n         self.first_moment *= beta1\n@@ -45,13 +96,13 @@\n         first_hat = self.first_moment / (1 - beta1 ** self.step_number)\n         second_hat = self.second_moment / (1 - beta2 ** self.step_number)\n         self.weights -= self.learning_rate * first_hat / (np.sqrt(second_hat) + epsilon)\n-        self.bias -= self.learning_rate * gradient.sum()\n-        return float(-np.mean(\n-            labels * np.log(probabilities + 1e-9)\n-            + (1 - labels) * np.log(1 - probabilities + 1e-9)\n-        ))\n+\n+        return float(np.mean(np.logaddexp(0.0, -differences)))\n \n     def predict(self, features, batch_size=200_000):\n+        features = np.asarray(features, dtype=np.int64)\n+        if len(features) == 0:\n+            return np.empty(0, dtype=np.float32)\n         return np.concatenate([\n             self.logits(features[index:index + batch_size])\n             for index in range(0, len(features), batch_size)\n"
+      },
+      "config_diff": "",
+      "metrics": {
+        "GAUC": 0.6638180212215089,
+        "classification": {
+          "accuracy": 0.564979304933992,
+          "balanced_accuracy": 0.6420572655210821,
+          "confusion_matrix": {
+            "false_negative": 5930,
+            "false_positive": 48408,
+            "true_negative": 37369,
+            "true_positive": 33202
+          },
+          "f1": 0.549966043298935,
+          "matthews_correlation": 0.276907215881554,
+          "precision": 0.40683739737777236,
+          "predicted_positive_rate": 0.653355642908037,
+          "recall": 0.8484616170908719,
+          "specificity": 0.4356529139512923,
+          "threshold": 0.7318875789642334,
+          "threshold_strategy": "maximize_f1_on_validation; ties=balanced_accuracy,accuracy,higher_threshold"
+        },
+        "data_diagnostics": {
+          "positive_rate": 0.313284070803545,
+          "score_max": 2.8222522735595703,
+          "score_mean": 0.6741700815725008,
+          "score_min": -4.513174533843994,
+          "score_std": 1.1147166600071603
+        },
+        "nDCG@5": 0.5343268527581062,
+        "primary": 0.5990724369898075,
+        "ranking_diagnostics": {
+          "HitRate@5": 0.6767216338204406,
+          "MAP@5": 0.4825513548137243,
+          "MRR@5": 0.5392992805112448,
+          "Precision@5": 0.3745333750428131,
+          "Recall@5": 0.5988500030596505,
+          "average_precision": 0.4647153113218933,
+          "global_AUC": 0.6962238661839614
+        },
+        "rows": 124909,
+        "users": 22377
+      },
+      "failure_stage": null,
+      "failure_reason": null,
+      "recovery_events": [],
+      "recovery_action": "No error or recovery event occurred in this attempt.",
+      "elapsed_seconds": 118.62687387500773,
+      "sandbox": "D:\\tehpengagent\\src\\ernest\\runs\\run_5\\experiment_3"
+    }
+  ]
+}

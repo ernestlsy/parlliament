@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "(\"field-aware factorization machines\" OR FFM OR \"field-weighted factorization machines\" OR FwFM) \"context-aware recommendation\" sparse categorical user item context ranking pairwise interactions regularization",
+      "(\"factorization machine\" OR \"field-aware factorization machine\") recommender ranking \"Bayesian personalized ranking\" OR BPR user-item-context sparse categorical features nDCG@5",
+      "\"field-weighted factorization machines\" recommender systems comparison field-aware factorization machines parameter efficiency regularization sparse features",
+      "(\"compact interaction model\" OR \"low-rank feature interactions\" OR \"factorized feature interactions\") recommendation ranking sparse categorical context rare categories regularization",
+      "(\"context-aware recommender systems\" AND \"factorization machines\") rare context values cold-start long-tail items within-user ranking GAUC nDCG@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "\"implicit feedback\" recommendation pointwise binary cross-entropy pairwise BPR RankNet LambdaRank within-user AUC nDCG@K",
+      "\"learning to rank\" implicit-feedback recommender systems pairwise loss top-k ranking nDCG temporal evaluation negative sampling",
+      "BPR versus cross-entropy objective recommendation implicit interactions \"per-user AUC\" \"nDCG@5\"",
+      "LambdaRank RankNet BPR recommender systems implicit feedback sampled negative pairs exposure-aware temporal split",
+      "practical negative sampling pair construction for pairwise ranking implicit recommendation temporal leakage-safe evaluation within-user GAUC nDCG@K"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

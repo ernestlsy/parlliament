@@ -23,10 +23,13 @@ and segment diagnostics to state one exact ablation and an expected effect on bo
 Reserve official scoring for changes with a plausible primary gain and a clean fallback.
 
 ## Diagnostics and risks
-After each score, convergence compares the newest primary score with the score two counted
-experiments earlier. Ernest stops when that increase is strictly less than 0.002; abandoned attempts
-are absent from this sequence. Small noisy changes can therefore end the run even if many untested
-ideas remain. Repeated implementation failures waste wall-clock time despite being uncounted.
+Every scored experiment with primary score `x` establishes a target of `x + 0.002`. Ernest stops if
+all three subsequent scored experiments are strictly below that target, so the check requires at
+least four scored experiments. Reaching the target in any of those three experiments prevents that
+anchor from causing convergence. Abandoned attempts are absent from this sequence. The globally
+highest-scoring validation experiment is selected for submission even when a later, lower-scoring
+experiment triggers convergence. Repeated implementation failures waste wall-clock time despite
+being uncounted.
 
 ## Cheapest check and clean experiment
 Use profiling, train-only temporal holdout screening, contract checks, and code validation before

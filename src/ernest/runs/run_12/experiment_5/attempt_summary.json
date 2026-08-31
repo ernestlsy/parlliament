@@ -1,0 +1,24 @@
+{
+  "attempt_id": "cc322ea4020b",
+  "status": "scored",
+  "generation": 5,
+  "mode": "draft",
+  "parent_experiment_id": 4,
+  "hypothesis_text": "Add an explicit user-by-tab categorical interaction to the current additive five-field pairwise ranker.",
+  "active_sub_agents": [
+    "feature_engineer",
+    "model_designer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 80.84775617800187,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

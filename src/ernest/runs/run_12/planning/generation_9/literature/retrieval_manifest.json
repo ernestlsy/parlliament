@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "memory_hit"
+  ],
+  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "objective.within_user_ranknet_pairwise_loss",
+      "path": "30_objectives/within_user_ranknet_pairwise_loss.md",
+      "sha256": "6216278cdf2db9cbda95e1b4c7bd3dc1c0d5f56ec944bc787e1ffce628dc8c57",
+      "source_characters": 7726,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.bce_lambdarank_ndcg5_hybrid",
+      "path": "30_objectives/bce_lambdarank_ndcg5_hybrid.md",
+      "sha256": "48f2455f2d5620a3b9548e5d66c4ef2249f048e19be4023f4d958e67901489a0",
+      "source_characters": 10000,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.user_normalized_binary_cross_entropy",
+      "path": "30_objectives/user_normalized_binary_cross_entropy.md",
+      "sha256": "c366a83c3c5da5d8076ea1d3d8b00acc3006b64c9a45f2f8d7959e346defe485",
+      "source_characters": 9067,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "paper.mmoe_auxiliary_behavior_ranker",
+      "path": "90_papers/mmoe_auxiliary_behavior_ranker.md",
+      "sha256": "5d45195d5d49c0db72f89743f867510ee2e6b29d2761bd379146b785e98dd982",
+      "source_characters": 9900,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.mixed_group_listnet_top1_loss",
+      "path": "30_objectives/mixed_group_listnet_top1_loss.md",
+      "sha256": "35f46aa8c8e1061fe7b968980537bb4a9d2a7a01aea803ffa38bb0c69cb14c27",
+      "source_characters": 6242,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "paper.group_dro_within_user_ranking",
+      "path": "90_papers/group_dro_within_user_ranking.md",
+      "sha256": "4cf07fb8ed80114172821d7ef36480545e9423a61f12e86b046cb832dd045571",
+      "source_characters": 10000,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.shared_trunk_auxiliary_behavior_multitask_loss",
+      "path": "30_objectives/shared_trunk_auxiliary_behavior_multitask_loss.md",
+      "sha256": "51b2a46f7115e7b3f133c3ebc5cf66e86d7ad69f4e2d1658afaea195f27ad169",
+      "source_characters": 7765,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "experiment.predeclared_hypothesis_ladder",
+      "path": "80_experiment_strategy/predeclared_hypothesis_ladder.md",
+      "sha256": "af74dcb700e5058e0495fac36e0b08a8977d21678521b49c22ba150d019128e4",
+      "source_characters": 8411,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "objective.within_user_ranknet_pairwise_loss",
+    "objective.bce_lambdarank_ndcg5_hybrid",
+    "objective.user_normalized_binary_cross_entropy",
+    "paper.mmoe_auxiliary_behavior_ranker",
+    "objective.mixed_group_listnet_top1_loss",
+    "paper.group_dro_within_user_ranking",
+    "objective.shared_trunk_auxiliary_behavior_multitask_loss",
+    "experiment.predeclared_hypothesis_ladder"
+  ],
+  "total_fetched_characters": 40000
+}

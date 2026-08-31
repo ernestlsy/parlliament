@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "objective.mixed_group_listnet_top1_loss",
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "training.group_complete_stratified_minibatching",
+      "training.within_group_hard_pair_curriculum"
+    ]
+  },
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 2,
+    "selected_document_ids": [
+      "dataset.interaction_log_schema",
+      "dataset.inventory_and_splits",
+      "dataset.population_and_pair_shift"
+    ]
+  }
+]

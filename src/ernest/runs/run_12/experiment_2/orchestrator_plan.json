@@ -1,0 +1,103 @@
+{
+  "active_agents": [
+    "model_designer",
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "Unchanged data.encode(splits) returns (encoded, dimension). For each split, encoded[split] is (features, labels, users), where features is int32 shape [rows, 5] in canonical source-row split order. Feature columns are exactly [user_id, video_id, tab, hour, weekday]; hour is floor(numeric hourmin / 100) constrained to 0..23 and weekday is the calendar weekday from date with Monday=0 through Sunday=6. Vocabulary fitting remains train-only, with per-field unknown IDs and global offsets."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "factor_rank",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model receives features as a rank-2 integer array of globally offset categorical IDs with exactly five IDs per row, ordered user_id, video_id, tab, hour, weekday. Model logits are raw float scores in the same row order. The FM logit is bias plus first-order selected-ID weights plus all pairwise second-order interactions represented by rank-16 factor embeddings."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "model_designer": {
+      "objective": "Replace the parent additive scorer in model.py with a rank-16-capable second-order factorization-machine scorer over the unchanged five encoded categorical feature IDs.",
+      "required_changes": [
+        "In model.py, change Model.__init__ to accept factor_rank in addition to dimension, learning_rate, and l2. Allocate float32 first-order weights of shape (dimension,), factor embeddings of shape (dimension, factor_rank), and a scalar bias. Initialize first-order weights and bias to zero; initialize factor embeddings reproducibly from a small zero-mean random distribution using a model-local fixed seed or an explicitly supplied seed, with finite float32 values.",
+        "Implement logits(features) as the standard second-order FM logit for exactly the feature IDs in each row: bias + sum of first-order weights for the five IDs + 0.5 * sum over latent dimensions of ((sum of the five selected factor vectors)^2 - sum of their squared factor vectors). Do not add fields, crosses, numerical features, feature aliases, or any input other than the supplied encoded IDs.",
+        "Update step(features, labels) to optimize BCE with the existing Adam optimizer family and existing learning_rate and l2 semantics. Compute gradients for both first-order weights and factor embeddings. For each selected factor vector v_i, the per-example interaction derivative is sum_selected_factors - v_i, multiplied by the BCE logit gradient. Accumulate repeated-ID gradients with np.add.at. Apply L2 regularization to first-order weights and factor embeddings, but not to bias. Maintain Adam first and second moments for every optimized parameter tensor and finite float32-compatible updates.",
+        "Keep predict(features, batch_size=200_000) returning one raw-logit score per input row in input order. Update state() and load_state() so the validation-selected checkpoint restores first-order weights, factor embeddings, and bias required for identical valid/test predictions."
+      ],
+      "preserve": [
+        "Keep the data-to-model interface as a two-dimensional integer feature-ID array with one active ID per field and the existing field order [user_id, video_id, tab, hour, weekday].",
+        "Keep sigmoid clipping and BCE training behavior, batch prediction behavior, and no use of labels inside predict.",
+        "Do not modify data.py, train.py, or config.json; those files are owned by other agents."
+      ],
+      "coordination_notes": [
+        "Trainer will pass config['factor_rank'] to Model. The required configured value is 16; do not hard-code rank 16 as a Model default in place of that configuration.",
+        "The encoded IDs are globally offset by data.encode, so a single dimension-sized first-order table and factor table are required.",
+        "The only raw fields represented by the unchanged encoder are user_id, video_id, tab, hour derived canonically as floor(numeric hourmin / 100) constrained to 0..23, and weekday derived canonically from date as Monday=0 through Sunday=6."
+      ]
+    },
+    "trainer": {
+      "objective": "Wire the configured rank-16 FM model into train.py and config.json while preserving validation-only checkpoint selection and emitting canonical validation and test prediction artifacts.",
+      "required_changes": [
+        "In config.json, add the exact key-value pair \"factor_rank\": 16. Leave seed, learning_rate, l2, batch_size, max_epochs, patience, and split unchanged.",
+        "In train.py, construct Model with dimension, learning_rate=config['learning_rate'], l2=config['l2'], and factor_rank=config['factor_rank']. Do not move this configured rank into a model.py default.",
+        "Retain the existing BCE batch-training loop, training split usage, seeded train permutation, validation within_user_auc proxy, improvement threshold, patience behavior, and restoration of best_state. Select checkpoints and trigger early stopping exclusively from valid_features, valid_labels, valid_users, and validation predictions.",
+        "Do not use test labels for loss, metrics, checkpoint selection, early stopping, hyperparameter selection, or any other training decision. Only use test_features to generate final test scores after restoring the checkpoint selected on validation.",
+        "For a normal non-contract-check run, write predictions_valid.npz and predictions_test.npz in the output directory. Each file must contain exactly the two NPZ arrays row_ids and scores: predictions_valid.npz must use row_ids=np.arange(len(valid_features), dtype=np.int64) and scores=model.predict(valid_features); predictions_test.npz must use row_ids=np.arange(len(test_features), dtype=np.int64) and scores=model.predict(test_features). Preserve the encoded split row order without sorting, shuffling, grouping, or filtering predictions. If --output supplies a path, use its parent directory and ensure the validation artifact is named predictions_valid.npz.",
+        "Keep --contract-check as a finite-shape probe that instantiates the configured FM, runs one train step, and verifies one-dimensional finite validation scores; it must not train on or evaluate test labels."
+      ],
+      "preserve": [
+        "Do not modify data.py or alter split boundaries, vocab fitting, categorical field order, raw input fields, BCE objective, optimizer family, or the validation-based early-stopping procedure.",
+        "Keep validation labels available only for the existing validation early-stop proxy; final ground-truth evaluation remains external to this training script.",
+        "Do not introduce additional feature families, joins, source columns, derived features, or test-informed transformations."
+      ],
+      "coordination_notes": [
+        "model_designer will make Model require factor_rank and will make state/load_state include all FM parameters; pass the config value exactly.",
+        "data.encode continues to return (features, labels, users) in canonical source-row split order. Use only its features for test prediction generation and do not reference the returned test label array.",
+        "The fixed training command's non-contract execution must leave both predictions_valid.npz and predictions_test.npz present with only row_ids and scores."
+      ]
+    }
+  },
+  "reasoning": "The requested ablation changes architecture only: a standard rank-16 second-order FM adds compact pairwise interactions among the already active categorical user_id, video_id, tab, hour, and weekday IDs while retaining the first-order FM terms, BCE, split definitions, optimizer family, and validation-only early stopping. No data agent is needed because the parent encoder already uses exactly those five allowed fields with canonical hour and weekday derivations. A trainer agent is required because factor rank is a configured change and because artifact naming must be guaranteed by train.py."
+}

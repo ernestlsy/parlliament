@@ -1,0 +1,23 @@
+{
+  "attempt_id": "2d80571efdcb",
+  "status": "scored",
+  "generation": 7,
+  "mode": "draft",
+  "parent_experiment_id": 6,
+  "hypothesis_text": "Use a 50/50 uniform and hard-negative sampler within each user's training impressions.",
+  "active_sub_agents": [
+    "trainer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 82.0263567439979,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

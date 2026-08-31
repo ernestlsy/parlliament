@@ -1,0 +1,388 @@
+[
+  {
+    "text": "Revert the rank-16 factorization machine to the additive scorer while retaining the five currently available categorical fields.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "The only official architecture expansion regressed primary from 0.6029348473782026 to 0.6004596081403915, so the most evidence-backed corrective ablation is removal of second-order interactions while preserving the previously successful request-context representation.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace the rank-16 second-order factorization-machine logit with the additive linear logit over exactly user_id, video_id, tab, hour, and weekday; retain BCE, optimizer settings, data processing, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.004 versus experiment 2 by removing interaction overfitting that reduced official within-user ordering.",
+      "nDCG@5": "Increase by 0.001 to 0.004 versus experiment 2 by restoring the better observed top-five ordering of the additive model."
+    },
+    "expected_primary_gain": 0.0025,
+    "confidence": 9,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Train the additive five-field scorer with a within-user pairwise logistic ranking loss instead of pointwise BCE.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The official objective is entirely within-user ranking, while the current pointwise BCE model has GAUC 0.6689116170510226 but lower nDCG@5 of 0.5369580777053825. A pairwise objective directly targets positive-negative ordering without introducing unapproved features.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:6"
+    ],
+    "exact_ablation": "Replace pointwise BCE with a within-user positive-versus-negative logistic pairwise loss, keeping the additive five-field scorer, data, optimizer family, regularization, and stopping procedure unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.001 to 0.004 because each update directly rewards within-user positive-negative ordering.",
+      "nDCG@5": "Increase by 0.000 to 0.003 if improved pairwise ordering transfers to the first five positions; the effect may be smaller than GAUC."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Train the additive five-field scorer with a listwise within-user softmax loss over each user's impressions instead of BCE.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "The largest measured diagnostic gap is between acceptable global within-user discrimination and weaker top-five utility, including tab 6's GAUC of 0.622100122100122 with nDCG@5 of 0.10603509232581615. A listwise loss is a focused attempt to align training with ranked candidate sets.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:6"
+    ],
+    "exact_ablation": "Replace pointwise BCE with a per-user listwise softmax cross-entropy over all impressions for that user in a training batch, retaining the additive five-field scorer and all feature processing unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to 0.003 because listwise normalization prioritizes relative scores rather than every global pair.",
+      "nDCG@5": "Increase by 0.001 to 0.005 if the loss concentrates positive probability among each user's highest-ranked candidates."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Use a top-rank-weighted pairwise loss for the additive five-field scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "Experiment 2's tab 0 and tab 6 diagnostics show substantially weaker nDCG@5 than GAUC, which motivates one loss-only ablation that weights pairwise mistakes involving the current high-scoring negatives more heavily.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:0",
+      "experiment:2:segment:tab:6"
+    ],
+    "exact_ablation": "Replace BCE with a within-user pairwise logistic loss weighted by the negative item's current predicted rank, while keeping the additive model, five permitted fields, optimizer, and data splits unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to 0.002 because emphasis on difficult top-ranked negatives can leave lower-ranked pair ordering less optimized.",
+      "nDCG@5": "Increase by 0.001 to 0.005 if the reweighting removes irrelevant items from the first five ranks."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Early-stop the additive five-field model using a train-only temporal proxy for primary rather than GAUC alone.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The current checkpoint criterion uses only within-user AUC even though selection uses the mean of GAUC and nDCG@5. The observed distinction between GAUC and nDCG@5 indicates that checkpoint selection can be misaligned with the official objective.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:6"
+    ],
+    "exact_ablation": "Replace the validation GAUC-only early-stopping proxy with the mean of validation GAUC and validation nDCG@5, leaving the additive architecture, BCE loss, optimizer, fields, and epoch budget unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to 0.002 because the selected checkpoint may trade a small amount of pairwise discrimination for top-rank utility.",
+      "nDCG@5": "Increase by 0.001 to 0.004 if checkpoint selection avoids epochs that improve GAUC while degrading top-five ranking."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Add explicit user-video bilinear embeddings to the additive five-field scorer, without any other field interactions.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The full FM's all-pairs interaction expansion regressed, but its result does not isolate the ranking-relevant user-video interaction from unnecessary context-context and item-context interactions. This bounded architecture tests only collaborative user-item affinity.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add one low-rank dot-product term between user_id and video_id embeddings to the additive five-field logit, retaining BCE, all existing additive terms, context treatment, optimizer family, and stopping procedure unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.003 if user-specific video affinity generalizes better than the full FM interaction set.",
+      "nDCG@5": "Increase by 0.000 to 0.003 if affinity moves relevant known videos into the first five positions."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a low-rank video-by-tab interaction term to the additive five-field scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "Request context was the sole feature group with positive train-only screening lift, while tab slices have the strongest measured top-five failures. A video-tab term is narrower than the failed all-pairs FM and uses only already eligible impression-time context.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:2:segment:tab:0"
+    ],
+    "exact_ablation": "Add one low-rank dot-product interaction between video_id and tab to the additive five-field logit, retaining all other additive terms, BCE, optimizer settings, and training protocol unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.002 because the term can refine item ordering conditional on request surface.",
+      "nDCG@5": "Increase by 0.001 to 0.004 if tab-specific video relevance is concentrated near the top ranks."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace categorical hour with a cyclical hour-of-day representation in the additive scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 7,
+      "feasibility": 9
+    },
+    "rationale": "All hour values are available at impression time, but measured hour slices vary considerably; treating 23 and 0 as unrelated categorical effects may be unnecessarily discontinuous. This changes only the representation of an already approved field.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:hour:3",
+      "experiment:2:segment:hour:20"
+    ],
+    "exact_ablation": "Replace the categorical hour feature with two fixed sin(2\u03c0hour/24) and cos(2\u03c0hour/24) linear features, while retaining user_id, video_id, tab, weekday, BCE, optimizer, and stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to 0.002 because smoother temporal effects can help sparse hours but reduce categorical flexibility.",
+      "nDCG@5": "Change by -0.001 to 0.002 because broad hour smoothing may not specifically improve the first five ranks."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Increase L2 regularization for the additive five-field scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "The preferred additive model is ID-heavy and official validation is temporally later than training. A single regularization ablation is a low-cost robustness check after the higher-capacity FM regressed.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Increase only the additive model's L2 coefficient from 1e-6 to 1e-5; retain model structure, features, BCE, optimizer, batch size, and stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to 0.002 as reduced ID memorization may modestly improve temporal generalization.",
+      "nDCG@5": "Change by -0.001 to 0.002 because stronger shrinkage can either stabilize top ranks or suppress useful user-video differences."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Reduce the additive model learning rate while keeping all other settings fixed.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "The official best model has a small margin over the failed FM, and the available evidence does not support additional feature families. A learning-rate-only ablation is a clean way to test whether optimization noise rather than representation limits the additive model.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Change only the additive model learning rate from 0.01 to 0.005; retain fields, architecture, BCE, L2, batch size, epoch limit, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to 0.002 because smaller updates may yield more stable within-user ordering.",
+      "nDCG@5": "Change by -0.001 to 0.002 because a smoother fit may modestly stabilize the highest-scoring items."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Use user-stratified mini-batches for additive BCE training instead of row-shuffled mini-batches.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 6
+    },
+    "rationale": "Evaluation is within-user, whereas standard row shuffling can cause high-volume users to dominate individual updates. This is a training-only change that preserves all permitted input fields and the pointwise objective.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:user_frequency:warm_20_plus"
+    ],
+    "exact_ablation": "Replace uniform row-shuffled mini-batches with mini-batches sampled uniformly over users and then uniformly over that user's training impressions, retaining the additive model, BCE, optimizer, regularization, and total update count unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.000 to 0.003 if more balanced user exposure improves average within-user order.",
+      "nDCG@5": "Increase by 0.000 to 0.002 if balanced updates improve rankings for users not dominant in the impression log."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add dropout to the user-video bilinear interaction embeddings while retaining the otherwise additive scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 7,
+      "feasibility": 6
+    },
+    "rationale": "The failed FM indicates that unrestricted interaction capacity can overfit, while the item-frequency rare_1_4 segment has GAUC 0.5 and nDCG@5 0.17110937563226275. Regularized user-video interaction is a distinct capacity-control hypothesis using no additional feature family.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:item_frequency:rare_1_4",
+      "experiment:1:metrics"
+    ],
+    "exact_ablation": "Add one low-rank user_id-video_id dot-product term with embedding dropout during training to the additive five-field logit; retain BCE, all existing fields, optimizer, and stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to 0.003 because regularized collaborative affinity may help warm user-video ordering without full-FM interactions.",
+      "nDCG@5": "Change by -0.001 to 0.003 because the added affinity may improve top-five ordering for repeated user-item patterns."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture",
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

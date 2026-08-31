@@ -1,0 +1,85 @@
+{
+  "active_agents": [
+    "feature_engineer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.load returns train, valid, and test rows selected by the existing inclusive date boundaries and in original source-row order. Each internal row carries date, user_id, video_id, tab, canonical hour, canonical weekday, and long_view label. data.encode returns (encoded, dimension); encoded[\"train\"], encoded[\"valid\"], and encoded[\"test\"] are each (features, labels, users), where features is an int32 array of shape (N, 5) in exactly [user_id, video_id, tab, hour, weekday] order. Each column is mapped through a vocabulary fitted on train rows only, uses a distinct globally offset index range, and sends unseen holdout values to that field's train-defined unknown index. labels remains float32 and users remains raw user_id in canonical row order."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model receives the unchanged encoded integer feature matrix and total dimension. It must continue to compute only bias plus the sum of the five selected additive categorical weights, with the existing BCE loss, Adam-style optimizer behavior, learning rate, l2, batching, and all configuration settings unchanged. Checkpoint selection and early stopping remain validation-split-only; test labels must not affect fitting or selection. The fixed training command must emit predictions_valid.npz and predictions_test.npz, each containing exactly row_ids and scores, with row_ids equal to consecutive canonical row positions and scores aligned respectively to canonical validation and test source-row order."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Implement the request_context feature ablation in data.py by extending the existing additive categorical feature encoder from user_id/video_id to user_id/video_id/tab/hour/weekday, without changing the encoded-data interface consumed by train.py and model.py.",
+      "required_changes": [
+        "In data.py, change FIELDS exactly to [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"].",
+        "While reading each row from the existing two log files, read raw fields exactly as row[\"date\"], row[\"user_id\"], row[\"video_id\"], row[\"tab\"], and row[\"hourmin\"]. Do not use any source-column aliases and do not read any forbidden, excluded, or quarantined field as a feature.",
+        "Derive hour from raw hourmin using the canonical recipe: hour = floor(numeric hourmin / 100), represented as an integer, and validate that it is in 0..23. For example, use int(float(row[\"hourmin\"]) // 100) followed by a range check.",
+        "Derive weekday from raw date using the canonical YYYYMMDD calendar recipe with Monday=0 through Sunday=6. Parse the date value as YYYYMMDD with a calendar-date parser and call its weekday operation; do not derive weekday from row order, time_ms, or another timestamp.",
+        "Extend the internal stored row tuple so raw(row) returns exactly [user_id, video_id, tab, hour, weekday] in the same order as FIELDS. Preserve the label as the final tuple element so encode continues to emit labels identically.",
+        "Fit one categorical vocabulary per field exclusively by iterating the train split, retain one per-field unknown bucket, retain the existing field-offset construction, and map unseen validation/test values to that field's unknown bucket.",
+        "Keep split selection and source-row ordering unchanged: validation and test encoded rows must remain in the selected raw log row order. Keep encode returning encoded[name] = (features, labels, users) and returning the total integer dimension, so no train.py or model.py adaptation is required."
+      ],
+      "preserve": [
+        "Preserve the additive sparse-ID representation: each example must still be a fixed-width int32 feature row whose entries are globally offset categorical indices, one active index for each field.",
+        "Preserve LABEL = \"long_view\", the existing date-based train/valid/test boundaries, existing two input filenames, and max_rows_per_split behavior.",
+        "Preserve train-only vocabulary fitting and unknown-bucket behavior; validation and test rows must not expand vocabularies.",
+        "Do not add interactions, target-derived features, historical aggregates, continuous scalers, metadata joins, or any feature outside the exact request_context group: tab, hour, weekday.",
+        "Do not modify model.py, train.py, or config.json."
+      ],
+      "coordination_notes": [
+        "The downstream interface is unchanged: encode(splits) must return (encoded, dimension), where encoded[split] is (features, labels, users); features is int32 with shape (rows, 5), labels is float32, and users contains the raw user_id values in source-row order.",
+        "model.py will continue to sum one additive weight per encoded feature index. Therefore the feature-column order must remain exactly user_id, video_id, tab, hour, weekday and offsets must make all five fields disjoint.",
+        "The fixed training invocation continues to use the existing train.py behavior and must write predictions_valid.npz via its --output argument and predictions_test.npz beside it. Do not alter prediction ordering or row IDs in data.py."
+      ]
+    }
+  },
+  "reasoning": "Activate only feature_engineer because the stated ablation changes only feature extraction. The eligible request_context fields are raw tab plus canonical derived hour from hourmin and weekday from date. Their categorical vocabularies can be fitted solely on the train split while preserving the existing additive model, BCE optimization, configuration, validation-only checkpoint selection, and canonical validation/test row order."
+}

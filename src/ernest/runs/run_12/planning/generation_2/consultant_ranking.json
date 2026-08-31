@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c04",
+      "rank": 1,
+      "utility_score": 0.79,
+      "rationale": "Best head-to-head trade-off: compact shared interaction capacity directly addresses the additive model's principal limitation across approved user, item, and request-context fields. It is broader than a single cross but materially less validation-fragile and less runtime-risky than an MLP, with stronger expected gain and evidence than narrow interactions."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 2,
+      "utility_score": 0.73,
+      "rationale": "A highly focused, cheap test tied to the only feature family with positive train-only screening lift and to large weak tab slices, especially tabs 0 and 6. It has lower scope and runtime risk than scorer replacements, though raw video-tab pairs may be sparse and the poor-tab diagnostics partly reflect label prevalence rather than demonstrated interaction effects."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 3,
+      "utility_score": 0.64,
+      "rationale": "A constrained interaction-capacity experiment using only approved fields, with less scope and tuning flexibility than the MLP. It overlaps substantially with the factorization-machine hypothesis and has only indirect evidence that explicit crosses, rather than general interaction capacity, are needed."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 4,
+      "utility_score": 0.59,
+      "rationale": "Can model useful nonlinear user-item-context effects without new features, but is a broader and more validation-sensitive replacement than the FM or one-layer cross network. Its expected benefit is plausible but not specifically supported by evidence distinguishing nonlinear depth from low-order interactions."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 5,
+      "utility_score": 0.55,
+      "rationale": "Large, repeated weak hour slices provide reasonable motivation, and the ablation is narrow and inexpensive. Still, video-hour pairs are sparser than video-tab pairs, and weak hour-level performance does not establish that item appeal changes by hour rather than reflecting difficult traffic composition."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 6,
+      "utility_score": 0.53,
+      "rationale": "Cheap alignment of checkpoint selection with the stated dual-metric objective, with a direct nDCG@5 rationale. It is limited by potential validation-selection overfitting and reliance on unspecified proxy fidelity; it does not change the pointwise objective or model's ranking capacity."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 7,
+      "utility_score": 0.49,
+      "rationale": "Train-only item-frequency bucketing is leakage-safe and operationally cheap, with a clear rare/medium-item diagnostic gap. However, the rare-item slice is only 249 rows, warm items dominate validation, and frequency is an indirect popularity proxy that may not improve within-user ordering."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 8,
+      "utility_score": 0.44,
+      "rationale": "Uses approved fields and is narrow, but user-tab effects are likely highly sparse and largely duplicate existing user and tab main effects. They only alter ranking when a user's candidates span tabs, so tab-level diagnostic weakness is insufficiently direct evidence."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 9,
+      "utility_score": 0.4,
+      "rationale": "Has conceptual alignment with per-user evaluation and negligible engineering cost, but no evidence that prolific-user weighting causes the observed error pattern. It may sacrifice useful exposure-weighted signal and remains a pointwise surrogate for ranking metrics."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 10,
+      "utility_score": 0.34,
+      "rationale": "A simple, low-risk interaction using an approved field, but it lacks weekday-specific diagnostic evidence and is weaker than the tab and hour interaction hypotheses. It is also another sparse video-context-pair variant with high duplication of c01 and c02."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 11,
+      "utility_score": 0.27,
+      "rationale": "Very cheap robustness check, but the proposed tenfold shared L2 change is not actually specific to tab weights as claimed. Sparse-tab failures are also dominated by very low support and low positive rates, so a global regularization adjustment has weak directional evidence and modest upside."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 12,
+      "utility_score": 0.18,
+      "rationale": "Minimal implementation risk but weakest evidence, novelty, and expected gain. Existing early stopping already reduces the value of raising the epoch cap, while longer training adds avoidable runtime and checkpoint-selection exposure without convergence evidence."
+    }
+  ]
+}

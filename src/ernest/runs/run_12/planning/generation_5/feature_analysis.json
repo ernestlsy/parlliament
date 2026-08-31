@@ -1,0 +1,21 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:4:segment:tab:0",
+        "experiment:4:segment:tab:6",
+        "experiment:4:segment:hour:3",
+        "experiment:4:segment:hour:4"
+      ],
+      "finding": "Request context is the only train-only screened group with positive primary lift (+0.00221), full coverage, and positive lift on all four internal-holdout days. It is especially relevant because official post-score diagnostics show large, adequately sized top-five weaknesses by tab (tab 0: nDCG@5 0.0623, 13,726 rows; tab 6: nDCG@5 0.1056, 5,170 rows) and by hour (hour 3: GAUC 0.5197 and nDCG@5 0.3859; hour 4: GAUC 0.5605 and nDCG@5 0.3738). These are ranking and top-five deficits, not merely global discrimination issues.",
+      "recommended_action": "Run one strictly budgeted follow-up that adds only tab, hour, and weekday using request-time availability, with regularization and interaction control. Accept only if the internal temporal holdout reproduces a positive and directionally consistent within-user ranking gain; report GAUC and nDCG@5 separately for the large tab 0/tab 6 and hour 3/hour 4 slices. Do not use validation-label-derived user_positive_count as a serving feature."
+    }
+  ],
+  "avoid": [
+    "Reject user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, and historical_item_response for this budget cycle: each had non-positive training-only screening lift, with particularly large negative lifts for historical_author_response and historical_item_response.",
+    "Do not use current-impression outcomes or untime-stamped aggregate video statistics. Leakage controls take precedence over apparent offline gains.",
+    "Do not interpret the user_positive_count=zero diagnostic as model failure: it has no validation positives, so its zero top-five metrics are retrospective label-composition artifacts rather than actionable ranking evidence."
+  ],
+  "metric_diagnosis": "Experiment 4 has credible global within-user discrimination (GAUC 0.6707) and a small observed primary improvement over experiment 3 (+0.000431), below its predicted +0.0015 gain; this warrants strict early stopping rather than broad feature expansion. The principal weakness is top-five ranking heterogeneity: tab 0 and tab 6 have very low nDCG@5 despite nontrivial row volume, while hour 3 and hour 4 combine weak GAUC with weak nDCG@5. Thus prioritize request-context conditioning, assess GAUC separately from nDCG@5, and stop if the single follow-up does not produce stable temporal within-user ranking evidence."
+}

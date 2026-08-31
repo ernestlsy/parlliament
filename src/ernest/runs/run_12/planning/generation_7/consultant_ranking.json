@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.67,
+      "rationale": "Best direct extension of the validated within-user pairwise protocol: it preserves K=4 comparison volume while reallocating half the negatives toward likely ranking errors. It targets the official ranking objective and top-rank inversions with bounded scope. Penalized for extra epoch-wise scoring cost and potential self-reinforcing hard-negative noise, but its evidence chain is stronger than alternatives."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 2,
+      "utility_score": 0.59,
+      "rationale": "A single low-cardinality tab-by-hour feature is a clean, low-runtime test supported by the only positive feature-family screen and by substantial, sufficiently sized tab-0, tab-6, hour-14, and hour-16 deficits. It avoids the high-cardinality personalization failure in experiment 5. Some penalty applies because the same validation slices motivated the interaction, creating modest slice-selection risk."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 3,
+      "utility_score": 0.54,
+      "rationale": "Very isolated, low-runtime loss-reduction ablation with a plausible concern about users with many sampled pairs dominating optimization. However, equal user weighting is not perfectly aligned with the positive-count-weighted GAUC aggregation, so the rationale is directionally plausible but not strongly validated."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 4,
+      "utility_score": 0.47,
+      "rationale": "This is a simple continuation of the one validated sampling change: K=1 to K=4 improved primary by only 0.00043, so K=8 is a reasonable but diminishing-return test. It is materially duplicative of the existing K expansion and doubles pair-processing work without directly emphasizing top-rank errors."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 5,
+      "utility_score": 0.42,
+      "rationale": "A bounded loss-only intervention that can test whether large tab surfaces dominate optimization. It uses train frequencies only and is cheap. Its expected aggregate gain is weak, however, and it is substantially motivated by retrospective validation slices whose low metrics largely reflect radically different label prevalence, so it risks trading official aggregate quality for slice tuning."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 6,
+      "utility_score": 0.37,
+      "rationale": "Checkpoint averaging is architecture-preserving and may reduce parameter noise, but experiment 6 already showed no observed distinction from experiment 4 despite changing selection logic. Selecting the best late three-checkpoint window on the same validation primary adds another validation-search degree of freedom, with weak evidence of instability to justify it."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 7,
+      "utility_score": 0.34,
+      "rationale": "Low-risk and easy to run, but it is largely a weaker duplicate of c05. The available diagnostics implicate tab and hour much more directly than weekday, and the request-context screen supports the base fields rather than this specific interaction."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 8,
+      "utility_score": 0.29,
+      "rationale": "Clean, cheap robustness control, but evidence for excess fitting is indirect. The failed user-by-tab expansion demonstrates that a high-cardinality feature can hurt; it does not establish that the current five-field additive ranker is over-regularization limited or that a tenfold L2 change is appropriately calibrated."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 9,
+      "utility_score": 0.25,
+      "rationale": "The proposal is more complex than its likely benefit and changes the optimization exposure distribution without clear alignment to the official aggregate objective. It also selects supported tabs and stratifies based on retrospective weak-slice diagnostics, increasing scope and validation-driven tuning risk relative to c11."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 10,
+      "utility_score": 0.21,
+      "rationale": "It directly targets nDCG@5, but it combines a pointwise objective change, user normalization, a pairwise term, a fixed mixing coefficient, and detached swap weighting in one experiment. This excessive scope prevents attribution, substantially raises implementation and validation-overfitting risk, and trades against GAUC despite only modest evidence that the current objective is the limiting factor."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 11,
+      "utility_score": 0.17,
+      "rationale": "A safe but low-information optimizer control. There is no evidence that learning-rate instability caused the plateau, and lowering the rate while retaining the fixed epoch budget creates a clear undertraining risk. Its predicted upside is the smallest among the simple controls."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 12,
+      "utility_score": 0.1,
+      "rationale": "The closest architectural precedent, rank-16 FM with BCE, regressed on both official metrics. Switching to rank-8 plus pairwise loss confounds capacity and objective differences, has medium runtime risk, and reopens broad interaction capacity after the explicit user-by-tab interaction also regressed. The evidence does not justify spending the scarce experiment here."
+    }
+  ]
+}

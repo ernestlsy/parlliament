@@ -659,9 +659,11 @@ class Orchestrator:
             "feature_engineer owns data.py, model_designer owns model.py, and trainer owns train.py "
             "and config.json. If config.json must change, activate trainer and assign the exact edit; "
             "do not implement a configured change by modifying a default in model.py. "
-            "The fixed training command must "
-            "produce predictions_valid.npz with exactly row_ids and scores in canonical validation "
-            "row order; ground truth is loaded only by the fixed evaluator. Available agents: "
+            "The fixed training command must produce predictions_valid.npz and "
+            "predictions_test.npz, each with exactly row_ids and scores in canonical validation or "
+            "test row order respectively. Checkpoint selection and early stopping must use only the "
+            "validation split; test labels must never affect training or selection. Ground truth is "
+            "loaded only by the fixed evaluator. Available agents: "
             "feature_engineer(data.py), model_designer(model.py), trainer(train.py/config.json). "
             + JSON_ONLY
         )
@@ -709,6 +711,11 @@ class Orchestrator:
                     "path": "predictions_valid.npz",
                     "arrays": ["row_ids", "scores"],
                 }
+                contract_data["submission_artifact"] = {
+                    "path": "predictions_test.npz",
+                    "arrays": ["row_ids", "scores"],
+                    "split": "test",
+                }
                 plan = ExperimentPlan(
                     active_agents=list(raw.get("active_agents", [])),
                     contract=InterfaceContract.from_dict(contract_data),
@@ -739,6 +746,12 @@ class Orchestrator:
             "agent_instruction is your direct implementation scope; implement every required change "
             "and do not broaden or reinterpret it from the background hypothesis. Do not return diffs, "
             "patch markers, Markdown fences, explanations, or additional file names. "
+            + (
+                "train.py must preserve the fixed dual-artifact behavior: select checkpoints only "
+                "on validation data, write predictions_valid.npz to --output, and also write "
+                "predictions_test.npz in the same directory without using test labels for model "
+                "selection. " if agent == "trainer" else ""
+            )
             + JSON_ONLY
         )
         raw = self.llm.complete_json(

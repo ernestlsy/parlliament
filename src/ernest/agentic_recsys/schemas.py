@@ -107,6 +107,13 @@ class InterfaceContract:
             "arrays": ["row_ids", "scores"],
         }
     )
+    submission_artifact: Dict[str, Any] = field(
+        default_factory=lambda: {
+            "path": "predictions_test.npz",
+            "arrays": ["row_ids", "scores"],
+            "split": "test",
+        }
+    )
     train_command: List[str] = field(
         default_factory=lambda: list(FIXED_TRAIN_COMMAND)
     )
@@ -135,6 +142,12 @@ class InterfaceContract:
             raise ValueError("prediction artifact path is fixed to predictions_valid.npz")
         if self.prediction_artifact.get("arrays") != ["row_ids", "scores"]:
             raise ValueError("prediction artifact arrays are fixed")
+        if self.submission_artifact != {
+            "path": "predictions_test.npz",
+            "arrays": ["row_ids", "scores"],
+            "split": "test",
+        }:
+            raise ValueError("submission artifact contract is fixed")
 
 
 @dataclass

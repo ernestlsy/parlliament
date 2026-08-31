@@ -1,0 +1,14 @@
+[
+  {
+    "alternative_queries": [],
+    "fallback_reason": "LLM query expansion failed: LLM HTTP 429 Too Many Requests at responses; request_id=req_5b710df8d6e0495488974fa495e6c3de; response={\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient_quota\",\n    \"param\": null,\n    \"code\": \"credit_balance_exhausted\"\n  }\n}; attempts=3",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [],
+    "fallback_reason": "LLM query expansion failed: LLM HTTP 429 Too Many Requests at responses; request_id=req_9a35e8a1c0d24196b2f0819987ac73d1; response={\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient_quota\",\n    \"param\": null,\n    \"code\": \"credit_balance_exhausted\"\n  }\n}; attempts=3",
+    "request_index": 2,
+    "round": 1
+  }
+]

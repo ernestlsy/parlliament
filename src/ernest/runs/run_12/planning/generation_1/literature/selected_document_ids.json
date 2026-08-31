@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "architecture.deep_cross_ranker",
+      "objective.user_normalized_binary_cross_entropy",
+      "objective.within_user_ranknet_pairwise_loss",
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "objective.mixed_group_listnet_top1_loss"
+    ]
+  },
+  {
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 2,
+    "selected_document_ids": [
+      "dataset.interaction_log_schema",
+      "dataset.inventory_and_splits"
+    ]
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:5:metrics"
+      ],
+      "finding": "Request context is the sole train-only feature group with a positive primary lift (+0.00221), full coverage, and positive lift on all four temporal-holdout days. This is the strongest available stable within-user ranking signal. However, the latest explicit user-by-tab interaction reduced official-validation primary by 0.00209 versus its parent, so the evidence supports retaining or carefully regularizing the additive context representation rather than expanding high-cardinality user-by-context interactions.",
+      "recommended_action": "Stop feature-expansion experiments under the strict early-stopping rule. Preserve the additive request-context fields (tab, hour, weekday) in the best retained model configuration; only revisit context interactions after a new train-only screen demonstrates stable incremental lift and a pre-registered rollback criterion."
+    },
+    {
+      "evidence_ids": [
+        "experiment:5:segment:tab:8",
+        "experiment:5:segment:tab:0",
+        "experiment:5:segment:item_frequency:rare_1_4",
+        "experiment:5:segment:user_positive_count:zero"
+      ],
+      "finding": "The principal post-score weaknesses are top-five ranking and/or within-user discrimination in tab 8 (GAUC 0.352, nDCG@5 0.026, 547 rows), tab 0 (nDCG@5 0.063 across 13,726 rows), and rare items (GAUC 0.300, nDCG@5 0.169, 249 rows). The zero-positive user slice has nDCG@5 of zero by construction and uses validation labels retrospectively, so it is not actionable as a ranking-feature target.",
+      "recommended_action": "Treat these as diagnostic monitoring slices, not evidence for another feature launch. If budget resumes, investigate candidate availability, label prevalence, and ranking-list construction for tab 0 and tab 8 separately; require adequate sample size and train-only temporal evidence before testing any tab-specific remedy."
+    }
+  ],
+  "avoid": [
+    "Reject current-impression outcome fields and aggregate snapshots without per-impression availability timestamps; they are unavailable at ranking time or temporally unverified and would introduce leakage.",
+    "Do not use validation-label-derived user_positive_count as an online feature or optimization target; it is retrospective diagnostic information only.",
+    "Do not pursue historical author response, historical item response, item metadata, content duration, upload recency, historical user-author affinity, or user-profile additions: all had non-positive train-only screening lift, with especially large negative lift for historical author/item response."
+  ],
+  "metric_diagnosis": "Experiment 5 has reasonable global within-user discrimination (GAUC 0.6685) but weaker top-five utility (nDCG@5 0.5363) concentrated in tab and item-frequency slices. The user-by-tab interaction hypothesis failed its official-validation comparison, reducing primary from 0.60450 in experiment 4 to 0.60240 in experiment 5. Given the strict early-stopping rule, the appropriate decision is to stop rather than chase post-score segment variance. Evidence: experiment:5:metrics, experiment:5:segment:tab:8, experiment:5:segment:tab:0, experiment:5:segment:item_frequency:rare_1_4, experiment:5:segment:user_positive_count:zero, screen:request_context, screen:historical_author_response, screen:historical_item_response, screen:item_metadata, screen:content_duration, screen:upload_recency, screen:historical_user_author_affinity, screen:user_profile."
+}

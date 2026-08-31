@@ -56,10 +56,16 @@ class Journal:
 
     def converged(self, epsilon: float = 0.002, window: int = 3) -> bool:
         scores = [float(r["metrics"]["primary"]) for r in self.scored()]
-        if len(scores) < window:
+        # Every score is an anchor. It gets ``window`` subsequent experiments
+        # to produce at least one score that reaches anchor + epsilon.
+        if len(scores) < window + 1:
             return False
-        recent = scores[-window:]
-        return recent[-1] - recent[0] < epsilon
+        for anchor_index in range(len(scores) - window):
+            threshold = scores[anchor_index] + epsilon
+            following = scores[anchor_index + 1:anchor_index + window + 1]
+            if all(score < threshold for score in following):
+                return True
+        return False
 
     def stop_reason(self, max_experiments: int, epsilon: float, window: int) -> Optional[str]:
         scored = self.scored()

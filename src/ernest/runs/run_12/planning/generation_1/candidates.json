@@ -1,0 +1,362 @@
+[
+  {
+    "text": "Add impression-time request context (tab, hour, weekday) to the additive user/video-ID scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "This is the only feature family with a positive, directionally consistent train-only temporal-screen lift: +0.00221 primary across all four reported days and full coverage. It is therefore the highest-information first official ablation.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Extend the seed feature encoder with train-fitted categorical fields tab, hour derived from hourmin, and weekday derived from date; retain the additive model, BCE loss, optimizer, and all other settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately 0.001 to 0.004 because context can alter video ordering within a user.",
+      "nDCG@5": "Increase by approximately 0.000 to 0.003; the screen supports broad ranking lift more strongly than top-five lift."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace additive user/video effects with a second-order factorization machine over user ID and video ID.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The seed has only additive ID effects, which cannot express user-video affinity. The measured base-ID screen establishes the safe, available identifier inputs, though it does not directly estimate the interaction-model lift.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Replace the seed additive linear-ID scorer with a rank-16 factorization machine containing only user_id and video_id embeddings and their dot-product interaction; leave data, loss, training schedule, and early stopping unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately 0.002 to 0.008 if personalized user-video affinities generalize beyond additive propensities.",
+      "nDCG@5": "Increase by approximately 0.001 to 0.006 if affinity interactions promote long-view videos into the top five."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace the additive ID scorer with an embedding-plus-MLP scorer using only user and video IDs.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 7
+    },
+    "rationale": "A nonlinear scorer can represent richer ID interactions than the additive seed while retaining the same point-in-time-safe input contract. Direct support for a neural architecture is literature-only, not measured lift evidence.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Replace the seed additive model with separate 32-dimensional user_id and video_id embeddings concatenated into a two-layer 64-32 ReLU MLP with a scalar logit head; keep BCE, splits, and all non-architecture training choices fixed.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately 0.001 to 0.007 through nonlinear user-video interaction capacity.",
+      "nDCG@5": "Increase by approximately 0.000 to 0.005, with risk of little top-five benefit if sparse IDs are memorized."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Use user-normalized BCE so prolific users do not dominate the pointwise training objective.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The official GAUC is computed within users and positive-count weighted, whereas the seed\u2019s row-mean BCE can be dominated by high-volume users. Available base-ID evidence confirms user grouping inputs exist; no measured group-size analysis is supplied, so confidence is limited.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Change only the seed BCE reduction: weight each training row by the inverse number of training rows for its user, normalize by total weight, and retain the seed additive architecture and optimizer.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to +0.004; it may improve typical-user ordering but can conflict with the evaluator\u2019s positive-count weighting.",
+      "nDCG@5": "Change by -0.002 to +0.003 because equal-user pointwise weighting does not directly target top-five positions."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.user_normalized_binary_cross_entropy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a within-user RankNet auxiliary loss to the seed BCE objective.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "Within-user positive-negative comparisons are aligned with GAUC, unlike independent pointwise BCE. User IDs and long-view labels are present in the measured base-ID screen, but mixed-label coverage has not been measured, making this exploratory.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Keep the seed model and BCE unchanged, but add a RankNet logistic pair loss with coefficient 0.25 using uniformly sampled positive-negative pairs from the same user and K=4 negatives per positive.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately 0.001 to 0.006 if same-user mixed-label pairs are sufficiently common and meaningful.",
+      "nDCG@5": "Change by -0.001 to +0.004 because broad pairwise ordering may not focus errors near rank five."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add an nDCG@5-weighted LambdaRank-style auxiliary loss to seed BCE.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "The official primary includes nDCG@5, so an auxiliary term emphasizing swaps involving ranks one through five directly addresses the metric that ordinary BCE does not target. No measured evidence establishes that valid training slates can be reconstructed; this is high-risk.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Keep the seed model and BCE unchanged, but add a LambdaRank-style pairwise logistic loss with coefficient 0.1, using detached within-user nDCG@5 swap weights and only positive-negative pairs with nonzero top-five swap weight.",
+    "expected_effect": {
+      "GAUC": "Change by -0.002 to +0.003 because emphasis on top-five pairs can trade off broad ordering.",
+      "nDCG@5": "Increase by approximately 0.001 to 0.006 if training user groups faithfully represent the compared candidates."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE with mixed-user-group ListNet top-one loss.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 9,
+      "feasibility": 4
+    },
+    "rationale": "A listwise loss can directly train competition among candidates and may benefit top-five ordering. However, the available measured evidence does not establish that all rows for a user form valid contemporaneous candidate groups, so this is a low-priority exploratory alternative.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Replace seed pointwise BCE with ListNet top-one cross-entropy computed over complete mixed-label user groups, while leaving the additive scorer, data split, optimizer, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.004 to +0.003 because group-normalized listwise training can reduce broad discrimination.",
+      "nDCG@5": "Change by -0.002 to +0.006 if the user grouping is a valid proxy for ranking competition."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 10,
+    "leakage_risk": "medium",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Add a two-layer deep-cross branch to the ID embedding representation.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "Explicit bounded-order crosses offer a different inductive bias from the seed\u2019s additive score and can capture structured interaction effects. The only measured support is safe base-ID availability; there is no direct screen result for cross capacity.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Replace the seed additive scorer with 16-dimensional user_id and video_id embeddings followed by a two-layer low-rank deep-cross network and scalar head; retain BCE and all training settings.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately 0.000 to 0.006 if low-order ID embedding crosses generalize.",
+      "nDCG@5": "Increase by approximately 0.000 to 0.004 if those crosses improve ordering at the head of each user list."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use frequency-aware regularization for user and video ID coefficients in the additive seed.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The ID-only seed is vulnerable to noisy rare-entity estimates. Frequency is computable solely from training IDs and does not require forbidden outcomes as a feature; no measured frequency-slice evidence is available, so projected upside is modest.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Change only L2 regularization in the additive seed so each user_id and video_id coefficient receives L2 weight proportional to inverse square root of its training-only ID count, with the existing global L2 as the scale.",
+    "expected_effect": {
+      "GAUC": "Change by -0.001 to +0.003 through reduced rare-ID overfitting.",
+      "nDCG@5": "Change by -0.001 to +0.002 because regularization primarily stabilizes general ordering rather than emphasizing top ranks."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Switch the seed optimizer from Adam-style updates to Adagrad for sparse ID coefficients.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "The seed consists entirely of sparse categorical ID parameters, for which per-coordinate adaptive updates may change convergence behavior. This is a training-only change; available evidence verifies the base-ID input family but supplies no optimizer comparison.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:base_ids"
+    ],
+    "exact_ablation": "Replace the seed optimizer update with Adagrad using learning rate 0.05 and accumulator epsilon 1e-8; retain the additive model, features, BCE loss, batch order, epoch budget, and early stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.002 to +0.003 depending on whether sparse entities converge more reliably.",
+      "nDCG@5": "Change by -0.002 to +0.002 because optimization improvement need not alter top-five ranking."
+    },
+    "expected_primary_gain": 0.0,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add only tab as an impression-time categorical feature to the additive ID scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "Tab is one of the prioritized request-context fields and has full coverage within the only positive feature screen. Isolating it is lower capacity and can reveal whether context gain comes from a robust product-surface signal rather than temporal proxies.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Extend the seed feature encoder with a train-fitted categorical tab field only; retain user_id, video_id, additive model, loss, and all training settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately 0.000 to 0.003 if tab changes item preference ordering within users.",
+      "nDCG@5": "Increase by approximately 0.000 to 0.002; a single context field may be insufficient to shift top-five choices."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add only hour-of-day as an impression-time categorical feature to the additive ID scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "Hour is part of the sole positively screened request-context family and is derivable from the logged request-time field. Testing it alone avoids conflating contextual mechanisms in the broader context bundle.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Extend the seed feature encoder with a train-fitted categorical hour derived from hourmin only; retain user_id, video_id, additive model, loss, and all training settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by approximately 0.000 to 0.003 if time-of-day changes relative item relevance within users.",
+      "nDCG@5": "Change by -0.001 to +0.002 because temporal context may improve broad ordering without concentrating gains at rank five."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

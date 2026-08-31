@@ -1,0 +1,15 @@
+{
+  "created_at": "2026-08-31T18:23:44.168236+00:00",
+  "status": "incomplete",
+  "run_dir": "D:\\tehpengagent\\src\\ernest\\runs\\run_8",
+  "best_experiment_id": 1,
+  "files": {
+    "iteration_log_markdown": "iteration_log.md",
+    "iteration_log_json": "iteration_log.json",
+    "results_markdown": "results.md",
+    "results_json": "results.json",
+    "final_model_output": null
+  },
+  "submission_rows": null,
+  "submission_error": "ValueError: test prediction artifact is missing: D:\\tehpengagent\\src\\ernest\\runs\\run_8\\experiment_1\\predictions_test.npz"
+}

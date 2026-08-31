@@ -1,0 +1,48 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "objectives",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "context-aware recommendation",
+      "factorization machines",
+      "implicit feedback",
+      "within-user ranking",
+      "top-k ranking"
+    ],
+    "purpose": "The only supported new signal is request context, but additive context terms cannot alter the ordering of candidate videos shown to the same user in the same request context. Literature is needed to resolve the smallest point-in-time-safe interaction architecture and loss choice likely to improve both within-user GAUC and nDCG@5 under a scarce experiment budget.",
+    "query": "Context-aware recommendation for within-user implicit-feedback ranking: lightweight factorization-machine or field-aware interaction models that let request context (tab, hour, weekday) interact with item/video IDs; compare pointwise logistic training with ranking-oriented objectives and report top-k ranking effects.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "dataset",
+      "objectives"
+    ],
+    "max_documents": 2,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "KuaiRand-Pure",
+      "interaction-log schema",
+      "candidate groups",
+      "slates",
+      "timestamps",
+      "position bias"
+    ],
+    "purpose": "The next architecture/objective choice materially depends on whether real within-request candidate groups can be reconstructed. Existing literature supports RankNet, LambdaRank, and ListNet only conditional on valid group IDs; the supplied evidence reports evaluation within user but does not establish a train-time slate/group field. This evidence is needed to determine whether group-local pairwise/listwise objectives are valid or should be excluded in favor of pointwise ranking-relevant modeling.",
+    "query": "KuaiRand-Pure interaction-log schema and documentation: identify whether standard-exposure logs contain a stable request, slate, session, or jointly displayed candidate-group identifier; document timestamp granularity, display-position semantics, and whether rows can be validly reconstructed into contemporaneous candidate sets for group-local ranking losses.",
+    "request_index": 1,
+    "round": 2
+  }
+]

@@ -4,6 +4,7 @@ import argparse
 import collections
 import json
 import math
+from pathlib import Path
 
 import numpy as np
 
@@ -83,7 +84,8 @@ def main():
     splits = load(args.data_dir, max_rows_per_split=64 if args.contract_check else None)
     encoded, dimension = encode(splits)
     train_features, train_labels, _ = encoded["train"]
-    valid_features, valid_labels, valid_users = encoded[config["split"]]
+    valid_features, valid_labels, valid_users = encoded["valid"]
+    test_features, test_labels, _ = encoded["test"]
     model = Model(
         dimension,
         interaction_dimension=config["interaction_dimension"],
@@ -141,6 +143,11 @@ def main():
         args.output,
         row_ids=np.arange(len(valid_labels), dtype=np.int64),
         scores=model.predict(valid_features),
+    )
+    np.savez(
+        Path(args.output).with_name("predictions_test.npz"),
+        row_ids=np.arange(len(test_labels), dtype=np.int64),
+        scores=model.predict(test_features),
     )
 
 

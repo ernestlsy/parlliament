@@ -72,6 +72,9 @@ class AuditedLLMClient(LLMClient):
             })
             self._record(event)
             raise
+        usage = getattr(self.inner, "last_usage", None)
+        if isinstance(usage, dict):
+            event["usage"] = dict(usage)
         event.update({"status": "success", "response": response})
         self._record(event)
         return response
@@ -145,6 +148,7 @@ class OpenAICompatibleClient(LLMClient):
         self.api_mode = api_mode
         self.json_mode = json_mode
         self.web_search = web_search
+        self.last_usage: Optional[Dict[str, int]] = None
         if web_search_context_size not in {"low", "medium", "high"}:
             raise ValueError("web_search_context_size must be low, medium, or high")
         self.web_search_context_size = web_search_context_size
@@ -158,6 +162,25 @@ class OpenAICompatibleClient(LLMClient):
             return self.api_mode
         hostname = (urllib.parse.urlparse(self.base_url).hostname or "").lower()
         return "responses" if hostname == "api.openai.com" else "chat"
+
+    @staticmethod
+    def _normalized_usage(result: Dict[str, Any], mode: str) -> Optional[Dict[str, int]]:
+        usage = result.get("usage")
+        if not isinstance(usage, dict):
+            return None
+        if mode == "responses":
+            input_tokens = int(usage.get("input_tokens", 0) or 0)
+            output_tokens = int(usage.get("output_tokens", 0) or 0)
+        else:
+            input_tokens = int(usage.get("prompt_tokens", 0) or 0)
+            output_tokens = int(usage.get("completion_tokens", 0) or 0)
+        return {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": int(
+                usage.get("total_tokens", input_tokens + output_tokens) or 0
+            ),
+        }
 
     def _post(self, endpoint: str, body: Dict[str, Any]) -> Dict[str, Any]:
         encoded = json.dumps(body).encode("utf-8")
@@ -260,6 +283,7 @@ class OpenAICompatibleClient(LLMClient):
 
     def complete_json(self, *, role: str, system: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         mode = self._resolved_mode()
+        self.last_usage = None
         user_input = (
             "Return the result as one valid JSON object only.\n\n"
             f"Request payload:\n{json.dumps(payload)}"
@@ -285,6 +309,7 @@ class OpenAICompatibleClient(LLMClient):
                     "include": ["web_search_call.action.sources"],
                 })
             result = self._post("responses", body)
+            self.last_usage = self._normalized_usage(result, mode)
             parsed = _extract_json(self._responses_text(result))
             if self.web_search:
                 metadata = self._responses_web_metadata(result)
@@ -303,6 +328,7 @@ class OpenAICompatibleClient(LLMClient):
         if self.json_mode:
             body["response_format"] = {"type": "json_object"}
         result = self._post("chat/completions", body)
+        self.last_usage = self._normalized_usage(result, mode)
         try:
             content = result["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:

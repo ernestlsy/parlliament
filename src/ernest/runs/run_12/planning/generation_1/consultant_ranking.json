@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.87,
+      "rationale": "Best-supported candidate: the exact request-context family is the only measured positive screen, with full coverage and positive lift on every reported day. It is point-in-time safe, low-cost, and a narrow ablation; despite moderate day-to-day variance, it is the strongest use of the scarce official experiment."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 2,
+      "utility_score": 0.61,
+      "rationale": "A compact factorization machine directly addresses the principal limitation of additive IDs by modeling user-video affinity. Evidence is indirect rather than measured, but the intervention is well-scoped, leakage-safe, computationally low risk, and more justified than higher-capacity neural alternatives."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 3,
+      "utility_score": 0.49,
+      "rationale": "Tab is a low-risk, interpretable subset of the positively screened context family. It is partly duplicative of c01 and therefore inferior to the full evidence-matched bundle, but it is a reasonable conservative fallback if scope must be minimized."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 4,
+      "utility_score": 0.47,
+      "rationale": "Hour is another safe, low-cost subset of the positive context bundle. It is duplicative of c01 and has no field-level measured lift, so it ranks below the full bundle and slightly below tab due to greater risk that temporal effects are unstable or weak at top ranks."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 5,
+      "utility_score": 0.43,
+      "rationale": "Within-user RankNet has credible metric alignment with GAUC and avoids leakage when pairs are built within training data. However, mixed-label group prevalence is unverified, pair sampling adds runtime and tuning sensitivity, and there is no direct measured evidence of gain."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 6,
+      "utility_score": 0.39,
+      "rationale": "This is a clean, cheap objective ablation with a plausible mismatch rationale between row-mean BCE and within-user evaluation. Expected upside is modest and the proposed equal-user weighting may conflict with the evaluator's positive-count weighting, limiting priority."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 7,
+      "utility_score": 0.36,
+      "rationale": "Training-only frequency-aware regularization is safe, inexpensive, and targets a plausible rare-ID overfitting issue. Its evidence is entirely theoretical, its expected gain is small, and the regularization heuristic may require tuning, but risk remains low."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 8,
+      "utility_score": 0.33,
+      "rationale": "Embedding-plus-MLP can represent useful ID interactions, but it is a broader and more runtime-sensitive version of c02 with weaker inductive discipline and greater sparse-ID memorization risk. No measured architecture evidence supports spending the scarce experiment here."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 9,
+      "utility_score": 0.3,
+      "rationale": "Deep-cross introduces another unvalidated interaction architecture with medium runtime and tuning risk. It overlaps strongly with the affinity hypothesis tested more simply by c02, so its additional complexity is not justified by the available evidence."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 10,
+      "utility_score": 0.23,
+      "rationale": "The optimizer swap is operationally easy and safe but has no comparative evidence, zero projected primary gain, and an arbitrary fixed learning rate that makes a one-shot result difficult to interpret. It is a weak use of scarce validation capacity."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 11,
+      "utility_score": 0.18,
+      "rationale": "Although nDCG@5 alignment is appealing, this proposal risks validation/objective overfitting because valid contemporaneous ranking slates have not been established. Reconstructing user groups may be semantically invalid, and the top-five-weighted auxiliary can trade off GAUC while adding tuning and runtime risk."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 12,
+      "utility_score": 0.1,
+      "rationale": "ListNet is the highest-scope and least validated objective change. The required complete user groups are not demonstrated to be valid candidate slates, creating substantial semantic leakage/proxy risk; the stated confidence of 10 contradicts the rationale and should be heavily discounted."
+    }
+  ]
+}

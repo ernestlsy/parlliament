@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "(\"Bayesian Personalized Ranking\" OR BPR OR \"pairwise logistic\") AND (\"multiple negatives\" OR \"multi-negative\" OR \"in-batch negatives\") AND (\"listwise softmax\" OR sampled-softmax OR \"softmax loss\") AND (implicit feedback OR implicit recommendation) AND (\"per-user\" OR \"candidate set\") AND (nDCG@5 OR \"NDCG at 5\" OR GAUC) AND (negative sampling OR temperature OR efficiency OR computational cost)",
+      "(\"pairwise ranking\" AND recommender) AND (\"one negative\" OR single-negative) AND (\"multi-negative pairwise\" OR \"multiple negative sampling\" OR \"contrastive ranking\") AND (listwise OR softmax) AND (\"top-K\" OR \"top five\" OR nDCG@5) AND (implicit-feedback OR \"user-item interactions\") AND (empirical OR ablation)",
+      "(\"BPR loss\" OR \"pairwise logistic loss\") AND (\"sampled softmax\" OR \"multinomial softmax\" OR \"listwise loss\") AND recommender-system AND \"implicit feedback\" AND (nDCG OR \"top-k ranking\") AND (\"negative sampling distribution\" OR popularity-based OR hard-negative OR uniform-negative) AND (runtime OR throughput OR computational efficiency)",
+      "(\"learning to rank\" AND recommender systems) AND (pairwise OR BPR) AND (listwise OR \"softmax objective\") AND (\"candidate-set ranking\" OR \"slate ranking\" OR \"per-user ranking\") AND (\"nDCG@5\" OR GAUC) AND (temperature OR \"number of negatives\" OR \"negative sampler\") AND (implicit interactions)",
+      "(\"contrastive learning\" OR InfoNCE OR \"multi-negative loss\") AND recommender AND (BPR OR \"pairwise ranking\") AND (\"listwise ranking\" OR \"sampled softmax\") AND \"implicit feedback\" AND (nDCG@5 OR \"top-k metrics\" OR GAUC) AND (temperature scaling OR hard-negative sampling OR \"training cost\")"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "KuaiRand-Pure standard exposure log schema request_id session_id impression_id slate_id timestamp position fields jointly exposed candidate set ranking request grouping",
+      "KuaiRand-Pure dataset documentation interaction logs columns recommendation exposure logs request context tab timestamp user_id item_id position and reconstructing impression batches",
+      "KuaiRand-Pure GitHub data schema standard exposure logs candidate slate ranking decision identifier session request impression batch",
+      "KuaiRand-Pure within-request candidate grouping exposure logs ranking list reconstruction timestamp position session identifier leakage cautions user-level grouping",
+      "KuaiRand-Pure recommendation dataset paper supplementary interaction-log format exposure records ranking requests candidate lists GAUC nDCG@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 2
+  }
+]

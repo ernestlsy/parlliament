@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "Unchanged data interface from data.py: load(..., include_test_labels=False) and encode(...) provide train, valid, and test tuples of (features, labels, users). Features have exactly five encoded columns in this fixed order: user_id, video_id, tab, hour derived as floor(numeric hourmin / 100), and weekday derived from date with Monday=0 through Sunday=6. Training and validation labels are long_view binary values; test labels are None. All arrays preserve selected source-row order."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model input remains an int32 feature matrix of shape [rows, 5] from the unchanged encoder. At each epoch boundary trainer calls Model.predict(train_features) once to create frozen_train_scores aligned exactly to canonical training row indices. build_train_pairs consumes these aligned scores plus training labels and user IDs, returning int64 positive and negative row-index arrays for same-user pairwise batches. Validation is the sole checkpoint/early-stopping split, and final archives contain canonical-order row_ids and scores for validation and test."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

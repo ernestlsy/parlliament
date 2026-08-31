@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c11",
+      "rank": 1,
+      "utility_score": 0.63,
+      "rationale": "Best scarce-experiment trade-off: a single low-risk representation simplification of an approved request-time field, motivated by weakness across many adjacent hour slices rather than one noisy segment. It reduces variance and scope without adding sparse high-cardinality parameters."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 2,
+      "utility_score": 0.58,
+      "rationale": "Targets large weak tab-0 and tab-6 slices with a train-fitted, leakage-safe item-surface effect and preserves the successful ranker. It is materially distinct from the failed user-tab interaction, but high-cardinality video-tab cells create meaningful sparsity and exposure-pattern overfitting risk."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 3,
+      "utility_score": 0.54,
+      "rationale": "Very cheap, isolated robustness test with no leakage or runtime cost. The failed user-tab extension and hard-negative sampler provide some evidence that controlling variance is preferable to adding complexity, although the tenfold change is weakly calibrated."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 4,
+      "utility_score": 0.5,
+      "rationale": "A bounded continuation of the successful uniform pairwise approach, unlike the decisively harmful hard-negative direction. The observed K=4 over K=1 gain was small, so upside is limited and added pairs create moderate runtime and easy-negative dilution risk."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 5,
+      "utility_score": 0.46,
+      "rationale": "Uses approved request context and targets recurring hour weakness, but video-hour is a 24-way high-cardinality interaction with substantially greater sparsity than video-tab. Segment evidence is diagnostic and does not establish item-specific hourly effects."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 6,
+      "utility_score": 0.43,
+      "rationale": "A fixed small BCE anchor is a reasonably scoped stabilization test after hard-negative failure, but it partly reverses the objective family that pairwise training already beat. The 0.10 coefficient is unvalidated and the added loss/runtime complexity is not strongly evidence-backed."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 7,
+      "utility_score": 0.39,
+      "rationale": "Operationally safe and clean, but it moves away from the only confirmed sampling improvement: K=4 exceeded K=1. The marginal gain leaves uncertainty, yet there is little affirmative evidence that removing comparisons improves ranking."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 8,
+      "utility_score": 0.34,
+      "rationale": "Leakage-safe but highly sparse user-hour cells are prone to memorizing behavior and temporal validation overfit. It also resembles the failed user-tab personalization interaction, with weaker evidence that the residual problem is user-specific rather than global by hour."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 9,
+      "utility_score": 0.3,
+      "rationale": "Simple to implement, but has little mechanism-based evidence and expands repeated validation checkpoint selection, increasing validation-overfitting risk. It also consumes moderate runtime for likely negligible gain."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 10,
+      "utility_score": 0.24,
+      "rationale": "The hard-negative collapse does not isolate learning-rate instability, so the supporting evidence is weak. Lowering the rate while retaining a fixed 10-epoch budget has a direct undertraining risk."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 11,
+      "utility_score": 0.17,
+      "rationale": "Direct prior evidence is negative: the rank-16 FM underperformed the additive model, and changing rank plus objective context does not overcome that warning. It adds architecture scope, interaction overfit risk, and moderate runtime for low expected value."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 12,
+      "utility_score": 0.08,
+      "rationale": "Lowest value counterfactual for one scarce run: pairwise training already improved both official metrics over pointwise BCE, and user normalization has no positive direct evidence. It is cheap and safe but has negative expected primary gain and largely duplicates an already rejected objective direction."
+    }
+  ]
+}

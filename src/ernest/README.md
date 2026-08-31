@@ -66,8 +66,11 @@ Successful descendants are atomically renamed to `runs/<run>/experiment_<id>`. F
    diagnostics; only then is the sandbox finalized and the next experiment ID journaled.
    Failures are routed to responsible agents for at most three total attempts and one shared
    wall-clock budget. A repeatedly resource-failing configuration is reclassified as semantic.
-9. After every score, Ernest stops immediately if 50 experiments are counted or if the newest score
-   minus the score two counted experiments earlier is strictly less than `0.002`.
+9. After every score, Ernest stops immediately if 50 experiments are counted or if an experiment
+   with primary score `x` is followed by three scored experiments that are all strictly below
+   `x + 0.002`. This convergence check requires at least four successfully scored experiments.
+   The validation-best experiment across the full run, rather than necessarily the final one, is
+   selected for submission.
 
 The default backfill ceiling is two replacements per abandoned generation slot. This bounds the
 otherwise free abandoned-attempt path while preserving the required 50-count semantics.
@@ -228,6 +231,35 @@ The run directory contains a complete cross-attempt `llm_events.jsonl`, includin
 Consultant calls that occur before an experiment sandbox exists. Invalid Orchestrator contracts and
 invalid complete-file responses are automatically returned to the responsible agent with precise
 validation feedback for up to three response repairs before abandonment.
+
+## Submission bundle
+
+When a run stops, Ernest writes `runs/<run>/submission/` automatically. Refresh or backfill the
+reporting files for any run with:
+
+```bash
+ernest submit runs/run_1
+```
+
+The bundle contains:
+
+- `iteration_log.md` and `iteration_log.json`: every scored experiment and abandoned recovery
+  attempt, including its hypothesis, final unified code/config diff, validation GAUC and nDCG@5,
+  failure chain, and recovery action. Manual interventions are reported as zero/none.
+- `kuairand_pure_submission.csv`: predictions from the validation-best experiment in the Starter
+  Kit schema `row_id,user_id,video_id,score`, aligned to the canonical test row order.
+- `results.md` and `results.json`: the validation-best GAUC, nDCG@5, and primary score, plus absolute
+  deltas from the official validation FM baseline (`0.6674`, `0.5357`, and `0.6016`).
+- `manifest.json`: bundle completeness, selected experiment, file index, row count, and any reason
+  the final CSV could not be produced.
+
+Every successful experiment must emit both `predictions_valid.npz` and `predictions_test.npz` in
+one training pass. Checkpoint selection remains validation-only; the Experimentor validates the
+test artifact's schema and alignment without calculating or exposing test metrics. Provider-reported
+input/output token usage is attached to each new LLM audit event, while `run_timing.json` accumulates
+agent wall-clock time across resumed invocations. Runs created before these fields were introduced
+can still receive logs and validation result tables, but their token totals or test CSV may be marked
+incomplete when the original artifacts do not contain the necessary information.
 
 Important options include `--max-experiments` (default 50), `--timeout` (one wall-clock budget per
 experiment), `--max-debug-attempts` (default 3), `--max-backfills` (default 2),

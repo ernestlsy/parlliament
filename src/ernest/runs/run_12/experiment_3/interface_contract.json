@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "load(..., include_test_labels=False) and encode(...) provide encoded['train'] and encoded['valid'] as (features int32[N,5], labels float32[N], users unicode[N]) and encoded['test'] as (features int32[N,5], None, users unicode[N]). Feature columns are exactly [user_id, video_id, tab, hour, weekday], where hour is floor(numeric hourmin / 100) constrained to 0..23 and weekday is derived from date with Monday=0 through Sunday=6. Rows retain source order within each canonical date split."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model.step receives positive_features int32[P,5] and negative_features int32[P,5], P>0, aligned by row into same-user pairs with train long_view positive=1 and negative=0. Model.predict receives an int32[N,5] encoded feature matrix and returns one score per row. The trainer alone constructs pairs and uses validation labels only for validation-only checkpoint selection."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

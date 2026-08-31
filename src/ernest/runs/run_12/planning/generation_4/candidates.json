@@ -1,0 +1,382 @@
+[
+  {
+    "text": "Increase same-user negative sampling from one to four negatives per eligible positive in the pairwise logistic objective.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "Experiment 3 improved both official components over the pointwise parent (GAUC 0.67060 versus 0.66891; nDCG@5 0.53753 versus 0.53696), so increasing negative coverage is a focused way to strengthen the already validated ordering signal. The largest remaining nDCG weakness is on tab 0 and tab 6, where more within-user alternatives may improve discrimination.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:tab:6"
+    ],
+    "exact_ablation": "Change only the pair constructor so each eligible positive training row samples K=4 same-user negative rows uniformly without replacement when possible, instead of K=1; retain the additive five-field scorer, pairwise logistic loss, optimizer, learning rate, regularization, epoch budget, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0005 to 0.0025 because each positive receives broader same-user negative comparisons.",
+      "nDCG@5": "Increase by 0.0005 to 0.0030 if additional comparisons correct top-five inversions; the effect may be concentrated in low-performing tabs."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training",
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss"
+    ]
+  },
+  {
+    "text": "Use all same-user negatives for each eligible positive, capped at 16 negatives, rather than one sampled negative.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 6
+    },
+    "rationale": "The pairwise objective produced the best current primary score, but one negative per positive is a high-variance approximation of within-user ordering. A bounded multi-negative treatment tests whether more complete ranking supervision improves top-rank placement without changing model capacity or features.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:3:segment:item_frequency:medium_5_19",
+      "experiment:3:segment:tab:6"
+    ],
+    "exact_ablation": "Change only pair enumeration so every eligible positive is paired with up to 16 same-user negatives selected by deterministic uniform sampling without replacement, replacing the current one-negative sample; keep all other training and model settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0000 to 0.0020 from lower-variance coverage of within-user negatives, with possible saturation.",
+      "nDCG@5": "Increase by 0.0005 to 0.0035 if broader comparisons promote positives above top-five negatives; it can be flat if most added negatives are easy."
+    },
+    "expected_primary_gain": 0.00125,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss"
+    ]
+  },
+  {
+    "text": "Replace uniform same-user negative sampling with a 50/50 uniform-plus-hard-negative sampler after a two-epoch uniform warm start.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "Experiment 3 has credible broad ordering but still weak nDCG@5 in several large request-context slices, especially tab 0 (0.06247) and tab 6 (0.10520). Mining train-only negatives that the current model ranks too highly targets unresolved local inversions rather than adding screened-out features.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:tab:6",
+      "experiment:3:segment:hour:3"
+    ],
+    "exact_ablation": "Change only pair selection: retain one same-user negative per positive, use uniform sampling for epochs 1-2, then sample 50% uniformly and 50% from the lowest positive-minus-negative score-margin candidates computed from a frozen train-only checkpoint each later epoch; retain the model, features, pairwise loss, optimizer, and total pair count.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0005 to 0.0020 because hard mining focuses on difficult orderings but reduces broad pair coverage.",
+      "nDCG@5": "Increase by 0.0010 to 0.0040 if hard negatives correspond to positives just below highly scored negatives."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "training.within_group_hard_pair_curriculum",
+      "objective.within_user_ranknet_pairwise_loss"
+    ]
+  },
+  {
+    "text": "Add a small pointwise BCE anchor to the current pairwise logistic loss.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "Pairwise training improved GAUC and nDCG@5 but reduced global AUC sharply relative to experiment 1 (0.69942 versus 0.76503), indicating that pure pairwise updates may sacrifice useful propensity structure. A small BCE anchor tests whether stabilizing sparse or homogeneous examples improves the balance without abandoning the successful ranking objective.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Change only the objective from pairwise logistic loss to L_pairwise + 0.10 times item-mean BCE on the same training rows; retain pair sampling, additive five-field scorer, optimizer, learning rate, regularization, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0005 to 0.0015 because BCE can stabilize scores but dilutes direct within-user ordering pressure.",
+      "nDCG@5": "Increase by 0.0000 to 0.0025 if the anchor improves score reliability for sparse-item and homogeneous-user examples; it may be flat."
+    },
+    "expected_primary_gain": 0.00075,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss"
+    ]
+  },
+  {
+    "text": "Use a LambdaRank-style nDCG@5 swap-weighted pairwise loss instead of uniform pairwise logistic loss.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 4
+    },
+    "rationale": "The current model's GAUC is stronger than its top-five quality in several slices: medium-frequency items reach GAUC 0.71380 while nDCG@5 is only 0.24494, and tab 0/tab 6 have particularly poor nDCG@5. Weighting training comparisons by their train-time nDCG@5 swap impact directly tests whether the residual problem is top-rank emphasis.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:3:segment:item_frequency:medium_5_19",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:tab:6"
+    ],
+    "exact_ablation": "Replace only the uniform weight on each current same-user positive-negative logistic pair with its detached train-time absolute nDCG@5 swap delta, normalized within user; retain K=1 pair sampling, the additive five-field scorer, features, optimizer, and training schedule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0020 to 0.0010 because emphasizing top-five-relevant pairs can trade broad within-user AUC for local order.",
+      "nDCG@5": "Increase by 0.0010 to 0.0050 if sampled same-user groups provide a meaningful top-five ordering proxy."
+    },
+    "expected_primary_gain": 0.00125,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid"
+    ]
+  },
+  {
+    "text": "Replace the pairwise objective with a user-local ListNet top-one loss over each train-user candidate set.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 4
+    },
+    "rationale": "Current diagnostics indicate a top-five placement problem in specific context and frequency slices despite adequate aggregate GAUC. A listwise objective is a materially distinct test of whether jointly normalizing alternatives, rather than independently sampled pairs, better aligns with nDCG@5.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:3:segment:tab:0",
+      "experiment:3:segment:item_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Replace only the pairwise logistic loss with a numerically stable ListNet top-one cross-entropy computed over all train rows belonging to each user, excluding all-positive and all-negative user groups; keep the additive five-field scorer, features, optimizer, learning rate, regularization, and stopping procedure unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0030 to 0.0010 because list normalization need not preserve broad positive-negative ordering across a user's history.",
+      "nDCG@5": "Increase by 0.0005 to 0.0040 if list-level competition better promotes positives into the first five positions."
+    },
+    "expected_primary_gain": 0.00075,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.mixed_group_listnet_top1_loss"
+    ]
+  },
+  {
+    "text": "Lower the pairwise optimizer learning rate from 0.01 to 0.005.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "The only tested nonlinear capacity expansion, the factorization machine, reduced both GAUC and nDCG@5, whereas the simple pairwise additive model improved primary by only 0.00113. A lower step size is a clean, low-risk optimization ablation that may reduce overshooting in sparse categorical weights without introducing rejected feature families.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Change only Adam learning_rate from 0.01 to 0.005 in experiment 3; retain features, additive architecture, pair construction, loss, l2, batch size, epoch budget, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0010 to 0.0015; slower updates may improve generalization but may underfit under the fixed epoch budget.",
+      "nDCG@5": "Change by -0.0010 to 0.0020 for the same stability-versus-undertraining trade-off."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Increase L2 regularization of the pairwise additive scorer from 1e-6 to 1e-5.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "Validation is nearly novel at the user-video-pair level, so sparse ID weights can overfit observed pairwise comparisons. The factorization-machine capacity increase was harmful, making a regularization-only test more justified than another capacity increase.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:metrics",
+      "experiment:3:segment:user_frequency:warm_20_plus"
+    ],
+    "exact_ablation": "Change only l2 from 0.000001 to 0.00001 in experiment 3; retain the five fields, additive architecture, K=1 uniform same-user pair sampling, pairwise logistic loss, optimizer learning rate, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0005 to 0.0015 because shrinkage can improve transfer but may suppress useful ID differentiation.",
+      "nDCG@5": "Change by -0.0005 to 0.0020 if regularization reduces unstable top-rank memorization."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "dataset.population_and_pair_shift"
+    ]
+  },
+  {
+    "text": "Use rank-4 second-order factorization-machine interactions over the current five fields.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 5,
+      "feasibility": 7
+    },
+    "rationale": "The rank-16 FM was negative versus the additive pointwise parent, decreasing GAUC by 0.00302 and nDCG@5 by 0.00193. A substantially lower-rank interaction model isolates whether that failure was excess capacity rather than the interaction mechanism itself, while retaining only approved request-context fields.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the additive logit in experiment 3 with a rank-4 second-order factorization-machine logit over exactly user_id, video_id, tab, hour, and weekday; retain the pairwise logistic loss, K=1 sampler, optimizer family, learning rate, regularization, and stopping procedure.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0030 to 0.0010; low-rank interactions may capture context-specific ordering, but rank-16 evidence makes a gain uncertain.",
+      "nDCG@5": "Change by -0.0020 to 0.0020; interactions may help top-rank context effects but can overfit sparse combinations."
+    },
+    "expected_primary_gain": -0.00025,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace the 24-category hour feature with six fixed four-hour time-of-day buckets.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "Request context is the only positive train-only screened feature family, but the current model has low GAUC in several hour slices, including hour 3 (0.49545), hour 4 (0.57846), and hour 8 (0.59037). Coarsening only hour tests whether sparse per-hour ID effects are too granular while retaining the same impression-time information.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:3:metrics",
+      "experiment:3:segment:hour:3",
+      "experiment:3:segment:hour:4",
+      "experiment:3:segment:hour:8"
+    ],
+    "exact_ablation": "Replace only the categorical hour field with floor(hour/4), yielding six fixed time-of-day categories; retain user_id, video_id, tab, weekday, additive architecture, pairwise objective, sampling, and all optimization settings.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0000 to 0.0020 if pooling sparse adjacent hours improves generalization; it can decline if exact hour effects matter.",
+      "nDCG@5": "Increase by 0.0000 to 0.0025 if smoother time effects improve top-five ordering in weak hour slices."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace separate hour and weekday categorical fields with one categorical hour-of-week field.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The approved request-context screen was positive on every internal temporal-holdout day, while official performance varies sharply by hour. A single hour-of-week field tests a more specific recurring temporal context without adding any new source or outcome-derived feature.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:3:metrics",
+      "experiment:3:segment:hour:3",
+      "experiment:3:segment:hour:11"
+    ],
+    "exact_ablation": "Replace only the two fields hour and weekday with one categorical hour_of_week=24*weekday+hour feature; retain user_id, video_id, tab, the additive pairwise model, pair sampling, and all optimizer and stopping settings.",
+    "expected_effect": {
+      "GAUC": "Increase by -0.0005 to 0.0020 because weekly-hour interactions may distinguish recurring context preferences but are sparser than separate fields.",
+      "nDCG@5": "Increase by -0.0005 to 0.0030 if recurrent temporal context improves top-five placement; sparse combinations are the main downside."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Remove weekday from the approved request-context feature set.",
+    "parent_experiment_id": 3,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "Although request context is beneficial as a family, the current temporal split covers only two adjacent weeks and weekday may contribute sparse, unstable variation beyond tab and hour. This subtractive ablation is an interpretable robustness check after the FM's capacity increase failed and before committing to more complex temporal interactions.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:metrics",
+      "experiment:3:metrics"
+    ],
+    "exact_ablation": "Remove only the weekday categorical field from experiment 3, retaining user_id, video_id, tab, hour, additive architecture, pairwise logistic loss, K=1 pair sampling, optimizer, and stopping rule.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0015 to 0.0010; GAUC may improve slightly if weekday weights are noisy, but loss of true weekly preference is more likely.",
+      "nDCG@5": "Change by -0.0015 to 0.0010; top-five effects should be small because hour and tab remain available."
+    },
+    "expected_primary_gain": -0.00025,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  }
+]

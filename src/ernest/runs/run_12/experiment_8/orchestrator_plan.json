@@ -1,0 +1,84 @@
+{
+  "active_agents": [
+    "feature_engineer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.load returns the existing split dictionaries with canonical source-row order. Each loaded row retains its existing positional structure, except feature position row[4] is hour_bin in 0..5 rather than raw hour. data.encode returns (encoded, dimension), where encoded[split] is (features, labels, users); features is an int32 array of shape (row_count, 5) with globally offset, train-vocabulary categorical IDs in the order user_id, video_id, tab, hour_bin, weekday. Every field, including hour_bin, has one train-fitted unknown bucket."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model receives the unchanged five-column encoded categorical matrix. Column 3 (zero-based) is the train-fitted six-bin hour_bin categorical ID instead of the former train-fitted 24-category hour ID. No model architecture, loss, sampling, optimizer, regularization, checkpoint rule, or configuration value changes."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Implement the hour-coarsening representation ablation exclusively in data.py: replace the existing categorical hour feature with a six-category four-hour bin derived from hourmin, while retaining the five-column additive feature interface.",
+      "required_changes": [
+        "In data.py, change FIELDS from [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\"] to [\"user_id\", \"video_id\", \"tab\", \"hour_bin\", \"weekday\"].",
+        "Continue deriving integer hour from the exact raw log column row[\"hourmin\"] with the canonical recipe hour = floor(numeric hourmin / 100), and retain the existing validation that hour is in 0..23.",
+        "Derive hour_bin as integer floor(hour / 4), yielding exactly values 0 through 5 for valid hours 0 through 23.",
+        "Store hour_bin, rather than raw hour, in each loaded row at the existing fourth feature position, so the row tuple remains compatible with the current positional accesses in encode().",
+        "Update encode()'s raw(row) function to return [row[1], row[2], row[3], row[4], row[5]], where row[4] is now the derived hour_bin. Do not add a sixth feature column or alter encode()'s returned tuple interface.",
+        "Fit the hour_bin vocabulary only by iterating training rows exactly as the existing vocabulary loop does. Preserve the existing one-unknown-ID-per-field behavior, including an unknown bucket for hour_bin in validation and test.",
+        "Do not read any source other than the existing standard log files and do not add raw fields, labels, aggregates, joins, or profile features."
+      ],
+      "preserve": [
+        "Keep split date boundaries, source-file iteration order, selected-row order, label masking for test when include_test_labels is false, weekday derivation from the exact raw date column, and the user_id/video_id/tab/weekday categorical fields unchanged.",
+        "Keep encode() output as encoded[name] = (features, labels, users), with features dtype int32, exactly five feature columns, train-fitted per-field vocabularies, per-field unknown buckets, and offsets.",
+        "Do not modify model.py, train.py, or config.json. The existing model requirement for five feature columns must remain satisfied without changes.",
+        "Do not use test labels for fitting any representation or vocabulary."
+      ],
+      "coordination_notes": [
+        "The shared data-to-model contract remains a two-dimensional int32 feature matrix with five globally offset categorical IDs per row in this exact order: user_id, video_id, tab, hour_bin, weekday.",
+        "hour_bin is derived solely from raw hourmin via hour = floor(float(hourmin) / 100), then hour_bin = floor(hour / 4); no source-column alias is permitted.",
+        "Trainer-owned train.py will continue to emit predictions_valid.npz and predictions_test.npz in encoded validation and test row order, respectively, so preserve source row ordering exactly."
+      ]
+    }
+  },
+  "reasoning": "The hypothesis is a single feature-representation ablation. Only data.py requires modification because the additive model already consumes five categorical columns and train.py/config.json already preserve the requested optimizer, K=4 uniform same-user negative sampling, pairwise loss, validation-only checkpoint selection, and canonical prediction archive behavior. The six-bin category is derived from the schema-approved raw hourmin field using the canonical hour derivation followed by the requested floor(hour/4) transformation; vocabularies remain train-fitted with the existing unknown bucket."
+}

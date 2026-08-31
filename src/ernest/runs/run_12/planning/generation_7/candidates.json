@@ -1,0 +1,396 @@
+[
+  {
+    "text": "Use a 50/50 uniform and hard-negative sampler within each user's training impressions.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The current K=4 uniform pairwise ranker improved primary from 0.60407 to 0.60450, but material tab-0 and tab-6 top-five quality remains weak. Sampling current high-scoring negatives targets inversions most likely to affect top ranks while retaining half uniform negatives for coverage.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:4:metrics",
+      "experiment:6:metrics",
+      "experiment:6:segment:tab:0",
+      "experiment:6:segment:tab:6"
+    ],
+    "exact_ablation": "Change only same-user negative sampling: for each positive, retain K=4 negatives but sample two uniformly and two from the highest-scoring available same-user negatives under the frozen model at the start of each epoch; keep the additive five-field scorer, pairwise logistic loss, optimizer, L2, checkpoint selection, and all other training settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0002 to 0.0012 because difficult within-user inversions receive more training weight.",
+      "nDCG@5": "Increase by 0.0005 to 0.0020 because high-scoring negative impressions are the most likely to displace positives from the top five."
+    },
+    "expected_primary_gain": 0.0009,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training",
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss"
+    ]
+  },
+  {
+    "text": "Increase same-user uniform negative sampling from K=4 to K=8.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 9
+    },
+    "rationale": "K=4 modestly improved both official metrics over K=1, suggesting broader within-user comparison coverage may still help, although diminishing returns are likely.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:4:metrics",
+      "experiment:6:metrics"
+    ],
+    "exact_ablation": "Change only the uniform same-user negative count from K=4 to K=8 per eligible positive, without replacement when possible; keep all features, additive scorer, pairwise logistic loss, optimizer, regularization, checkpoint selection, and epoch budget unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0002 to 0.0010 as additional comparisons can improve discrimination but may overemphasize easy negatives.",
+      "nDCG@5": "Change by 0.0000 to 0.0012 because broader comparisons may correct some top-five inversions, with weaker direct top-rank focus than hard-negative sampling."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss"
+    ]
+  },
+  {
+    "text": "Normalize the pairwise RankNet loss equally across users rather than across sampled pairs.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "Official GAUC is positive-count weighted within user, while the present sampled-pair mean can let users with more positives and negatives dominate updates. Per-user normalization is a direct test of whether this mismatch limits generalization.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:4:metrics",
+      "experiment:6:metrics",
+      "experiment:6:segment:user_frequency:warm_20_plus",
+      "experiment:6:segment:user_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Change only loss reduction: compute the mean sampled pairwise logistic loss separately for each eligible training user and average those user losses equally, instead of averaging all sampled pairs globally; preserve K=4 uniform sampling, model, features, optimizer, regularization, and checkpoint selection.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.0000 to 0.0012 if reduced domination by high-pair-count users improves average within-user ordering.",
+      "nDCG@5": "Increase by 0.0001 to 0.0014 if better balanced user-level updates promote positives in smaller candidate sets."
+    },
+    "expected_primary_gain": 0.0007,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace pure pairwise loss with a user-normalized BCE plus nDCG@5-weighted pairwise hybrid.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 5
+    },
+    "rationale": "Global GAUC is acceptable at 0.67071 while nDCG@5 is only 0.53829 and is particularly poor in material tabs 0 and 6. A top-five swap-weighted ranking term directly targets this diagnosed gap while BCE retains broad supervision.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:6:metrics",
+      "experiment:6:segment:tab:0",
+      "experiment:6:segment:tab:6",
+      "experiment:6:segment:hour:14",
+      "experiment:6:segment:hour:16"
+    ],
+    "exact_ablation": "Replace only the current pure K=4 pairwise logistic objective with L=user-normalized pointwise BCE plus 0.25 times a within-user positive-negative logistic loss weighted by detached absolute nDCG@5 swap change; retain the additive five-field scorer, data, optimizer, L2, checkpoint selection, and epoch budget.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0003 to 0.0008 because top-five weighting may trade some broad pairwise discrimination for local rank improvements.",
+      "nDCG@5": "Increase by 0.0005 to 0.0025 because nonzero swap weights prioritize positive-negative inversions involving the first five ranks."
+    },
+    "expected_primary_gain": 0.0009,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add one train-fitted tab-by-hour categorical interaction feature.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "Request context was the only positive screened feature family, with full coverage and a +0.00221 training-only temporal primary lift. The largest material deficits remain tab- and hour-specific, but the failed user-by-tab interaction cautions against high-cardinality personalization; a low-cardinality context conjunction is a narrower alternative.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:5:metrics",
+      "experiment:6:metrics",
+      "experiment:6:segment:tab:0",
+      "experiment:6:segment:tab:6",
+      "experiment:6:segment:hour:14",
+      "experiment:6:segment:hour:16"
+    ],
+    "exact_ablation": "Append exactly one train-fitted categorical feature equal to the pair (tab,hour), with one unknown bucket; retain the existing five features, additive scorer, K=4 uniform pairwise objective, optimizer, regularization, and validation-primary checkpoint selection.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0002 to 0.0010 because tab-specific time effects may improve within-user ordering but can fragment support.",
+      "nDCG@5": "Increase by 0.0002 to 0.0018 if contextual effects correct top-five ordering in the weak tab-hour regimes."
+    },
+    "expected_primary_gain": 0.0006,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add one train-fitted tab-by-weekday categorical interaction feature.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 9
+    },
+    "rationale": "The positive request-context screen supports retaining context, and this low-cardinality interaction tests weekly surface-specific preference without repeating the failed high-cardinality user-by-tab feature.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:5:metrics",
+      "experiment:6:metrics",
+      "experiment:6:segment:tab:0",
+      "experiment:6:segment:tab:6"
+    ],
+    "exact_ablation": "Append exactly one train-fitted categorical feature equal to the pair (tab,weekday), with one unknown bucket; keep the five existing fields, additive scorer, K=4 uniform pairwise loss, optimizer, regularization, and checkpoint selection unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0002 to 0.0008 because weekly differences may be weak after accounting for tab and hour.",
+      "nDCG@5": "Change by 0.0000 to 0.0014 if recurring tab-weekday patterns affect which items enter the top five."
+    },
+    "expected_primary_gain": 0.0004,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Increase L2 regularization tenfold for the additive pairwise ranker.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "The best primary is modestly above experiment 3 and experiment 5's added interaction regressed by 0.00209, indicating limited headroom and potential sensitivity to fitted categorical weights. A single conservative regularization change is a clean robustness test.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:3:metrics",
+      "experiment:4:metrics",
+      "experiment:5:metrics",
+      "experiment:6:metrics"
+    ],
+    "exact_ablation": "Change only L2 regularization from 1e-6 to 1e-5; retain feature schema, additive scorer, K=4 uniform pairwise loss, optimizer, learning rate, epoch budget, and validation-primary checkpoint selection.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0004 to 0.0006 because shrinkage can reduce temporal overfit but may underfit ID effects.",
+      "nDCG@5": "Change by -0.0003 to 0.0010 because more stable margins can help top-five ordering, although excessive shrinkage can flatten ranks."
+    },
+    "expected_primary_gain": 0.0003,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Average three contiguous late checkpoints from the current training trajectory.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "Experiment 6 produced the same final score as experiment 4 despite changing checkpoint selection, suggesting the selected trajectory may be stable but offers no evidence that a single terminal checkpoint is uniquely optimal. Weight averaging tests a low-serving-cost variance reduction mechanism.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:4:metrics",
+      "experiment:6:metrics"
+    ],
+    "exact_ablation": "Change only inference checkpoint construction: save one checkpoint per epoch and emit the equal-weight FP32 average of the three contiguous late checkpoints whose predeclared window has the highest mean validation primary, breaking ties by earliest window; retain model, features, loss, optimizer, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0002 to 0.0008 because averaging can smooth late pairwise-margin noise but may dilute the best ordering checkpoint.",
+      "nDCG@5": "Change by -0.0002 to 0.0012 because top-five ranks can benefit from smoother parameters but are locally discontinuous."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "training.metric_aligned_checkpoint_averaging"
+    ]
+  },
+  {
+    "text": "Use a lower learning rate of 0.003 for the same ranker.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 3,
+      "feasibility": 10
+    },
+    "rationale": "The current primary plateau and equal outcomes for experiments 4 and 6 make optimizer-step granularity a simple, isolated source of possible top-rank instability. This is deliberately a low-risk control rather than a feature expansion.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:4:metrics",
+      "experiment:6:metrics"
+    ],
+    "exact_ablation": "Change only Adam learning rate from 0.01 to 0.003; retain additive model, five fields, K=4 uniform pairwise loss, L2, batch size, maximum epochs, patience, and validation-primary checkpoint selection.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0005 to 0.0007 because smaller updates may improve convergence stability but may undertrain within the fixed epoch budget.",
+      "nDCG@5": "Change by -0.0004 to 0.0010 because smoother score margins may improve local ordering, contingent on sufficient convergence."
+    },
+    "expected_primary_gain": 0.0002,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Train a rank-8 factorization machine with the established pairwise protocol.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 6
+    },
+    "rationale": "The prior rank-16 FM with pointwise BCE regressed on both official metrics, so high-capacity interactions are not validated. A smaller FM combined with the subsequently successful pairwise objective is a materially different but bounded test of low-rank context-item interactions.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:3:metrics",
+      "experiment:4:metrics",
+      "experiment:6:metrics"
+    ],
+    "exact_ablation": "Replace only the additive logit with a rank-8 second-order factorization-machine logit over exactly user_id, video_id, tab, hour, and weekday; retain K=4 uniform pairwise loss, optimizer settings, regularization coefficient, data splits, and validation-primary checkpoint selection.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0010 to 0.0010 because low-rank field interactions may recover context-dependent orderings but prior FM evidence is negative.",
+      "nDCG@5": "Change by -0.0010 to 0.0015 because interactions can improve top ranks but may overfit sparse ID-context combinations."
+    },
+    "expected_primary_gain": 0.0002,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a training-only tab-balanced pair-loss weight.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "Material context slices are highly uneven: tab 0 has 13,726 validation rows and nDCG@5 0.0623, while tab 6 has 5,170 rows and nDCG@5 0.1056. Equalizing the influence of observed training tabs tests whether dominant surfaces suppress learning for weak surfaces without adding features.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:6:metrics",
+      "experiment:6:segment:tab:0",
+      "experiment:6:segment:tab:6",
+      "experiment:6:segment:tab:8"
+    ],
+    "exact_ablation": "Change only loss weighting: multiply each sampled training pair loss by the inverse square root of its positive row's train-split tab frequency, normalized to mean weight one; retain features, additive scorer, K=4 uniform sampling, pairwise logistic loss form, optimizer, L2, and checkpoint selection.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0006 to 0.0005 because tab reweighting can trade aggregate ordering for less frequent surfaces.",
+      "nDCG@5": "Change by 0.0000 to 0.0015 because additional gradient weight on weak context surfaces may improve their top-five ordering."
+    },
+    "expected_primary_gain": 0.0004,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss",
+      "training"
+    ],
+    "literature_document_ids": [
+      "training.group_complete_stratified_minibatching",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use group-complete, tab-stratified pair minibatches.",
+    "parent_experiment_id": 6,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 5
+    },
+    "rationale": "The current objective samples pairs globally after construction, while diagnostics show pronounced context heterogeneity. Sampling same-user pair groups approximately uniformly across sufficiently supported training tabs tests an optimization distribution change without using validation labels or new predictors.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:6:metrics",
+      "experiment:6:segment:tab:0",
+      "experiment:6:segment:tab:6",
+      "experiment:6:segment:tab:8"
+    ],
+    "exact_ablation": "Change only minibatch construction: build training same-user K=4 pairs as currently, then form batches by sampling eligible users approximately uniformly across their positive row's train-split tab, using only tabs with at least 500 eligible training users; retain the pairwise loss, features, model, optimizer, L2, and checkpoint selection unchanged.",
+    "expected_effect": {
+      "GAUC": "Change by -0.0005 to 0.0008 because altered exposure to tab regimes may reduce aggregate-frequency fit or improve underrepresented ordering.",
+      "nDCG@5": "Change by 0.0000 to 0.0018 if more consistent coverage of weak but supported tabs improves top-five inversions."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "training.group_complete_stratified_minibatching",
+      "objective.within_user_ranknet_pairwise_loss"
+    ]
+  }
+]

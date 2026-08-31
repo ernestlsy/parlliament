@@ -1,0 +1,24 @@
+[
+  {
+    "fallback_reason": "LLM selection failed: LLM HTTP 429 Too Many Requests at responses; request_id=req_f39e7f46f33a4d49baceaec800b4e45b; response={\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient_quota\",\n    \"param\": null,\n    \"code\": \"credit_balance_exhausted\"\n  }\n}; attempts=3",
+    "request_index": 1,
+    "round": 1,
+    "selected_document_ids": [
+      "objective.within_user_ranknet_pairwise_loss",
+      "objective.bce_lambdarank_ndcg5_hybrid",
+      "objective.user_normalized_binary_cross_entropy",
+      "paper.mmoe_auxiliary_behavior_ranker",
+      "objective.mixed_group_listnet_top1_loss",
+      "paper.group_dro_within_user_ranking",
+      "objective.shared_trunk_auxiliary_behavior_multitask_loss"
+    ]
+  },
+  {
+    "fallback_reason": "LLM selection failed: LLM HTTP 429 Too Many Requests at responses; request_id=req_1148f038fa5e44eab00a7927477735c8; response={\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient_quota\",\n    \"param\": null,\n    \"code\": \"credit_balance_exhausted\"\n  }\n}; attempts=3",
+    "request_index": 2,
+    "round": 1,
+    "selected_document_ids": [
+      "experiment.predeclared_hypothesis_ladder"
+    ]
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "\"context-aware recommendation\" implicit feedback \"factorization machines\" context item interaction within-user ranking GAUC nDCG@5",
+      "(\"field-aware factorization machine\" OR FFM OR \"factorization machine\") recommender \"context-item interaction\" (tab OR hour OR weekday) implicit-feedback ranking",
+      "\"context-aware\" recommender systems \"pairwise ranking\" OR BPR versus \"pointwise logistic\" implicit feedback top-k nDCG",
+      "\"contextual collaborative filtering\" request context item ID interaction \"learning to rank\" implicit feedback nDCG@5",
+      "(\"factorization machines\" OR \"field-aware factorization machines\") video recommendation contextual features ranking loss GAUC OR \"group AUC\""
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "KuaiRand-Pure dataset documentation standard-exposure interaction log schema request_id impression_id slate_id session_id candidate set timestamp position",
+      "KuaiRand-Pure GitHub README data dictionary standard exposure logs fields user_id item_id timestamp position request context displayed items",
+      "KuaiRand-Pure paper interaction logs exposure sequence reconstruction contemporaneous recommendation candidates request slate session identifiers",
+      "KuaiRand-Pure standard exposure position field timestamp granularity display order impression logs candidate-group reconstruction pairwise listwise ranking",
+      "KuaiRand-Pure dataset schema exposure logs valid within-request candidate sets RankNet LambdaRank ListNet GAUC nDCG@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 2
+  }
+]

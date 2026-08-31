@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 from .diagnostics import attach_segment_diagnostics
-from .evaluation import score_prediction_artifact
+from .evaluation import score_prediction_artifact, validate_prediction_artifact
 from .schemas import AGENT_FILES, ExperimentPlan, FailureKind, FailureReport
 
 
@@ -46,6 +46,12 @@ class Experimentor:
             return FailureReport(
                 FailureKind.CONTRACT_FULFILLMENT,
                 f"config does not fulfill contract; missing {missing}", "",
+                ["trainer"], attempt,
+            )
+        if config.get("split") != "valid":
+            return FailureReport(
+                FailureKind.CONTRACT_FULFILLMENT,
+                "config split must remain 'valid'; test labels cannot control model selection", "",
                 ["trainer"], attempt,
             )
         for filename in ("data.py", "model.py", "train.py"):
@@ -142,6 +148,9 @@ class Experimentor:
             return None, self.classify_process_failure(proc.stderr, attempt, proc.returncode)
         try:
             metrics = score_prediction_artifact(output, Path(self.data_dir), "valid")
+            validate_prediction_artifact(
+                sandbox / "predictions_test.npz", Path(self.data_dir), "test"
+            )
         except (ValueError, OSError) as exc:
             return None, FailureReport(
                 FailureKind.CONTRACT_FULFILLMENT,

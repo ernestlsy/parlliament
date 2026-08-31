@@ -202,6 +202,13 @@ class EndToEndTests(unittest.TestCase):
             self.assertTrue((experiment / "llm_events.jsonl").is_file())
             self.assertTrue((experiment / "attempt_summary.json").is_file())
             self.assertFalse((experiment / "failure.log").exists())
+            self.assertTrue((config.run_dir / "run_timing.json").is_file())
+            submission_manifest = json.loads(
+                (config.run_dir / "submission" / "manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(submission_manifest["best_experiment_id"], 1)
+            self.assertTrue((config.run_dir / "submission" / "iteration_log.md").is_file())
+            self.assertTrue((config.run_dir / "submission" / "results.json").is_file())
 
 
 if __name__ == "__main__":

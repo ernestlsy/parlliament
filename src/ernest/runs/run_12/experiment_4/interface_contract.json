@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "Unchanged interface from data.py: load returns canonical date-filtered train, valid, and test source-row sequences; test labels are withheld when include_test_labels=False. encode returns encoded[split] = (features, labels, users), with features shaped (N, 5) and ordered as [user_id, video_id, tab, hour, weekday]. Raw fields are exactly user_id, video_id, tab, hourmin, and date; hour is floor(numeric hourmin / 100) constrained to 0..23, and weekday is the Monday=0 through Sunday=6 calendar weekday from YYYYMMDD date. Validation and test prediction row order is this unchanged encoded split order."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Unchanged Model interface: Model.step receives aligned nonempty positive_features and negative_features arrays of equal shape (pair_count, 5). train.py must construct these by indexing training features with aligned int64 positive_indices and negative_indices. For each eligible training positive, build up to four pairs against distinct same-user training negatives, uniformly sampled without replacement when at least four negatives exist; otherwise use all available same-user negatives once. Model.predict receives a (N, 5) feature matrix and returns one score per input row."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

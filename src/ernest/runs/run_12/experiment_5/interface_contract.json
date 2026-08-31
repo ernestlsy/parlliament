@@ -1,0 +1,53 @@
+{
+  "data_output": {
+    "description": "encode(splits) returns (encoded, dimension). For every split, encoded[split] remains (features, labels, users). features is a globally offset np.int32 matrix in canonical selected source-row order with exact columns [user_id, video_id, tab, hour, weekday, user_id_tab]. The sixth raw categorical value is exactly the Python tuple (row[1], row[3]), where row[1] is raw user_id and row[3] is raw tab from the log. All six vocabularies are fit only on splits[\"train\"], each has one unknown bucket, and validation/test unseen user_id_tab tuples use the sixth unknown bucket. labels remain None for test when include_test_labels=False; users remains the raw user_id vector."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives globally offset integer feature matrices of shape (N, 6). logits is bias + sum of the six corresponding scalar weights. step() receives equal-shape positive and negative matrices with exactly six columns and optimizes the unchanged pairwise logistic loss."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "submission_artifact": {
+    "path": "predictions_test.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ],
+    "split": "test"
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

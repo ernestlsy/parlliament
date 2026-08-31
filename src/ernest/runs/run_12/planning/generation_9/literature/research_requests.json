@@ -1,0 +1,47 @@
+[
+  {
+    "categories": [
+      "objectives",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "learning-to-rank",
+      "pairwise-ranking",
+      "listwise-ranking",
+      "top-k-ranking",
+      "binary-relevance"
+    ],
+    "purpose": "Resolve whether a bounded objective change from the currently best uniform-sampled pairwise logistic ranker is justified after the factorization-machine and hard-negative variants underperformed, given that the fixed primary metric averages GAUC and nDCG@5.",
+    "query": "Learning-to-rank objectives for within-user logged-impression recommendation with binary relevance: compare pairwise logistic/RankNet against listwise top-k objectives (LambdaRank, LambdaMART, soft nDCG); emphasize when listwise methods improve nDCG@5 without degrading AUC under sparse per-user candidate sets and categorical ID/context features.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "experiment_strategy",
+      "bias_and_robustness",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "offline-evaluation",
+      "contextual-recommendation",
+      "exposure-bias",
+      "candidate-set-diagnostics",
+      "temporal-validation"
+    ],
+    "purpose": "Resolve whether the severe tab-specific nDCG@5 gaps, especially in large tab 0 and tab 6 slices, warrant a ranking-model experiment or should first be attributed to candidate-set composition, exposure bias, or low label prevalence through non-model diagnostic analysis.",
+    "query": "Offline recommender evaluation and experiment-design literature for diagnosing poor context-specific ranking in logged impression data: distinguish ranker error from candidate-inventory limitations, exposure/label-prevalence differences, and sparse segment uncertainty; focus on actionable analyses that retain fixed temporal holdout metrics and do not use post-impression outcomes as features.",
+    "request_index": 2,
+    "round": 1
+  }
+]

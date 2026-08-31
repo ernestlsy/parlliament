@@ -153,13 +153,13 @@ The Consultant cross-checks new hypotheses against the full hypothesis history (
 
 ## 6. Convergence & Stopping Rule (Hackathon-Constrained)
 
-Because experiments run strictly sequentially and are numbered 1-onwards in execution order, "3 consecutive experiments" is unambiguous:
+Because experiments run strictly sequentially and are numbered 1-onwards in execution order, the three-experiment patience window is unambiguous:
 
 1. Maintain a running ordered list of `(experiment_id, val_score)` for **successfully scored** experiments only (abandoned attempts never enter this list).
-2. After each new successful experiment, compare its score against the scores 1 and 2 positions back in this list.
-3. If the score has increased by **less than 0.002** across these 3 consecutive entries, **stop** — this is the converged score used for judging.
+2. For every scored experiment `n` with score `x`, use `x + 0.002` as its improvement target for the next three scored experiments.
+3. Stop after experiment `n+3` if all of `score[n+1]`, `score[n+2]`, and `score[n+3]` are strictly less than `x + 0.002`. If any reaches or exceeds the target, anchor `n` does not cause convergence.
 4. Independently, stop if the counted-experiment total reaches **50**, whichever comes first.
-5. The judged score is the converged score at the stopping point, not the peak or final score reached afterward — no further experiments should run once either condition triggers.
+5. Submit the experiment with the highest validation primary score observed before stopping; it need not be the final experiment. No further experiments run once either stopping condition triggers.
 
 ---
 

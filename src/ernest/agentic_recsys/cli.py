@@ -9,6 +9,7 @@ from .config import SystemConfig
 from .journal import Journal
 from .llm import CommandLLMClient, OpenAICompatibleClient
 from .overseer import Overseer
+from .submission import export_submission_bundle
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -67,11 +68,23 @@ def _parser() -> argparse.ArgumentParser:
 
     status = sub.add_parser("status", help="summarize a run journal")
     status.add_argument("run_dir")
+    submit = sub.add_parser("submit", help="build or refresh a run submission bundle")
+    submit.add_argument("run_dir")
+    submit.add_argument(
+        "--data-dir", default=None,
+        help="KuaiRand-Pure data directory; defaults to the run's saved system_config.json",
+    )
     return parser
 
 
 def main(argv=None) -> int:
     args = _parser().parse_args(argv)
+    if args.command == "submit":
+        manifest = export_submission_bundle(
+            Path(args.run_dir), Path(args.data_dir) if args.data_dir else None
+        )
+        print(json.dumps(manifest, indent=2))
+        return 0 if manifest["status"] == "complete" else 1
     if args.command == "status":
         journal = Journal(Path(args.run_dir) / "journal.jsonl")
         records = journal.records()

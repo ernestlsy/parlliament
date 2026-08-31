@@ -27,6 +27,7 @@ from .sandbox import (
 from .schemas import (
     AGENT_FILES, FailureKind, FailureReport, Hypothesis, JournalRecord, Mode, Status,
 )
+from .submission import export_submission_bundle
 
 
 class Overseer:
@@ -605,7 +606,10 @@ class Overseer:
         return record
 
     def run(self) -> Dict[str, Any]:
+        run_started = time.monotonic()
+        invocation_started_at = datetime.now(timezone.utc).isoformat()
         self.initialize()
+        records_at_invocation_start = len(self.journal.records())
         stop = self.journal.stop_reason(
             self.config.max_experiments,
             self.config.convergence_epsilon,
@@ -683,11 +687,42 @@ class Overseer:
                     break
             generation += 1
         scored = self.journal.scored()
+        timing_path = self.config.run_dir / "run_timing.json"
+        prior_timing = {}
+        if timing_path.is_file():
+            try:
+                prior_timing = json.loads(timing_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                prior_timing = {}
+        elapsed = time.monotonic() - run_started
+        timing = {
+            "first_started_at": prior_timing.get("first_started_at", invocation_started_at),
+            "last_started_at": invocation_started_at,
+            "last_finished_at": datetime.now(timezone.utc).isoformat(),
+            "invocations": int(prior_timing.get("invocations", 0)) + 1,
+            "last_invocation_wall_clock_seconds": elapsed,
+            "total_wall_clock_seconds": (
+                float(prior_timing.get("total_wall_clock_seconds", 0.0)) + elapsed
+            ),
+            "complete": bool(
+                prior_timing.get("complete", records_at_invocation_start == 0)
+            ),
+        }
+        timing_path.write_text(json.dumps(timing, indent=2), encoding="utf-8")
+        submission = None
+        if scored:
+            submission = export_submission_bundle(
+                self.config.run_dir, Path(self.config.data_dir)
+            )
+        best = max(scored, key=lambda item: float(item["metrics"]["primary"])) if scored else None
         return {
             "stop_reason": stop,
             "counted_experiments": len(scored),
             "converged_score": scored[-1]["metrics"]["primary"] if scored else None,
             "last_experiment_id": scored[-1]["experiment_id"] if scored else None,
+            "submitted_score": best["metrics"]["primary"] if best else None,
+            "submitted_experiment_id": best["experiment_id"] if best else None,
             "journal": str(self.journal.path.resolve()),
             "screening_report": str(self.research.report_path.resolve()),
+            "submission": submission,
         }

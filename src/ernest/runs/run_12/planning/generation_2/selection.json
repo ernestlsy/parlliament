@@ -1,0 +1,36 @@
+{
+  "winner": {
+    "text": "Replace the additive linear scorer with a second-order factorization machine over the existing user, video, tab, hour, and weekday fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The parent contains only additive field weights, so it cannot model any user-item or item-context interaction. The positive context screen supports retaining these fields while testing compact shared interaction capacity instead of adding rejected feature families.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:6"
+    ],
+    "exact_ablation": "Replace only the additive logit with a rank-16 second-order factorization-machine logit over exactly the current five categorical fields; retain BCE, train/validation splits, optimizer family, and early-stopping procedure.",
+    "expected_effect": {
+      "GAUC": "Increase by 0.002 to 0.007 because user-video and video-context interactions can improve within-user discrimination.",
+      "nDCG@5": "Increase by 0.002 to 0.008 when those interactions move relevant items into the first five ranks."
+    },
+    "expected_primary_gain": 0.0045,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  "selection_rationale": "c04 is selected because it has the strongest consultant head-to-head ranking (rank 1, utility 0.79), the highest expected primary gain (0.0045), and high confidence (7). It directly remedies the measured limitation of the additive scorer by learning compact shared user-item and item-context interactions using only the approved fields whose request-context family showed positive training-only lift. Its low leakage risk and medium, bounded runtime risk make it a more reliable high-upside next experiment than narrower sparse pair interactions or broader MLP alternatives.",
+  "counted_experiments_consumed": 0
+}

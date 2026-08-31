@@ -1,0 +1,23 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:8:metrics",
+        "experiment:8:segment:tab:0",
+        "experiment:8:segment:tab:6",
+        "experiment:8:segment:tab:8",
+        "experiment:8:segment:hour:3"
+      ],
+      "finding": "Request context is the only train-only screened group with positive aggregate primary lift (+0.00221) and positive lift on every reported temporal holdout day. However, its daily variability (std 0.00580) exceeds the aggregate lift, so this is weak but directionally consistent evidence rather than justification for a new feature-budget experiment. Official validation has adequate global within-user ranking (GAUC 0.67086) but material top-five weakness by tab, especially tab 8 (GAUC 0.35185, nDCG@5 0.02634), tab 0 (GAUC 0.56217, nDCG@5 0.06252), and tab 6 (GAUC 0.60134, nDCG@5 0.10559). Hour 3 is also weak (GAUC 0.50909, nDCG@5 0.38624).",
+      "recommended_action": "Retain the existing request-context representation, including the train-fitted hour-bin treatment already assessed, but stop feature experimentation under the strict early-stopping rule. Treat tab-specific top-five ranking as the primary operational weakness; diagnose candidate generation, inventory, and label prevalence for the large tab 0 and tab 6 slices before allocating any future modeling budget. Do not interpret low-ranking segments with zero validation positives as model-ranking failures."
+    }
+  ],
+  "avoid": [
+    "Do not run another hour encoding experiment: experiment 8 decreased primary by 0.000276 versus its parent despite acceptable global GAUC, so the observed result does not clear a strict early-stopping threshold. [experiment:4:metrics, experiment:8:metrics]",
+    "Do not promote user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response; each had non-positive train-only screened primary lift. [screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response]",
+    "Do not use current-impression behavioral outcomes or untimestamped aggregate snapshots as ranking features; they are unavailable at ranking time or lack point-in-time availability and would create leakage risk.",
+    "Do not optimize directly against user_positive_count diagnostic slices, because the zero-positive slice has nDCG@5 of 0 by construction and this dimension uses validation labels retrospectively. [experiment:8:segment:user_positive_count:zero]"
+  ],
+  "metric_diagnosis": "Global validation ranking is reasonably strong (GAUC 0.67086; nDCG@5 0.53758), but GAUC does not guarantee satisfactory top-five outcomes in each serving context. The largest actionable gap is context heterogeneity: tab 0 and tab 6 have both lower GAUC and severely reduced nDCG@5, while tab 8 is an extreme low-volume but clearly poor-ranking slice. Item-frequency weakness is concentrated in rare items (nDCG@5 0.17111; 249 rows) and medium-frequency items (nDCG@5 0.24424; 3,133 rows), whereas warm items nearly match global primary. The cold-item estimates are too small for inference. [experiment:8:metrics, experiment:8:segment:tab:0, experiment:8:segment:tab:6, experiment:8:segment:tab:8, experiment:8:segment:item_frequency:rare_1_4, experiment:8:segment:item_frequency:medium_5_19, experiment:8:segment:item_frequency:cold_0, experiment:8:segment:item_frequency:warm_20_plus]"
+}

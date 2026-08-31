@@ -1,0 +1,26 @@
+[
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "learning-to-rank",
+      "LambdaRank",
+      "listwise-ranking",
+      "NDCG",
+      "implicit-feedback",
+      "temporal-evaluation"
+    ],
+    "purpose": "The best scored model uses a pairwise logistic loss (experiment 4, primary 0.60450), while the most recent hard-negative variant sharply degraded both GAUC and nDCG@5. The remaining material uncertainty is whether an NDCG-aligned objective can improve top-five ordering without repeating the failed hard-negative mechanism or altering fixed evaluation.",
+    "query": "Literature on computationally practical listwise or LambdaRank-style objectives that directly optimize NDCG@5 for within-user logged-impression recommendation, including guidance on stable implementation with variable-sized user groups, binary relevance, temporal splits, and comparison with pairwise logistic loss.",
+    "request_index": 1,
+    "round": 1
+  }
+]

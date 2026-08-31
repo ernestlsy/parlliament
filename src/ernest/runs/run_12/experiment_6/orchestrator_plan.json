@@ -1,0 +1,86 @@
+{
+  "active_agents": [
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "Unchanged. data.encode returns encoded['train'], encoded['valid'], and encoded['test'] as (features, labels, users). Features remain int32 matrices with five columns ordered [user_id, video_id, tab, hour, weekday]. Validation labels are float32 long_view targets; test labels are None because load is called with include_test_labels=False. Validation and test feature row order is the canonical source-row order after split filtering."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Unchanged. Model receives the existing total encoded dimension plus the configured learning_rate and l2. Training step receives same-shape two-dimensional positive and negative encoded feature matrices with exactly five columns. Prediction receives an encoded feature matrix and returns one score per input row."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "trainer": {
+      "objective": "Change only validation checkpoint selection and early stopping in train.py from validation within-user GAUC to validation primary, defined exactly as the arithmetic mean of validation within-user GAUC and validation within-user nDCG@5.",
+      "required_changes": [
+        "Edit train.py only; do not edit config.json because existing patience and all other configuration values remain unchanged.",
+        "Retain within_user_auc(user_ids, labels, scores) as the validation GAUC calculation used in the primary metric.",
+        "Add a validation-only within_user_ndcg_at_5(user_ids, labels, scores) function. Group rows by str(user_id) while preserving each user's canonical validation row order as the deterministic final tie-break. For each user with at least one positive label, rank that user's rows by descending score and then ascending original row position; compute DCG@5 as sum((2**label - 1) / log2(rank + 1)) for ranks 1 through min(5, user-row-count). Compute ideal DCG@5 by sorting that same user's binary labels descending, using the same discount positions. Use that user's normalized DCG only when ideal DCG is positive. Return the unweighted arithmetic mean over eligible users, and return 0.0 if there are no eligible users.",
+        "After each epoch, compute valid_gauc = within_user_auc(valid_users, valid_labels, predictions), valid_ndcg_at_5 = within_user_ndcg_at_5(valid_users, valid_labels, predictions), and valid_primary = 0.5 * (valid_gauc + valid_ndcg_at_5).",
+        "Use valid_primary, rather than GAUC or either component individually, for best_score initialization/comparison, best_state capture, stale counting, and the existing patience-based early-stop decision. Preserve the strict improvement threshold: update the checkpoint only when valid_primary > best_score + 1e-5.",
+        "Update epoch logging to report valid_gauc, valid_ndcg_at_5, and valid_primary, clearly identifying valid_primary as the checkpoint-selection metric.",
+        "Do not access test_labels, load test labels, compute test metrics, or use test predictions for training, checkpoint selection, early stopping, or any hyperparameter decision.",
+        "Preserve final restoration of best_state and emission of predictions_valid.npz and predictions_test.npz. Each archive must contain exactly row_ids and scores; row_ids must remain np.arange over the corresponding encoded split length, and scores must remain in the canonical validation or test encoded-row order."
+      ],
+      "preserve": [
+        "Preserve all data loading, split boundaries, exact raw fields, feature encoding, model construction, pair sampling (including K=4 behavior), pairwise loss, optimizer, seed handling, batch size, maximum epochs, patience value, and contract-check behavior.",
+        "Use validation labels only for validation metric computation. Do not alter data.py or model.py.",
+        "Do not introduce any raw source field, derived feature, source-column alias, feature vocabulary change, or dataset join.",
+        "Keep the fixed invocation interface --config, --data-dir, --output, and --contract-check unchanged."
+      ],
+      "coordination_notes": [
+        "Ownership is binding: trainer owns train.py and config.json. No other agent is active because this ablation is confined to trainer-owned checkpoint-selection logic.",
+        "The model input interface is unchanged: encoded feature matrices have five integer columns in the existing FIELDS order [user_id, video_id, tab, hour, weekday].",
+        "The data interface is unchanged: encode returns (features, labels, users) per split; validation labels are available, while test labels remain None under include_test_labels=False.",
+        "The fixed evaluator is the only component permitted to evaluate held-out test ground truth. The trainer must only produce the two canonical prediction archives for it."
+      ]
+    }
+  },
+  "reasoning": "The requested ablation changes only the validation criterion used to retain checkpoints and trigger early stopping. Activating only trainer is sufficient and avoids unintended changes to data, features, model parameters, sampling, loss, or optimization. Validation primary is specified as the mean of the existing validation GAUC calculation and a deterministic validation within-user nDCG@5 calculation; test labels remain unavailable and unused."
+}

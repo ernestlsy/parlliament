@@ -1,0 +1,47 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "training",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "context-aware-recommendation",
+      "learning-to-rank",
+      "temporal-validation",
+      "regularization"
+    ],
+    "purpose": "Resolve the architecture and regularization uncertainty for the sole evidence-supported follow-up: context treatment is beneficial overall, but the prior explicit user-by-tab categorical interaction reduced primary. Need literature that distinguishes robust low-cardinality context conditioning from high-cardinality user-context memorization while preserving within-user ranking.",
+    "query": "Context-aware learning-to-rank for recommender systems: evidence and implementation guidance for low-cardinality request-context (tab, hour, weekday) interactions or context-conditioned ranking under temporal splits; compare explicit cross features, shared embeddings, and regularization when user-by-context crosses overfit.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "papers"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "top-k-ranking",
+      "pairwise-ranking",
+      "listwise-ranking",
+      "implicit-feedback",
+      "negative-sampling"
+    ],
+    "purpose": "Resolve whether a bounded objective change can plausibly address the observed gap between acceptable GAUC and weak nDCG@5 in material tabs without changing the fixed evaluation or using forbidden outcome features. The current pairwise K=4 objective plateaued, so evidence is needed before spending an experiment on a top-k-aligned loss or sampling scheme.",
+    "query": "Top-k learning-to-rank objectives for implicit-feedback recommendation with within-user candidate sets: compare pairwise logistic/RankNet negative sampling against listwise or top-k-weighted objectives, including robustness to sparse positives and temporal holdout evaluation.",
+    "request_index": 2,
+    "round": 1
+  }
+]

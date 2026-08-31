@@ -1,0 +1,14 @@
+command: ['/home/user/anaconda3/envs/evo/bin/python', 'train.py', '--config', 'config.json', '--data-dir', '/mnt/d/tehpengagent/src/kuairand-starter-kit/KuaiRand-Pure/data', '--output', '/mnt/d/tehpengagent/src/ernest/runs/run_12/attempts/attempt_6c4950bcc304/predictions_valid.npz']
+elapsed_seconds: 36.340
+return_code: 0
+--- stdout ---
+epoch=1 loss=0.590983 valid_gauc=0.668593 valid_ndcg_at_5=0.770406 valid_primary=0.719500 checkpoint_selection_metric=valid_primary
+epoch=2 loss=0.557156 valid_gauc=0.669181 valid_ndcg_at_5=0.770357 valid_primary=0.719769 checkpoint_selection_metric=valid_primary
+epoch=3 loss=0.553544 valid_gauc=0.670251 valid_ndcg_at_5=0.771054 valid_primary=0.720653 checkpoint_selection_metric=valid_primary
+epoch=4 loss=0.552657 valid_gauc=0.670600 valid_ndcg_at_5=0.771295 valid_primary=0.720947 checkpoint_selection_metric=valid_primary
+epoch=5 loss=0.552136 valid_gauc=0.670706 valid_ndcg_at_5=0.772527 valid_primary=0.721616 checkpoint_selection_metric=valid_primary
+epoch=6 loss=0.551704 valid_gauc=0.670703 valid_ndcg_at_5=0.771872 valid_primary=0.721287 checkpoint_selection_metric=valid_primary
+epoch=7 loss=0.551444 valid_gauc=0.669142 valid_ndcg_at_5=0.770882 valid_primary=0.720012 checkpoint_selection_metric=valid_primary
+epoch=8 loss=0.551308 valid_gauc=0.669247 valid_ndcg_at_5=0.771062 valid_primary=0.720154 checkpoint_selection_metric=valid_primary
+
+--- stderr ---

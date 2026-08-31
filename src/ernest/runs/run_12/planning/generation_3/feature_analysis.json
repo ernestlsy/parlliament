@@ -1,0 +1,29 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "experiment:1:metrics",
+        "experiment:2:metrics",
+        "screen:request_context"
+      ],
+      "finding": "Stop feature-budget expansion under the strict early-stopping rule: the factorization-machine change reduced official primary from 0.6029348473782026 in experiment 1 to 0.6004596081403915 in experiment 2, despite the only train-only prioritized group, request_context, showing a small positive screening lift of 0.002213281016278046. Request-context evidence is directionally consistent across the listed temporal days, but its lift is too small relative to daily variability to justify another model-complexity iteration after the observed regression.",
+      "recommended_action": "Do not launch another feature or interaction experiment. Retain already available request-context fields only in the existing production candidate if separately supported by the prior approved baseline; otherwise end this experiment branch and require new, independently validated evidence before reopening budget."
+    },
+    {
+      "evidence_ids": [
+        "experiment:2:metrics",
+        "experiment:2:segment:tab:0",
+        "experiment:2:segment:tab:6",
+        "experiment:2:segment:tab:5"
+      ],
+      "finding": "The main opportunity is top-five ranking quality by tab rather than global within-user discrimination. Global GAUC is 0.6658897820004246, but global nDCG@5 is 0.5350294342803582. Tab 0 is material scale (13726 rows) yet has nDCG@5 of 0.06250505453731993 and primary of 0.3096359317224008; tab 6 has GAUC 0.622100122100122 but nDCG@5 only 0.10603509232581615. This GAUC-versus-top-five gap indicates that improving broad pairwise ordering alone is not an adequate remedy. Tab 5 is also severely weak, but its 291 rows make it a diagnostic alert rather than a stable optimization target.",
+      "recommended_action": "Treat tab-conditioned top-five failures as an offline diagnosis for any future, separately authorized work: first verify candidate-set composition, label prevalence, and rank-position behavior by tab before proposing a model change. Do not claim segment-level gains from the current evidence or optimize to tiny tabs."
+    }
+  ],
+  "avoid": [
+    "Reject all outcome-at-impression fields and quarantined aggregate snapshots; they are unavailable or lack timestamped availability at ranking time and must not enter screening or training.",
+    "Do not pursue user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response: each was rejected in train-only screening, with negative primary lift for every group except the already prioritized request-context group. Evidence: screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response.",
+    "Do not interpret the user_positive_count=zero slice as a deployable targeting rule or model feature. It is label-conditioned retrospective diagnostics, not ranking-time information. Evidence: experiment:2:segment:user_positive_count:zero."
+  ],
+  "metric_diagnosis": "Experiment 2 has respectable global within-user ranking discrimination (GAUC 0.6658897820004246) but weaker top-five utility (nDCG@5 0.5350294342803582), and the weakness is concentrated in tab slices rather than explained by a global GAUC failure. In particular, tab 6 has moderate GAUC but extremely low nDCG@5, demonstrating that pairwise discrimination does not guarantee useful top-five ordering. The item-frequency rare_1_4 slice is also weak (GAUC 0.5, nDCG@5 0.17110937563226275), but its 249 rows are insufficient for a budgeted feature decision. The official primary regression from experiment 1 to experiment 2 is the controlling result under early stopping. Evidence: experiment:1:metrics, experiment:2:metrics, experiment:2:segment:tab:0, experiment:2:segment:tab:6, experiment:2:segment:tab:5, experiment:2:segment:item_frequency:rare_1_4."
+}

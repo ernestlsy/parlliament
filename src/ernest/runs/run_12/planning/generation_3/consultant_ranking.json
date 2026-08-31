@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c02",
+      "rank": 1,
+      "utility_score": 0.64,
+      "rationale": "Best non-duplicate use of the single experiment: a narrowly scoped loss change directly aligns optimization with the official within-user GAUC objective while retaining the empirically best additive representation. Evidence for top-rank transfer is limited and runtime is moderate, but it is materially more diagnostic than tuning."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 2,
+      "utility_score": 0.52,
+      "rationale": "A training-only, representation-preserving test of whether row-level sampling mismatches user-averaged evaluation. It has modest direct evidence and moderate implementation/runtime risk, but avoids the failed interaction-capacity direction and provides a clean attribution."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 3,
+      "utility_score": 0.49,
+      "rationale": "Cheap and directly tied to the composite primary metric, with evidence that GAUC and nDCG@5 can diverge. It is penalized because the stated train-only proxy conflicts with the exact ablation's use of official validation metrics, creating checkpoint-selection overfitting risk."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 4,
+      "utility_score": 0.46,
+      "rationale": "The focused video-by-tab interaction is substantially narrower than the failed all-pairs FM and is motivated by the only positively screened feature group plus large tab heterogeneity. Still, tab-slice diagnostics are retrospective and do not establish that this interaction generalizes."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 5,
+      "utility_score": 0.42,
+      "rationale": "A bounded user-video interaction cleanly isolates the most plausible collaborative term from the failed full FM. However, the full FM regression is negative evidence against additional interaction capacity, and no positive evidence specifically supports this term."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 6,
+      "utility_score": 0.37,
+      "rationale": "Listwise optimization could target nDCG@5, but its proposed per-user grouping over all impressions is a weak proxy for actual contemporaneous candidate sets and may distort the learning problem. Moderate runtime and low confidence reduce scarce-experiment value."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 7,
+      "utility_score": 0.34,
+      "rationale": "Targets the observed GAUC-versus-nDCG gap, but rank weighting based on current predictions is more complex, sensitive to optimization details, and weakly evidenced by retrospective tab diagnostics. It is less cleanly interpretable than ordinary pairwise loss."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 8,
+      "utility_score": 0.3,
+      "rationale": "A low-cost, isolated robustness check consistent with the FM overfitting result, but it has little evidence that the current additive model is overfit or that a tenfold L2 increase is calibrated. Expected upside is very small."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 9,
+      "utility_score": 0.25,
+      "rationale": "Safe and inexpensive, but replaces a flexible categorical feature with a restrictive global smooth effect despite heterogeneous hour slices. The weak segment evidence does not imply cyclic smoothing will improve ranking."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 10,
+      "utility_score": 0.2,
+      "rationale": "Clean and cheap but largely an unguided optimizer tweak. There is no convergence, instability, or learning-rate evidence, so its expected information and upside are low."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 11,
+      "utility_score": 0.12,
+      "rationale": "Near-duplicate of c06 while adding dropout, so it changes both interaction capacity and regularization and weakens causal interpretability. It inherits negative evidence from the failed FM, has the lowest confidence, and is redundant under one-experiment scarcity."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 12,
+      "utility_score": 0.02,
+      "rationale": "It exactly recreates the already scored additive experiment 1 from experiment 2 and therefore offers no new evidence or expected gain over the known best result. Although the additive model is the correct incumbent, rerunning this duplicate wastes the sole experiment."
+    }
+  ]
+}

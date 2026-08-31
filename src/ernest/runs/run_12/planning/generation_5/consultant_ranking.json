@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.72,
+      "rationale": "Best scoped mechanism: a single request-time interaction extends the only positively screened feature family and directly addresses additive-model limitations. User-tab sparsity and slice-based evidence temper confidence, but feasibility and runtime risk are favorable."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 2,
+      "utility_score": 0.67,
+      "rationale": "A clean, low-risk context interaction with a plausible surface-specific item-relevance mechanism. It is slightly weaker than user-tab because tab heterogeneity alone does not establish item-by-tab variation and video-tab sparsity may be substantial."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 3,
+      "utility_score": 0.63,
+      "rationale": "Strong objective-aligned training change that could improve frontier ordering without feature leakage. It is less safe than the leading feature tests because dynamic hard-negative mining changes optimization behavior, can over-focus on noisy pairs, and adds runtime risk."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 4,
+      "utility_score": 0.57,
+      "rationale": "Low-scope and low-runtime interaction with a plausible time-conditioned item mechanism. Evidence is weaker than tab candidates: weak hour slices are smaller and are diagnostic rather than evidence that video-hour interactions are causal."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 5,
+      "utility_score": 0.54,
+      "rationale": "The only candidate with direct predecessor evidence: K=1 to K=4 produced a positive but small primary gain. K=8 is a disciplined continuation, but diminishing returns and doubled pair-construction/training cost limit scarce-experiment value."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 6,
+      "utility_score": 0.49,
+      "rationale": "Temporal reweighting is compatible with the split and operationally simple, with no leakage if weights use training dates only. The seven-day half-life is weakly justified and risks fitting one validation period rather than a stable mechanism."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 7,
+      "utility_score": 0.45,
+      "rationale": "A cheap, isolated loss-shape test with modest plausibility for close comparisons. The temperature value is arbitrary, may merely rescale effective optimization dynamics, and has only indirect evidence from weak validation slices."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 8,
+      "utility_score": 0.43,
+      "rationale": "Very safe and cheap, and sparse-ID shrinkage is plausible. However, it has weak empirical support, an arbitrary tenfold setting, and limited expected upside after the current compact additive model already generalizes reasonably."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 9,
+      "utility_score": 0.4,
+      "rationale": "A clean loss-only ablation, but hinge loss has a broad negative-to-small-positive predicted range and less direct support than logistic ranking, which already improved results. It is more exploratory than the higher-ranked tests."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 10,
+      "utility_score": 0.36,
+      "rationale": "The calibration rationale is plausible, but the fixed 0.8/0.2 mixture is unvalidated and adds objective scope plus runtime. Lower global AUC under pairwise training is not sufficient evidence that pointwise supervision improves the official ranking objective."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 11,
+      "utility_score": 0.29,
+      "rationale": "Directly selecting checkpoints on a reported validation metric creates a meaningful validation-overfitting risk, especially after inspecting heterogeneous nDCG slices. It may optimize selection noise rather than improve the trained ranker."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 12,
+      "utility_score": 0.18,
+      "rationale": "Lowest priority because the closely related rank-16 FM already regressed under pointwise training, while this retry changes architecture, rank, and objective together. Its broader interaction scope, sparse-combination overfitting risk, and medium runtime make attribution and payoff poor for one scarce experiment."
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "active_agents": [
+    "feature_engineer",
+    "model_designer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "encode(splits) returns (encoded, dimension). For every split, encoded[split] remains (features, labels, users). features is a globally offset np.int32 matrix in canonical selected source-row order with exact columns [user_id, video_id, tab, hour, weekday, user_id_tab]. The sixth raw categorical value is exactly the Python tuple (row[1], row[3]), where row[1] is raw user_id and row[3] is raw tab from the log. All six vocabularies are fit only on splits[\"train\"], each has one unknown bucket, and validation/test unseen user_id_tab tuples use the sixth unknown bucket. labels remain None for test when include_test_labels=False; users remains the raw user_id vector."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model receives globally offset integer feature matrices of shape (N, 6). logits is bias + sum of the six corresponding scalar weights. step() receives equal-shape positive and negative matrices with exactly six columns and optimizes the unchanged pairwise logistic loss."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "submission_artifact": {
+      "path": "predictions_test.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ],
+      "split": "test"
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Append exactly one train-fitted categorical user_id-by-tab interaction feature to the encoded additive feature matrix while retaining the existing five encoded fields in their current order.",
+      "required_changes": [
+        "Modify only data.py.",
+        "Change FIELDS to exactly [\"user_id\", \"video_id\", \"tab\", \"hour\", \"weekday\", \"user_id_tab\"].",
+        "Keep load() row tuples and raw CSV reads unchanged: use only raw fields user_id and tab from each log row for the new interaction; do not read any additional source column or file.",
+        "In encode(), retain the existing first five raw values in exactly this order: row[1] (user_id), row[2] (video_id), row[3] (tab), row[4] (hour), row[5] (weekday). Append the sixth raw categorical value as the tuple (row[1], row[3]), representing exactly (user_id, tab).",
+        "Fit the sixth vocabulary exclusively by iterating training rows, exactly as the existing categorical vocabularies are fitted. Its vocabulary keys must be tuple values (user_id, tab); do not stringify, hash, or derive an alternate alias for either source field.",
+        "Give the sixth field one unknown bucket at index len(vocab), use that bucket for every validation or test (user_id, tab) tuple absent from the training-fitted sixth vocabulary, and retain the existing per-field offset recipe: offsets = cumulative sum of preceding field dimensions.",
+        "Return features as int32 with shape (number_of_split_rows, 6), preserving the selected source-row order for train, valid, and test. Keep users as row[1] in that same order and preserve existing label handling, including test labels being None when include_test_labels=False.",
+        "Return the total embedding dimension as the sum of all six field dimensions."
+      ],
+      "preserve": [
+        "Keep SPLITS, date filtering, label policy, hour derivation from hourmin, weekday derivation from date, and max_rows_per_split behavior unchanged.",
+        "Use no forbidden, excluded, quarantined, outcome, aggregate, or test-label-derived input. The only new feature must use eligible raw user_id and tab.",
+        "Do not change train.py, model.py, or config.json.",
+        "Do not reorder or alter the semantics of the five pre-existing feature columns."
+      ],
+      "coordination_notes": [
+        "The shared encoded interface becomes encoded[split] = (features, labels, users), where features is int32 shape (N, 6), with columns [user_id, video_id, tab, hour, weekday, user_id_tab], each already globally offset and in range [0, dimension).",
+        "The model_designer will update model.py to accept this six-column additive input. No trainer change is required because train.py forwards feature matrices unchanged.",
+        "The interaction is categorical and train-fitted only; validation and test unseen pairs must map to the one sixth-field unknown bucket rather than expanding the vocabulary."
+      ]
+    },
+    "model_designer": {
+      "objective": "Adapt the additive pairwise ranker to consume the six-field matrix produced by data.py, adding no nonlinear or non-additive model architecture beyond summing the new user_id_tab categorical weight.",
+      "required_changes": [
+        "Modify only model.py.",
+        "In Model.step(), replace the fixed five-column validation with a six-column validation: raise ValueError unless positive_features.shape[1] == 6. Keep the existing requirements that both pair matrices are two-dimensional, have identical shapes, and have nonzero pair count.",
+        "Keep logits(features) as bias plus self.weights[features].sum(1), so the score is exactly the additive sum of six categorical field weights plus the unchanged bias.",
+        "Keep the existing pairwise logistic objective, gradient construction with np.add.at for positive and negative feature IDs, L2 regularization, Adam constants and update logic, finite-value checks, prediction batching, and state/load_state behavior unchanged.",
+        "Do not add interaction layers, embeddings, cross terms, alternative losses, altered optimizer settings, or configuration defaults."
+      ],
+      "preserve": [
+        "Preserve pairwise logistic training semantics and the additive scorer; the sole added capacity is the sixth categorical user_id_tab feature weight supplied by data.py.",
+        "Preserve learning_rate and l2 constructor defaults exactly; config.json is unchanged and must not be compensated for through model defaults.",
+        "Preserve prediction output shape: predict(features) must return one finite one-dimensional score per input row in input order.",
+        "Do not change data.py, train.py, or config.json."
+      ],
+      "coordination_notes": [
+        "Expect feature matrices from data.py with exact columns [user_id, video_id, tab, hour, weekday, user_id_tab] and total dimension covering six offset categorical vocabularies.",
+        "train.py already uses the encoded matrices for same-user K=4 uniform negative sampling, validation-only proxy/checkpoint selection, and canonical prediction emission; it requires no edit for the six-column interface.",
+        "The updated six-column check is necessary for the contract probe and full training to reject stale five-column encodings."
+      ]
+    }
+  },
+  "reasoning": "The requested ablation is exactly one train-fitted categorical interaction between the eligible raw log fields user_id and tab. It requires data.py to create and encode that sixth field and model.py to accept six additive IDs. train.py and config.json already preserve K=4 same-user uniform negative sampling, pairwise logistic loss, optimizer, regularization, validation-only early stopping/checkpoint selection, and canonical valid/test prediction archive generation, so activating trainer would be unnecessary and risks changing the controlled ablation."
+}

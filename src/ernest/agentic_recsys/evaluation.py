@@ -299,5 +299,31 @@ def score_prediction_artifact(path: Path, data_dir: Path, split: str = "valid") 
                 f"prediction rows ({len(scores)}) do not match canonical {split} rows ({len(labels)})"
             )
         if not np.array_equal(row_ids, np.arange(len(labels))):
-            raise ValueError("row_ids must be consecutive and in canonical validation order")
+            raise ValueError(f"row_ids must be consecutive and in canonical {split} order")
         return evaluate(users, labels, scores)
+
+
+def validate_prediction_artifact(path: Path, data_dir: Path, split: str) -> None:
+    """Validate an artifact's schema and alignment without computing or exposing metrics."""
+    import numpy as np
+
+    if not path.is_file():
+        raise ValueError(f"prediction artifact does not exist: {path.name}")
+    with np.load(path, allow_pickle=False) as artifact:
+        if set(artifact.files) != {"row_ids", "scores"}:
+            raise ValueError("prediction arrays must be exactly ['row_ids', 'scores']")
+        row_ids = artifact["row_ids"]
+        scores = artifact["scores"]
+        _, labels = load_ground_truth(data_dir, split)
+        if row_ids.ndim != 1 or scores.ndim != 1:
+            raise ValueError("row_ids and scores must be one-dimensional")
+        if not np.issubdtype(row_ids.dtype, np.integer):
+            raise ValueError("row_ids must use an integer dtype")
+        if len(row_ids) != len(labels) or len(scores) != len(labels):
+            raise ValueError(
+                f"prediction rows ({len(scores)}) do not match canonical {split} rows ({len(labels)})"
+            )
+        if not np.array_equal(row_ids, np.arange(len(labels))):
+            raise ValueError(f"row_ids must be consecutive and in canonical {split} order")
+        if not np.all(np.isfinite(scores)):
+            raise ValueError("scores contain NaN or infinity")

@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "built"
+  ],
+  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.deep_cross_ranker",
+      "path": "20_architectures/deep_cross_ranker.md",
+      "sha256": "db004648e9c7b63e0f9bc0954691dbcf9fe572c134fa90b309e12eee9d590cb8",
+      "source_characters": 7634,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "architecture.embedding_mlp_ranker",
+      "path": "20_architectures/embedding_mlp_ranker.md",
+      "sha256": "c81739cefc5d550399a927013519688953b21ea274c3211bcfc5316593a569be",
+      "source_characters": 8308,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.adversarial_embedding_regularization",
+      "path": "40_training/adversarial_embedding_regularization.md",
+      "sha256": "f776c2d5191a8dd09a99afc246f926c9b3ef8916f9e18f8cc79bfc1182d9bf48",
+      "source_characters": 8458,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.group_complete_stratified_minibatching",
+      "path": "40_training/group_complete_stratified_minibatching.md",
+      "sha256": "ac4067495282d7b9958b561801403db5a3d02efd526f51595e93589f3edfb471",
+      "source_characters": 10000,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.within_group_hard_pair_curriculum",
+      "path": "40_training/within_group_hard_pair_curriculum.md",
+      "sha256": "5ef41289369502c1f1c4f0d24962fed95b8604e35071b0eea1af212dbc503c64",
+      "source_characters": 7580,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.user_normalized_binary_cross_entropy",
+      "path": "30_objectives/user_normalized_binary_cross_entropy.md",
+      "sha256": "c366a83c3c5da5d8076ea1d3d8b00acc3006b64c9a45f2f8d7959e346defe485",
+      "source_characters": 9067,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "robustness.recency_weighted_causal_ranking_training",
+      "path": "60_bias_and_robustness/recency_weighted_causal_ranking_training.md",
+      "sha256": "01659cc8a2c87fd62ae3112660817ef4f15647a3ecc267b670538c2886fa7f7b",
+      "source_characters": 10000,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.metric_aligned_checkpoint_averaging",
+      "path": "40_training/metric_aligned_checkpoint_averaging.md",
+      "sha256": "b2da1788bc426937876f44a8bee418c5ee304e87ce49dd11f98881983dc53ffc",
+      "source_characters": 8702,
+      "truncated": true
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "architecture.deep_cross_ranker",
+    "architecture.embedding_mlp_ranker",
+    "training.adversarial_embedding_regularization",
+    "training.group_complete_stratified_minibatching",
+    "training.within_group_hard_pair_curriculum",
+    "objective.user_normalized_binary_cross_entropy",
+    "robustness.recency_weighted_causal_ranking_training",
+    "training.metric_aligned_checkpoint_averaging"
+  ],
+  "total_fetched_characters": 40000
+}

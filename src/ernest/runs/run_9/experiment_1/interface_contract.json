@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "data.encode(splits) returns (encoded, dimension), where each encoded split is (features, labels, user_ids); features is an int32 matrix with columns in exact order [user_id, video_id, author_id, tab, dur_bucket, hour, weekday], labels are float32 long_view values, user_ids are the original user_id values, and validation rows retain canonical source row order."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives an int32 feature matrix of shape (N, 8), containing globally offset categorical indices for the five baseline fields plus tab, canonical derived hour, and canonical derived weekday. Model architecture, interaction dimension, BCE training, optimizer, and configuration remain unchanged."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

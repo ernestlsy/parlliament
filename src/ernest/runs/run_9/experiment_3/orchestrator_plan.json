@@ -1,0 +1,93 @@
+{
+  "active_agents": [
+    "model_designer",
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.py remains unchanged and continues to return encoded split tuples (features, labels, user_ids) in canonical source row order; validation ground truth is not emitted to the evaluator output."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model.step receives features, labels, and float32 per-row sample_weights aligned to the batch; weights are reciprocal complete-training-user impression counts and the weighted BCE gradient is normalized by the batch sum of weights. Model.predict receives only features and returns one score per input row."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "model_designer": {
+      "objective": "Implement exact inverse-user-candidate-count weighted BCE in the incumbent Factorization Machine without changing its seven-field representation or architecture.",
+      "required_changes": [
+        "In model.py, change Model.step to accept a per-row sample_weights argument aligned with features and labels.",
+        "Compute weighted BCE as sum(sample_weights * per-row BCE) divided by sum(sample_weights), where each row weight is the reciprocal of its complete training user's total candidate/impression count.",
+        "Scale the logit gradient by sample_weights divided by sum(sample_weights), so embeddings, linear weights, and bias receive the exact weighted objective gradient.",
+        "Return the normalized weighted BCE loss.",
+        "Validate that sample_weights is one-dimensional, has the same length as labels, is finite, nonnegative, and has a positive sum; retain the existing empty-batch behavior.",
+        "Do not compute user counts from a mini-batch inside model.py, because that would not represent complete training-user counts."
+      ],
+      "preserve": [
+        "Preserve the existing FM logits calculation, seven encoded fields, interaction_dimension, optimizer equations, learning rate, l2 regularization, random seed behavior, prediction output shape, checkpoint state format, and load_state behavior.",
+        "Preserve sigmoid clipping and numerical stabilization in BCE.",
+        "Do not modify data.py, add features, use labels or any forbidden/quarantined schema fields as model inputs, or change config defaults."
+      ],
+      "coordination_notes": [
+        "trainer will compute complete training-user impression counts from encoded train user IDs before shuffling, create one reciprocal count per training row, and pass the corresponding batch slice to Model.step.",
+        "The model input contract becomes Model.step(features, labels, sample_weights), with sample_weights aligned to the canonical row order of the supplied batch; validation prediction remains Model.predict(valid_features) and must not use ground truth."
+      ]
+    },
+    "trainer": {
+      "objective": "Thread exact complete-training-user inverse-count weights through training while preserving the fixed training and evaluation behavior.",
+      "required_changes": [
+        "In train.py, after encoded[\"train\"] is loaded, retain train user IDs and count every training impression for each complete training user using those IDs.",
+        "Construct train_sample_weights as float32 values equal to 1.0 divided by the complete training user's total training impression count, with one weight for every training row.",
+        "For every training batch, pass train_sample_weights[batch] as the third argument to model.step.",
+        "In contract-check mode, pass the corresponding probe weights to model.step as well.",
+        "Leave config.json unchanged; preserve seed, learning_rate, l2, batch_size, max_epochs, patience, and split values and do not implement a configured change through model.py defaults.",
+        "Keep validation scoring, early stopping, checkpoint selection, and fixed output behavior unchanged. Ensure the final predictions_valid.npz-style output contains exactly row_ids and scores, with row_ids equal to the canonical validation row positions in source validation order and scores in that same order."
+      ],
+      "preserve": [
+        "Preserve the existing data loading and encoding path, training permutation and batch boundaries, validation metric implementation, stopping rule, best-state restoration, output filename argument semantics, and absence of validation ground truth in training.",
+        "Do not modify data.py or introduce aliases for raw columns; no feature representation changes are part of this ablation."
+      ],
+      "coordination_notes": [
+        "model_designer is changing Model.step to require aligned sample_weights and to normalize by the batch weight sum; trainer must call that interface for both the contract probe and every normal training batch.",
+        "Use encoded train user IDs returned by data.py, not a feature-column alias or validation users, to derive counts. Counts must be computed before shuffling so users split across batches retain their complete training totals."
+      ]
+    }
+  },
+  "reasoning": "Both model.py and train.py are required: exact complete-user weighting cannot be implemented correctly from model.py alone because shuffled mini-batches do not contain complete users. The data representation and config remain unchanged, and no data.py agent is needed."
+}

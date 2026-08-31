@@ -18,6 +18,15 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--workspace", required=True, help="directory that will contain runs/")
     run.add_argument("--data-dir", required=True, help="KuaiRand-Pure data directory")
     run.add_argument("--run-name", default="run_1")
+    run.add_argument(
+        "--seed-model",
+        choices=["simple", "kuairand-baseline"],
+        default="simple",
+        help=(
+            "parent-0 scaffold: simple additive user/item model (default), or the "
+            "five-field KuaiRand Factorization Machine baseline"
+        ),
+    )
     providers = run.add_mutually_exclusive_group(required=True)
     providers.add_argument("--llm-command", help="local command accepting JSON stdin and emitting JSON stdout")
     providers.add_argument("--model", help="model for an OpenAI or compatible HTTP API")
@@ -110,6 +119,12 @@ def main(argv=None) -> int:
             "abandoned": len(abandoned),
             "latest_primary": scored[-1]["metrics"]["primary"] if scored else None,
             "converged": journal.converged(),
+            "seed_model": (
+                json.loads(
+                    (Path(args.run_dir) / "system_config.json").read_text(encoding="utf-8")
+                ).get("seed_model", "simple")
+                if (Path(args.run_dir) / "system_config.json").is_file() else None
+            ),
             "research": research_summary,
             "literature": literature_summary,
             "recent_failures": [{
@@ -126,6 +141,7 @@ def main(argv=None) -> int:
         workspace=args.workspace,
         data_dir=args.data_dir,
         run_name=args.run_name,
+        seed_model=args.seed_model,
         max_experiments=args.max_experiments,
         experiment_timeout_seconds=args.timeout,
         max_debug_attempts=args.max_debug_attempts,

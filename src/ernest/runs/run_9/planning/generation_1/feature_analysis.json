@@ -1,0 +1,21 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context"
+      ],
+      "finding": "Prioritize request-context features. They are the only screened group with positive overall primary lift (+0.0022), full coverage, and positive daily lift on all four dates. Within-user ranking is reasonably stable in GAUC for cold users (0.654) and warm users/items (0.631), although nDCG@5 is weaker than GAUC, indicating limited top-five strength.",
+      "recommended_action": "Advance request_context to the next controlled experiment, with early stopping if the primary metric fails to remain positive or if GAUC does not hold across user segments; monitor nDCG@5 separately."
+    }
+  ],
+  "avoid": [
+    "screen:user_profile",
+    "screen:historical_user_author_affinity",
+    "screen:upload_recency",
+    "screen:content_duration",
+    "screen:item_metadata",
+    "screen:historical_author_response",
+    "screen:historical_item_response"
+  ],
+  "metric_diagnosis": "Training-only internal temporal screening supports advancing only screen:request_context. Its positive lift is modest relative to daily variability, so the budget should use a strict early-stop gate. GAUC is stronger than nDCG@5 in both cold-user and warm-user/item segments, which supports within-user ordering more than top-five ranking quality. The other screened groups have negative primary lift overall and should not receive experiment budget. No post-score weakest-segment evidence is available. Exclude outcome-derived and timestamp-unavailable aggregates because they are leakage or unavailable at ranking time."
+}

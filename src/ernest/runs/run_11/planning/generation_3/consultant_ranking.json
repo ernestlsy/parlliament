@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c09",
+      "rank": 1,
+      "utility_score": 0.66,
+      "rationale": "Best scarce-run tradeoff: a single low-runtime, leakage-safe loss weighting change directly aligns row-level BCE with macro per-user nDCG evaluation. Evidence is indirect and validation-derived, so the score is moderated, but it is less duplicative and lower risk than ranking-loss or architecture replacements."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 2,
+      "utility_score": 0.61,
+      "rationale": "A minimal, cheap regularization ablation with a plausible sparse-ID generalization mechanism. The harmful sparse tab\u00d7hour addition provides modest supporting evidence for reducing overfit, although it does not establish that the baseline L2 is too weak."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 3,
+      "utility_score": 0.57,
+      "rationale": "Pairwise loss is well aligned with the official within-user ordering objective and has a bounded, interpretable scope. It has weak direct empirical support here and medium implementation/runtime risk, but is a more principled next direction than arbitrary optimizer perturbations."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 4,
+      "utility_score": 0.52,
+      "rationale": "Changing FM dimension is a clean one-knob capacity test that may capture interactions without another explicit sparse cross. Evidence for under-capacity is limited, and additional capacity risks repeating the overfitting pattern from tab\u00d7hour."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 5,
+      "utility_score": 0.47,
+      "rationale": "Low-runtime and cleanly ablated, with training-only evidence that the broader duration family was harmful. However, that screen does not isolate the already-deployed duration bucket, so extrapolating it to removal is weak and risks discarding a useful baseline field."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 6,
+      "utility_score": 0.38,
+      "rationale": "Cheap and isolated optimization check, but there is no evidence that learning rate 0.001 is noisy or that the baseline failed to converge. Its claimed upside is small and the reported confidence is unsupported by the archive."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 7,
+      "utility_score": 0.34,
+      "rationale": "A cheap counterpart to stronger L2, but decreasing regularization conflicts with the only relevant signal: sparse cross expansion worsened validation. The warm-item segment is not evidence that baseline regularization is excessive."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 8,
+      "utility_score": 0.3,
+      "rationale": "Low execution cost but the least supported learning-rate direction, with a material overshoot risk under the unchanged early-stop schedule. The under-training rationale is speculative."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 9,
+      "utility_score": 0.27,
+      "rationale": "Targets top-five ranking but uses retrospective weak validation slices to motivate a substantially more complex hard-negative procedure. It introduces tuning and validation-overfitting risk, and its expected nDCG benefit is not independently supported."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 10,
+      "utility_score": 0.22,
+      "rationale": "Field-aware FM is a broad parameterization replacement with high runtime and memory risk. It is leakage-safe, but no evidence shows that shared field embeddings are the limiting factor, and the sparse-cross failure cautions against more interaction flexibility."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 11,
+      "utility_score": 0.16,
+      "rationale": "DeepFM-style MLP is the broadest high-capacity architecture change, with high runtime and substantial temporal validation-overfitting risk. The failed manual cross is not positive evidence that a nonlinear interaction network will generalize."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 12,
+      "utility_score": 0.05,
+      "rationale": "The reversion is already exactly represented by scored experiment 1: it restores primary from 0.600645 to the known 0.601430. It is the safest deployment rollback, but as the one scarce experiment it is fully duplicative and yields no new information unless reproducibility verification is explicitly required."
+    }
+  ]
+}

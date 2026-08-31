@@ -24,11 +24,13 @@ The implementation keeps the specification's responsibilities separate:
 | Guardrails | `agentic_recsys/sandbox.py`: sandbox-contained paths and validated full-file replacements |
 | Fixed evaluator | `agentic_recsys/evaluation.py`: official scores plus classification and ranking diagnostics |
 | Segment analyzer | `agentic_recsys/diagnostics.py`: post-score warm/cold, context, and activity slices |
-| Seed scaffold | `agentic_recsys/seed/`: neutral two-ID additive learner, represented as unscored parent 0 |
+| Seed scaffolds | `agentic_recsys/seed/` and `seed_kuairand_baseline/`: selectable unscored parent 0 code |
 
-The seed is a fresh, unscored code scaffold—not a prior experiment and not a reference to the
-published KuaiRand baseline. It uses only user/item IDs and a minimal additive pointwise learner so
-the first generation starts without inherited interaction architecture or performance assumptions.
+The default `simple` seed is a fresh, unscored code scaffold—not a prior experiment. It uses only
+user/item IDs and a minimal additive pointwise learner. New runs may instead select
+`kuairand-baseline`, an Ernest-owned adaptation of the starter kit's five-field, 16-dimensional
+Factorization Machine using user, video, author, tab, and train-fitted duration-bucket fields. Both
+choices remain unscored parent 0; published baseline scores are not inserted into the Journal.
 Successful descendants are atomically renamed to `runs/<run>/experiment_<id>`. Failed staging directories become
 `runs/<run>/abandoned/attempt_<attempt_id>` and retain code and logs without consuming an ID.
 
@@ -173,9 +175,14 @@ python -m pip install -e .
 ernest run \
   --workspace . \
   --data-dir ../kuairand-starter-kit/KuaiRand-Pure/data \
+  --seed-model simple \
   --model YOUR_MODEL \
   --base-url https://api.openai.com/v1
 ```
+
+Use `--seed-model kuairand-baseline` on a new run to start parent 0 from the starter kit's official
+FM architecture and training setup. The default is `simple`. Seed selection is immutable for a run:
+resuming an existing `--run-name` with a different value is rejected to preserve lineage.
 
 `OPENAI_API_KEY` supplies the key. `--base-url` may point to a service implementing the common
 chat-completions JSON interface. One client object is shared by all roles. `--api-mode auto` is the

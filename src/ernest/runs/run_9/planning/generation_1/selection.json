@@ -1,0 +1,34 @@
+{
+  "winner": {
+    "text": "Add impression-time request-context fields to the five-field Factorization Machine baseline.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "The only screened feature group with positive overall and daily internal temporal-holdout lift is request_context, with full coverage and +0.002213 primary lift.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add tab, hour, and weekday as three categorical FM fields while leaving the model, BCE objective, optimizer, split, and existing five fields unchanged.",
+    "expected_effect": {
+      "GAUC": "Small positive increase, approximately +0.002 to +0.004, because context can reorder impressions within users.",
+      "nDCG@5": "Small positive or flat change, approximately -0.001 to +0.003; the screening indicates weaker top-five strength than GAUC."
+    },
+    "expected_primary_gain": 0.0022,
+    "confidence": 7,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "task.leakage_policy"
+    ]
+  },
+  "selection_rationale": "Select c01 because request_context is the only screened feature group with positive overall and daily temporal-holdout lift, including full coverage and +0.002213 primary lift. It offers the strongest evidence and expected reliable gain while isolating one feature change with low leakage and runtime risk. The Consultant ranked it first, ahead of broader and less validated loss or architecture changes.",
+  "counted_experiments_consumed": 0
+}

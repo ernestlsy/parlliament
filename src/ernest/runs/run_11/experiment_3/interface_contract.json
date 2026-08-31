@@ -1,0 +1,46 @@
+{
+  "data_output": {
+    "description": "data.encode(splits) remains unchanged and returns (encoded, dimension). encoded[\"train\"] is (train_features, train_labels, train_users), where train_users is aligned one-to-one with training rows and is derived from the exact raw user_id field. encoded[\"valid\"] remains (valid_features, valid_labels, valid_users) in canonical selected source-row order."
+  },
+  "config_keys": [
+    "seed",
+    "interaction_dimension",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model.step(features, labels, sample_weights=None) accepts features shaped (batch_rows, 7), labels shaped (batch_rows,), and optional finite nonnegative float32-compatible sample_weights shaped (batch_rows,). Trainer supplies globally mean-one normalized inverse training-user-impression-count weights. Model.predict(features) continues to return one raw-logit score per input row in unchanged order."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

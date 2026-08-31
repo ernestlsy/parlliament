@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "data.py remains unchanged and continues to return encoded split tuples (features, labels, user_ids) in canonical source row order; validation ground truth is not emitted to the evaluator output."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model.step receives features, labels, and float32 per-row sample_weights aligned to the batch; weights are reciprocal complete-training-user impression counts and the weighted BCE gradient is normalized by the batch sum of weights. Model.predict receives only features and returns one score per input row."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

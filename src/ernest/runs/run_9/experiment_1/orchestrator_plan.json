@@ -1,0 +1,80 @@
+{
+  "active_agents": [
+    "feature_engineer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.encode(splits) returns (encoded, dimension), where each encoded split is (features, labels, user_ids); features is an int32 matrix with columns in exact order [user_id, video_id, author_id, tab, dur_bucket, hour, weekday], labels are float32 long_view values, user_ids are the original user_id values, and validation rows retain canonical source row order."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model receives an int32 feature matrix of shape (N, 8), containing globally offset categorical indices for the five baseline fields plus tab, canonical derived hour, and canonical derived weekday. Model architecture, interaction dimension, BCE training, optimizer, and configuration remain unchanged."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Extend the baseline data encoding with the request_context feature group as three additional categorical FM fields.",
+      "required_changes": [
+        "Modify only data.py.",
+        "Use the exact raw source columns date, hourmin, tab, user_id, video_id, and the existing joined author_id and duration_ms fields; do not introduce aliases.",
+        "For each log row, derive hour as integer floor(numeric hourmin / 100), constrained to 0..23, exactly per dataset_feature_schema.",
+        "For each log row, derive weekday from the YYYYMMDD date using calendar weekday with Monday=0 through Sunday=6, exactly per dataset_feature_schema.",
+        "Change FIELDS from [\"user_id\", \"video_id\", \"author_id\", \"tab\", \"dur_bucket\"] to [\"user_id\", \"video_id\", \"author_id\", \"tab\", \"dur_bucket\", \"hour\", \"weekday\"].",
+        "Retain duration bucket construction using training-split-only quantile edges.",
+        "Encode hour and weekday as categorical string values with vocabularies fitted only on the training split, using the existing per-field unknown category and offset mechanism.",
+        "Return feature arrays with eight columns and a total dimension equal to the sum of the eight field dimensions.",
+        "Keep labels sourced only from the exact raw long_view column and keep users sourced from the exact raw user_id column."
+      ],
+      "preserve": [
+        "Preserve the existing train, valid, and test date ranges and source-file loading order.",
+        "Preserve the existing video_id-to-author_id join and UNK fallback behavior.",
+        "Preserve canonical source row order within every split, especially validation order.",
+        "Preserve max_rows_per_split behavior by truncating each selected split after filtering in source order.",
+        "Do not add forbidden, excluded, or quarantined fields, including time_ms, outcome fields other than the existing training label handling, or aggregate snapshots.",
+        "Do not modify model.py, train.py, or config.json; the FM architecture, BCE objective, optimizer, split, and all existing five fields remain unchanged."
+      ],
+      "coordination_notes": [
+        "model.py will consume the encoded feature matrix generically, so its input remains an integer matrix of shape (row_count, 8) with globally offset categorical indices.",
+        "train.py must continue using encoded[config[\"split\"]] and must emit predictions_valid.npz with exactly row_ids and scores; row_ids must remain np.arange(len(valid_labels), dtype=np.int64) matching canonical validation row order.",
+        "No trainer or model_designer activation is required because neither train.py/config.json nor model.py needs an edit."
+      ]
+    }
+  },
+  "reasoning": "Activate only feature_engineer because the requested ablation is entirely a data.py change: add the exact request_context fields tab, hour, and weekday while leaving the FM implementation, training procedure, configuration, objective, optimizer, split, and existing five fields unchanged. The derived fields use the canonical dataset_feature_schema recipes and all vocabularies remain training-only. The fixed output contract is preserved because validation rows are not reordered and predictions_valid.npz contains only row_ids and scores."
+}

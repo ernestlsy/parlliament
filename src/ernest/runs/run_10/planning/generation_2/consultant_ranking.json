@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.78,
+      "rationale": "Best scarce-experiment trade-off: a single, cheap, leakage-safe interaction directly tests a plausible missing request-context effect while preserving the proven additive system. The hour-slice evidence is only retrospective validation diagnostics, so the expected gain is modest and carries validation-selection risk, but scope and runtime risk are minimal."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 2,
+      "utility_score": 0.72,
+      "rationale": "A factorization machine is the most disciplined architecture expansion: it can model the missing user-item-context interactions implicated by heterogeneous tab performance while retaining exactly the allowed fields. It has broader capacity and medium runtime/overfit risk than c01, but is less excessive than MLP or Deep & Cross replacements."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 3,
+      "utility_score": 0.66,
+      "rationale": "Directly aligns training with the official within-user ordering target and requires no new features or availability assumptions. It is penalized for medium runtime, an arbitrary fixed pairwise weight, and incomplete alignment with nDCG@5 because uniformly sampled pairs need not emphasize top-rank errors."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 4,
+      "utility_score": 0.61,
+      "rationale": "Low-risk objective-alignment test: training-only inverse user-impression weighting addresses the mismatch between row-level BCE gradient mass and user-averaged GAUC. Evidence for meaningful user-frequency imbalance is modest, so upside is lower than c01/c03/c09, but its bounded scope is valuable under a scarce budget."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 5,
+      "utility_score": 0.55,
+      "rationale": "Embedding-plus-MLP has credible upside from nonlinear identity-context interactions, but it is a comparatively broad capacity increase with medium runtime and substantial overfitting risk. The poor tab slices motivate interactions, but do not specifically establish that an MLP is needed over the simpler FM alternative."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 6,
+      "utility_score": 0.49,
+      "rationale": "A cheap and safe ablation, but it duplicates c01's request-context-interaction direction with weaker evidence and lower expected gain. Existing weekday main effects may already absorb much of the proposed signal, and tab-slice heterogeneity does not specifically support tab-by-weekday effects."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 7,
+      "utility_score": 0.43,
+      "rationale": "Logit averaging is leakage-safe and may reduce seed variance, but it triples training/inference cost for a small, weakly evidenced expected gain. The additive baseline is relatively simple, making substantial ensemble benefit unlikely; this is lower priority than testing a causal modeling hypothesis."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 8,
+      "utility_score": 0.39,
+      "rationale": "Very safe, reproducible, and inexpensive, with a plausible sparse-ID shrinkage rationale. However, the selected one-decade L2 change is not evidence-calibrated, sparse-item slices are small or dominated by different label mixes, and expected global movement is minimal."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 9,
+      "utility_score": 0.35,
+      "rationale": "Deep & Cross targets interactions but is a larger and less feasible architecture replacement than the FM with no stronger direct evidence. It duplicates the interaction-capacity hypothesis while adding tuning, implementation, and validation-overfitting exposure."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 10,
+      "utility_score": 0.3,
+      "rationale": "Optimizer substitution is bounded and cheap, but retaining Adam's initial learning rate for AdaGrad makes the ablation poorly calibrated and raises avoidable undertraining risk. Frequency-slice disparities alone provide weak causal evidence that optimizer choice is the bottleneck."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 11,
+      "utility_score": 0.18,
+      "rationale": "Listwise optimization nominally targets top-rank quality, but same-day all-impression user groups are an unvalidated proxy for serving-time candidate sets and introduce medium leakage/protocol risk through group construction. Low confidence, medium runtime, and broad objective replacement are unfavorable for the one experiment."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 12,
+      "utility_score": 0.09,
+      "rationale": "Most excessive and least validated proposal: it combines an FM architecture replacement with adversarial training, adds high runtime risk, and uses an arbitrary perturbation calibration. It cannot isolate whether any outcome comes from interaction capacity or adversarial regularization and is unsuitable for a scarce experiment."
+    }
+  ]
+}

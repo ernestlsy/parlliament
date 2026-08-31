@@ -1,0 +1,18 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context"
+      ],
+      "finding": "Request-context features are the only screened group with positive primary lift (+0.00221) and positive lift on all four temporal-holdout days. Their full coverage supports a low-cost follow-up, but the daily standard deviation (0.00580) exceeds the aggregate lift, so the evidence is directional rather than robust.",
+      "recommended_action": "Run one tightly scoped confirmation experiment using only tab, hour, and weekday, evaluated on an untouched temporal holdout with GAUC as the primary acceptance metric and nDCG@5 reported separately. Early-stop unless the GAUC gain is positive and stable by day; do not expand the feature set before confirmation."
+    }
+  ],
+  "avoid": [
+    "Reject user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, and historical_item_response: each has non-positive aggregate primary lift, with especially large and consistently negative effects for the historical author/item response groups.",
+    "Do not use current-impression outcomes or aggregate snapshots lacking per-impression availability timestamps; these are leakage or availability risks.",
+    "Do not infer a cold-item conclusion from the reported cold-item metrics because that segment has only 8 rows.",
+    "Do not prioritize a feature solely for top-five performance: no post-score weakest-segment evidence is available, and the proposed confirmation must establish stable within-user GAUC first."
+  ],
+  "metric_diagnosis": "The screening evidence supports only request_context, and even that signal is small relative to day-to-day variation. Its reported warm-user-and-item GAUC (0.6312) and nDCG@5 (0.5076) are both stronger than the other screened groups' reported segment values, but no matched baseline or per-segment lift is supplied, so neither a causal GAUC improvement nor a top-five improvement is established. There are no weakest-segment diagnostics available. Under strict early stopping, run a single leakage-safe request-context confirmation and stop if stable GAUC evidence does not materialize."
+}

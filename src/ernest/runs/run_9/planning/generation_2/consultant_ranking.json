@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c03",
+      "rank": 1,
+      "utility_score": 0.78,
+      "rationale": "Best objective alignment: directly optimizes within-user ordering, which matches GAUC and addresses the pointwise-BCE mismatch. It is a single-component ablation with low leakage risk and stronger expected GAUC upside than safer capacity or representation tweaks, though pair availability and medium runtime risk reduce confidence."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 2,
+      "utility_score": 0.72,
+      "rationale": "Strong risk-adjusted choice: a clean, low-runtime feature representation change directly motivated by weak adjacent-hour slices. It is less duplicated than the architecture proposals and avoids adding scope, but evidence is indirect and the categorical baseline may already capture useful hour-specific effects."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 3,
+      "utility_score": 0.69,
+      "rationale": "Highly feasible and tightly controlled capacity ablation with low runtime and leakage risk. The modest expected gain is credible given incremental context signal, but the likely effect is small and it does not directly target the objective or top-five weakness."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 4,
+      "utility_score": 0.65,
+      "rationale": "Targeted cross interactions plausibly address weak context-conditioned tabs without expanding the feature set. However, it overlaps with c01, has medium runtime risk and feasibility, and relies mainly on noisy segment diagnostics rather than direct architectural evidence."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 5,
+      "utility_score": 0.62,
+      "rationale": "Aligns training emphasis with within-user evaluation and may reduce domination by high-volume users. The natural validation distribution is preserved and leakage risk is low, but batching changes can alter optimization substantially, have medium runtime risk, and may not improve top-five ranking."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 6,
+      "utility_score": 0.57,
+      "rationale": "Directly targets the nDCG@5 weakness, but model-score-based violation weighting risks validation overfitting and metric tradeoffs. It duplicates the broader loss-change direction of c03, has lower confidence and feasibility, and could sacrifice GAUC."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 7,
+      "utility_score": 0.55,
+      "rationale": "A nonlinear scorer could capture interactions missed by FM and has meaningful upside, but it is a broader architecture replacement than c02, carries medium runtime and overfitting risk, and is weakly distinguishable from the targeted cross-branch experiment."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 8,
+      "utility_score": 0.49,
+      "rationale": "Low-risk robustness intervention motivated by unstable context lifts and weak slices. Expected gains are small and uncertain, while masking precisely the fields that showed positive evidence may erase useful signal; the literature evidence is also not specific to feature dropout."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 9,
+      "utility_score": 0.4,
+      "rationale": "Cheap and clean regularization test, but the expected primary gain is near zero with a meaningful underfitting downside. Segment instability is weak evidence for globally reducing embedding capacity, and it is largely a low-upside counterpart to c05."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 10,
+      "utility_score": 0.34,
+      "rationale": "Very feasible and low risk, but the predicted gain is minimal and the fixed epoch budget creates a real chance of under-optimization. The evidence does not isolate learning-rate instability from ordinary day-to-day variability, making this a poor use of the scarce experiment."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 11,
+      "utility_score": 0.27,
+      "rationale": "Date is available at impression time, but categorical date modeling is especially vulnerable to temporal overfitting and unknown-date behavior. Evidence comes from only a few holdout dates with variable gains, and the medium leakage-risk label materially lowers its value."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 12,
+      "utility_score": 0.18,
+      "rationale": "A valid isolation ablation, but it is expected to be flat or negative and does not address the dominant ranking weaknesses. It offers diagnostic information about the prior grouped context gain rather than a credible improvement opportunity, so it is least suitable for one scarce experiment."
+    }
+  ]
+}

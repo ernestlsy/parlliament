@@ -12,6 +12,7 @@ from pathlib import Path
 from unittest import mock
 
 from agentic_recsys.agents import EvolutionJudge, FeatureAnalyst, Orchestrator
+from agentic_recsys.cli import _parser
 from agentic_recsys.evaluation import METRIC_CATALOG, evaluate
 from agentic_recsys.experimentor import Experimentor
 from agentic_recsys.journal import Journal
@@ -241,6 +242,16 @@ class ContractTests(unittest.TestCase):
                 "model_input": {"features": "array"},
                 "train_command": ["{python}", "-c", "print('not allowed')"],
             })
+
+    def test_cli_seed_model_flag_defaults_and_selects_baseline(self):
+        common = [
+            "run", "--workspace", "workspace", "--data-dir", "data", "--model", "model",
+        ]
+        self.assertEqual(_parser().parse_args(common).seed_model, "simple")
+        selected = _parser().parse_args(
+            common + ["--seed-model", "kuairand-baseline"]
+        )
+        self.assertEqual(selected.seed_model, "kuairand-baseline")
 
 
 class EvolutionJudgeMetricAccessTests(unittest.TestCase):
@@ -504,6 +515,42 @@ class ResearchPlanningTests(unittest.TestCase):
 
 
 class ReferenceRefreshTests(unittest.TestCase):
+    def test_seed_model_selects_requested_parent_zero_scaffold(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data_dir = root / "data"
+            data_dir.mkdir()
+            overseer = Overseer(SystemConfig(
+                workspace=str(root / "workspace"),
+                data_dir=str(data_dir),
+                seed_model="kuairand-baseline",
+            ), ScriptedLLMClient([]))
+            self.assertEqual(overseer.seed_dir.name, "seed_kuairand_baseline")
+            seed = overseer._archive()[0]
+            self.assertEqual(seed["seed_model"], "kuairand-baseline")
+            self.assertIn("Factorization Machine", seed["hypothesis_text"])
+
+    def test_run_cannot_resume_with_a_different_seed_model(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data_dir = root / "data"
+            data_dir.mkdir()
+            simple = Overseer(SystemConfig(
+                workspace=str(root / "workspace"),
+                data_dir=str(data_dir),
+                run_name="fixed-seed-run",
+                seed_model="simple",
+            ), ScriptedLLMClient([]))
+            simple.initialize()
+            changed = Overseer(SystemConfig(
+                workspace=str(root / "workspace"),
+                data_dir=str(data_dir),
+                run_name="fixed-seed-run",
+                seed_model="kuairand-baseline",
+            ), ScriptedLLMClient([]))
+            with self.assertRaisesRegex(ValueError, "cannot resume"):
+                changed.initialize()
+
     def test_newly_scored_experiment_becomes_replacement_parent(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

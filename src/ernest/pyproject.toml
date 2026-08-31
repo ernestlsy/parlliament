@@ -25,6 +25,8 @@ include = ["agentic_recsys*"]
 agentic_recsys = [
     "seed/*.py",
     "seed/*.json",
+    "seed_kuairand_baseline/*.py",
+    "seed_kuairand_baseline/*.json",
     "knowledge/*.md",
     "knowledge/*.json",
     "knowledge/*.jsonl",

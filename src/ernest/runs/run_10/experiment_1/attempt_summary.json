@@ -1,0 +1,23 @@
+{
+  "attempt_id": "07634cca1e4f",
+  "status": "scored",
+  "generation": 1,
+  "mode": "draft",
+  "parent_experiment_id": 0,
+  "hypothesis_text": "Add request-context categorical features (tab, hour, weekday) to the additive user/video-ID scorer.",
+  "active_sub_agents": [
+    "feature_engineer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 63.26439852999829,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

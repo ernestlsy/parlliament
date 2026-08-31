@@ -1,0 +1,46 @@
+[
+  {
+    "categories": [
+      "architectures",
+      "training"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "context-aware recommendation",
+      "factorization machines",
+      "sparse categorical interactions",
+      "top-k ranking"
+    ],
+    "purpose": "Resolve the material architecture uncertainty for the single permitted leakage-safe context-slice remediation: whether an explicit tab-by-hour interaction mechanism is supported over the current standard FM, and how it should handle sparse tabs without creating unstable slice-specific parameters.",
+    "query": "Context-aware factorization machines and field-aware interaction modeling for session/request-context recommendation: evidence on modeling categorical context interactions (e.g., tab-by-hour) versus standard FM, with attention to sparse context values and top-k ranking quality.",
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "categories": [
+      "objectives",
+      "training",
+      "bias_and_robustness"
+    ],
+    "max_documents": 8,
+    "metrics_of_interest": [
+      "GAUC",
+      "nDCG@5"
+    ],
+    "preferred_tags": [
+      "temporal recommendation",
+      "contextual calibration",
+      "partial pooling",
+      "regularization",
+      "distribution shift"
+    ],
+    "purpose": "Resolve the training/objective uncertainty for a pre-registered tab-focused treatment: identify defensible regularization or partial-pooling methods that can target tab 0 and tab 6 without relying on label-defined slices, changing fixed evaluation, or using unavailable outcome features.",
+    "query": "Regularization and shrinkage for context-conditional recommender models under temporal drift: tab-specific calibration or partial pooling approaches that improve weak high-volume context slices while preserving global ranking metrics.",
+    "request_index": 2,
+    "round": 1
+  }
+]

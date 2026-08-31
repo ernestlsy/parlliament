@@ -32,6 +32,18 @@ from .schemas import (
 class Overseer:
     """Sequential owner of generation scheduling, retries, counting, and stopping."""
 
+    SEED_DIRECTORIES = {
+        "simple": "seed",
+        "kuairand-baseline": "seed_kuairand_baseline",
+    }
+
+    SEED_DESCRIPTIONS = {
+        "simple": "Neutral unscored additive user/item scaffold; fresh starting point",
+        "kuairand-baseline": (
+            "Unscored KuaiRand five-field Factorization Machine baseline scaffold"
+        ),
+    }
+
     def __init__(self, config: SystemConfig, llm: LLMClient):
         self.config = config
         self.journal = Journal(config.run_dir / "journal.jsonl")
@@ -58,7 +70,9 @@ class Overseer:
         self.consultant = Consultant(self.llm, config.max_consultant_rounds)
         self.orchestrator = Orchestrator(self.llm)
         self.experimentor = Experimentor(config.python_executable, config.data_dir)
-        self.seed_dir = Path(__file__).parent / "seed"
+        self.seed_dir = (
+            Path(__file__).parent / self.SEED_DIRECTORIES[config.seed_model]
+        )
         self.research = ResearchEngine(
             Path(config.data_dir),
             config.run_dir,
@@ -72,7 +86,16 @@ class Overseer:
 
     def initialize(self) -> None:
         self.config.run_dir.mkdir(parents=True, exist_ok=True)
-        self.config.save(self.config.run_dir / "system_config.json")
+        config_path = self.config.run_dir / "system_config.json"
+        if config_path.is_file():
+            existing = SystemConfig.load(config_path)
+            if existing.seed_model != self.config.seed_model:
+                raise ValueError(
+                    f"run {self.config.run_name!r} was initialized with seed_model="
+                    f"{existing.seed_model!r}; cannot resume it with "
+                    f"{self.config.seed_model!r}"
+                )
+        self.config.save(config_path)
         if not self.seed_dir.is_dir():
             raise FileNotFoundError(f"seed experiment is missing: {self.seed_dir}")
         if not Path(self.config.data_dir).is_dir():
@@ -82,7 +105,8 @@ class Overseer:
         seed = {
             "attempt_id": "seed", "experiment_id": 0, "generation": 0,
             "parent_experiment_id": 0,
-            "hypothesis_text": "Neutral unscored additive user/item scaffold; fresh starting point",
+            "hypothesis_text": self.SEED_DESCRIPTIONS[self.config.seed_model],
+            "seed_model": self.config.seed_model,
             "hypothesis_scores": None,
             "mode": "seed", "code_diff": {}, "config_diff": "",
             "active_sub_agents": [],

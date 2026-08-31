@@ -1,0 +1,391 @@
+[
+  {
+    "text": "Remove the tab\u00d7hour cross from experiment 2 to restore the validated seven-field request-context FM.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "Experiment 2's only added tab\u00d7hour field reduced primary from 0.60143 in experiment 1 to 0.60065. Reverting that isolated harmful addition is the lowest-risk recovery hypothesis.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Remove exactly the tab_hour categorical field from experiment 2, retaining user_id, video_id, author_id, tab, duration bucket, hour, weekday, FM architecture, binary cross-entropy loss, optimizer, seed, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.0008 to +0.0020, recovering the within-user ordering loss observed after adding tab_hour.",
+      "nDCG@5": "+0.0000 to +0.0005, recovering the small top-five regression observed after adding tab_hour."
+    },
+    "expected_primary_gain": 0.0011,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol",
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Increase FM interaction dimension from 16 to 32 for the validated seven-field request-context model.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The supported request-context main effects improve ranking, while the explicit tab\u00d7hour field was not beneficial. A larger latent interaction space may represent useful existing field interactions without introducing a sparse hand-built cross.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Change only interaction_dimension from 16 to 32 in experiment 1; retain its seven input fields, binary cross-entropy loss, optimizer settings, seed, batch size, epoch limit, and early-stopping policy.",
+    "expected_effect": {
+      "GAUC": "+0.0002 to +0.0015 from more expressive user-item-context interactions.",
+      "nDCG@5": "+0.0001 to +0.0012 if additional interaction capacity resolves a small number of top-five inversions."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Increase FM L2 regularization to reduce sparse-ID and context overfitting.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The model contains high-cardinality user, item, and author IDs, and the sparse tab\u00d7hour expansion hurt validation performance. Stronger regularization may improve temporal generalization without adding any feature.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Change only l2 from 0.000001 to 0.00001 in experiment 1; retain all seven fields, interaction dimension, learning rate, optimizer, seed, batching, loss, and stopping policy unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.0000 to +0.0012 through less overfit sparse entity interactions.",
+      "nDCG@5": "-0.0002 to +0.0008 because regularization can either improve top-five generalization or flatten useful score differences."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Decrease FM L2 regularization to allow stronger fitted entity and context interactions.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "Experiment 1's strongest performance comes from a compact seven-field model. If its current regularization is constraining interaction magnitudes, a smaller penalty could improve within-user item separation; this directly contrasts the stronger-regularization hypothesis.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:item_frequency:warm_20_plus"
+    ],
+    "exact_ablation": "Change only l2 from 0.000001 to 0.0000001 in experiment 1; retain all seven fields, interaction dimension, learning rate, optimizer, seed, batching, loss, and stopping policy unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.0003 to +0.0010 if retained entity interactions become more discriminative.",
+      "nDCG@5": "-0.0005 to +0.0012 if greater score separation improves top-five ordering."
+    },
+    "expected_primary_gain": 0.0003,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Lower the FM learning rate from 0.001 to 0.0005 for a less noisy optimization trajectory.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The tab\u00d7hour change produced a small decline rather than a large signal, so an optimization-only change provides an interpretable check for whether the baseline checkpoint is sensitive to update noise without changing features or objective.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Change only learning_rate from 0.001 to 0.0005 in experiment 1; retain model size, seven fields, L2, optimizer type, seed, batch size, maximum epochs, patience, and binary cross-entropy loss unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.0002 to +0.0010 from potentially smoother convergence.",
+      "nDCG@5": "-0.0002 to +0.0008 because slower learning may preserve or weaken top-five score separation."
+    },
+    "expected_primary_gain": 0.0004,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Raise the FM learning rate from 0.001 to 0.002 to test for under-training under the current early-stop schedule.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "The model is selected by an internal ranking checkpoint. A single higher learning rate may reach a better ranking region within the same epoch budget, while leaving all data and features untouched.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Change only learning_rate from 0.001 to 0.002 in experiment 1; retain model size, seven fields, L2, optimizer type, seed, batch size, maximum epochs, patience, and binary cross-entropy loss unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.0008 to +0.0010; faster learning may improve separation but can overshoot.",
+      "nDCG@5": "-0.0010 to +0.0012; sharper score differences may help or destabilize top-five ranking."
+    },
+    "expected_primary_gain": 0.0001,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace binary cross-entropy with within-user pairwise logistic ranking loss.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 3
+    },
+    "rationale": "The official objective is entirely within-user ordering, and experiment 2 has GAUC 0.66560 versus nDCG@5 0.53569, leaving a notable top-five gap. Pairwise training directly optimizes positive-versus-negative ordering within each user.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:item_frequency:medium_5_19",
+      "experiment:2:segment:tab:0"
+    ],
+    "exact_ablation": "Replace only the binary cross-entropy training loss in experiment 1 with a uniformly sampled within-user positive-negative pairwise logistic loss; retain seven fields, FM architecture, optimizer hyperparameters, seed, epochs, and model-selection metric unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.0005 to +0.0025 from direct optimization of within-user positive-negative order.",
+      "nDCG@5": "+0.0002 to +0.0020 if pairwise corrections move positives into the top five."
+    },
+    "expected_primary_gain": 0.0013,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics",
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Replace binary cross-entropy with a top-heavy within-user pairwise loss that samples negatives from the model's highest-scoring candidates.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "The large tab 0 diagnostic slice has nDCG@5 of 0.06331 despite GAUC of 0.58556, and medium-frequency items have GAUC 0.71277 but nDCG@5 0.24497. This indicates broad ordering can coexist with poor top-five placement, motivating a top-focused loss.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:0",
+      "experiment:2:segment:item_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Replace only the binary cross-entropy loss in experiment 1 with a within-user pairwise logistic loss that, for each positive, samples the current highest-scoring eligible negative in that user's training impressions; retain all fields, architecture, optimizer settings, seed, and selection metric unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.0005 to +0.0015 because hard-negative emphasis can sacrifice broad ordering.",
+      "nDCG@5": "+0.0005 to +0.0030 by concentrating updates on likely top-five inversions."
+    },
+    "expected_primary_gain": 0.0011,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Use inverse user-impression-count weights in binary cross-entropy so highly active users do not dominate training updates.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 4
+    },
+    "rationale": "Official nDCG@5 is macro-averaged across users, whereas unweighted row loss gives more influence to users with many training impressions. User-frequency segments show differentiated behavior, so a user-balanced loss is a ranking-aligned training ablation.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:user_frequency:medium_5_19",
+      "experiment:2:segment:user_frequency:warm_20_plus"
+    ],
+    "exact_ablation": "Replace only unweighted binary cross-entropy in experiment 1 with binary cross-entropy weighted by the reciprocal of each user's count of training impressions, normalized to mean weight one; retain all model, feature, optimizer, seed, and schedule settings unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.0003 to +0.0015 because user balancing may trade dominant-user fit for macro ordering.",
+      "nDCG@5": "+0.0000 to +0.0020 because the training weighting better matches macro per-user top-five evaluation."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace the FM interaction layer with a field-aware factorization machine while retaining the seven validated fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "The current FM shares each feature embedding across all counterpart fields. Field-aware embeddings can distinguish user-item, user-author, and item-context interactions without adding unsupported feature groups or sparse manual crosses.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the standard FM interaction parameterization in experiment 1 with field-aware FM embeddings; retain exactly the same seven encoded fields, binary cross-entropy loss, optimizer settings, seed, batch size, and stopping procedure.",
+    "expected_effect": {
+      "GAUC": "+0.0002 to +0.0020 from more specific cross-field within-user discrimination.",
+      "nDCG@5": "+0.0001 to +0.0018 if field-specific interactions improve top-five item placement."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace the FM interaction layer with a two-layer DeepFM-style interaction MLP over the existing field embeddings.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 5,
+      "feasibility": 2
+    },
+    "rationale": "The request-context screen supports main effects, but the manually materialized tab\u00d7hour categorical cross regressed. A nonlinear interaction layer may learn only supported combinations while retaining the same leakage-safe inputs.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Replace only the FM second-order interaction term in experiment 1 with a two-layer MLP over the concatenated embeddings of its existing seven fields; retain field inputs, binary cross-entropy loss, optimizer type, seed, and checkpoint selection metric unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.0005 to +0.0020 because extra nonlinearity can learn useful interactions or overfit the short temporal window.",
+      "nDCG@5": "-0.0005 to +0.0025 because nonlinear context ranking may improve or degrade top-five order."
+    },
+    "expected_primary_gain": 0.0009,
+    "confidence": 10,
+    "leakage_risk": "low",
+    "runtime_risk": "high",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking",
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Remove duration bucket from the seven-field request-context FM.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "Training-only screening found the content-duration feature family harmful, with primary lift -0.01044. Although the deployed duration bucket is a compact impression-time field rather than the whole screened family, an isolated removal tests whether it is adding unstable duration effects.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:content_duration",
+      "experiment:2:segment:duration_bucket:(136900.0, inf]"
+    ],
+    "exact_ablation": "Remove exactly the dur_bucket field from experiment 1, retaining user_id, video_id, author_id, tab, hour, weekday, FM architecture, loss, optimizer, seed, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.0005 to +0.0015 if removing a harmful duration prior improves general within-user order.",
+      "nDCG@5": "-0.0005 to +0.0018 if duration-driven top-five inversions are reduced."
+    },
+    "expected_primary_gain": 0.0007,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics",
+      "task.experiment_protocol"
+    ]
+  }
+]

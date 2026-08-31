@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "encode(splits) returns (encoded, dimension). encoded[split] remains a tuple (features, labels, users). features is an int32 matrix in exact column order [user_id, video_id, tab, hour, weekday, tab_hour], where tab_hour is the literal categorical tuple (tab, hour), tab is raw field tab, and hour is canonical floor(float(raw field hourmin)/100) constrained to 0..23. Each field, including tab_hour, has a vocabulary fitted on train rows only, one unknown ID, and a disjoint global offset. labels and users retain their existing types and row alignment; all split rows retain source order."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "The unchanged Model accepts the encoded int32 feature matrix with six columns and computes bias plus the sum of the six corresponding categorical weights per row. The fixed unchanged training command must write predictions_valid.npz containing exactly row_ids and scores, with row_ids equal to sequential int64 validation row indices and scores in canonical validation row order; validation ground truth remains external to the prediction artifact and is loaded only by the fixed evaluator."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "attempt_id": "625a77b4b510",
+  "status": "scored",
+  "generation": 3,
+  "mode": "draft",
+  "parent_experiment_id": 1,
+  "hypothesis_text": "Use inverse user-impression-count weights in binary cross-entropy so highly active users do not dominate training updates.",
+  "active_sub_agents": [
+    "model_designer",
+    "trainer"
+  ],
+  "consultant_rounds": 1,
+  "failure_stage": null,
+  "failure_reason": null,
+  "failure_reports": [],
+  "elapsed_seconds": 855.889040479,
+  "available_log_files": [
+    "attempt_1.log",
+    "contract_attempt_1.log"
+  ],
+  "llm_log": "llm_events.jsonl",
+  "patch_history": "patch_history.json",
+  "exception_traceback": null
+}

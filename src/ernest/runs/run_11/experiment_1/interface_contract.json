@@ -1,0 +1,46 @@
+{
+  "data_output": {
+    "description": "data.encode returns (encoded, total_dimension). encoded contains train, valid, and test tuples of (features, labels, users). For every split, features is an int32 array shaped (number_of_rows, 7) in field order user_id, video_id, author_id, tab, dur_bucket, hour, weekday; each column uses a vocabulary fitted exclusively on train plus that field's unknown ID and global field offset. labels remains float32 and users remains U32. Validation tuple order must exactly match canonical filtered source-log row order."
+  },
+  "config_keys": [
+    "seed",
+    "interaction_dimension",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives the encoded int32 feature matrix with seven globally offset categorical IDs per row and the unchanged float32 labels during training. No model architecture or hyperparameter interface changes are required; the existing FM operates over the supplied variable-width field matrix."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

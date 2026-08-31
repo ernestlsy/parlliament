@@ -1,0 +1,86 @@
+{
+  "cache_status": [
+    "memory_hit"
+  ],
+  "catalog_sha256": "c0177f20bdb9d28d5000b8cab19dd6447bfd4ca92e0b0ea5df79a4140d400002",
+  "character_budget": 40000,
+  "documents": [
+    {
+      "fetched_characters": 5000,
+      "id": "objective.user_normalized_binary_cross_entropy",
+      "path": "30_objectives/user_normalized_binary_cross_entropy.md",
+      "sha256": "c366a83c3c5da5d8076ea1d3d8b00acc3006b64c9a45f2f8d7959e346defe485",
+      "source_characters": 9067,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.within_user_ranknet_pairwise_loss",
+      "path": "30_objectives/within_user_ranknet_pairwise_loss.md",
+      "sha256": "6216278cdf2db9cbda95e1b4c7bd3dc1c0d5f56ec944bc787e1ffce628dc8c57",
+      "source_characters": 7726,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "objective.mixed_group_listnet_top1_loss",
+      "path": "30_objectives/mixed_group_listnet_top1_loss.md",
+      "sha256": "35f46aa8c8e1061fe7b968980537bb4a9d2a7a01aea803ffa38bb0c69cb14c27",
+      "source_characters": 6242,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.group_complete_stratified_minibatching",
+      "path": "40_training/group_complete_stratified_minibatching.md",
+      "sha256": "ac4067495282d7b9958b561801403db5a3d02efd526f51595e93589f3edfb471",
+      "source_characters": 10000,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 5000,
+      "id": "training.within_group_hard_pair_curriculum",
+      "path": "40_training/within_group_hard_pair_curriculum.md",
+      "sha256": "5ef41289369502c1f1c4f0d24962fed95b8604e35071b0eea1af212dbc503c64",
+      "source_characters": 7580,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 1273,
+      "id": "evaluation.within_user_metrics",
+      "path": "50_evaluation/within_user_metrics.md",
+      "sha256": "d51c53af38a3d738934f2cd6d5e7e15b728aef0d5c1cf5a17f04f55ba5d3ad52",
+      "source_characters": 1273,
+      "truncated": false
+    },
+    {
+      "fetched_characters": 6863,
+      "id": "evaluation.frozen_candidate_group_integrity_audit",
+      "path": "50_evaluation/frozen_candidate_group_integrity_audit.md",
+      "sha256": "1841e0eaea615303278e54285a2deb2d53d834834948d2bd21ee21f139e9483c",
+      "source_characters": 8716,
+      "truncated": true
+    },
+    {
+      "fetched_characters": 2263,
+      "id": "dataset.population_and_pair_shift",
+      "path": "05_dataset/population_and_pair_shift.md",
+      "sha256": "efed314a4dfc289282bc1a380f44dcec6e492383629f0f8fa910306ae24b543c",
+      "source_characters": 2263,
+      "truncated": false
+    }
+  ],
+  "retrieval_rounds": 1,
+  "schema_version": 1,
+  "selected_document_ids": [
+    "objective.user_normalized_binary_cross_entropy",
+    "objective.within_user_ranknet_pairwise_loss",
+    "objective.mixed_group_listnet_top1_loss",
+    "training.group_complete_stratified_minibatching",
+    "training.within_group_hard_pair_curriculum",
+    "evaluation.within_user_metrics",
+    "evaluation.frozen_candidate_group_integrity_audit",
+    "dataset.population_and_pair_shift"
+  ],
+  "total_fetched_characters": 35399
+}

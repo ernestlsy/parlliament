@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c04",
+      "rank": 1,
+      "utility_score": 0.71,
+      "rationale": "Best remaining high-information experiment: it directly aligns training with the official within-user ranking objective while changing one component. Evidence is indirect and pairwise sampling adds medium runtime/implementation risk, but it is less validation-tailored and less duplicative than top-heavy alternatives."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 2,
+      "utility_score": 0.65,
+      "rationale": "A focused, plausible personalization ablation that addresses the additive scorer's inability to model user-item preference deviations. It has moderate overfitting and runtime risk, especially for sparse temporal pairs, but its scope is narrower and more interpretable than a full factorization machine."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 3,
+      "utility_score": 0.59,
+      "rationale": "Sampling users uniformly is reasonably aligned with macro user-level ranking evaluation and makes one bounded training-pipeline change. Evidence is weak and activity-segment diagnostics are retrospective, but it avoids feature leakage and does not tune directly to isolated validation slices."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 4,
+      "utility_score": 0.57,
+      "rationale": "Recency weighting is a low-runtime, temporally motivated transfer test using training-row dates available at impression time. Its benefit is unvalidated and the fixed decay is somewhat arbitrary, but it is safe and less complex than architecture changes."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 5,
+      "utility_score": 0.5,
+      "rationale": "Shared low-rank interactions are a credible response to the failed sparse tab-hour table and can discover compact user-item-context structure. However, it changes the scorer broadly, has medium runtime risk, and substantially increases capacity despite only weak supporting evidence."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 6,
+      "utility_score": 0.43,
+      "rationale": "A very cheap, isolated regularization check with low leakage and runtime risk. It is nevertheless a weakly evidenced hyperparameter probe, and the selected larger L2 value has no direct indication of under-regularization."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 7,
+      "utility_score": 0.39,
+      "rationale": "Ensembling can reduce seed variance, which is relevant because the observed experiment delta is tiny. Its expected gain is weakly supported, it consumes roughly three training runs for one experiment, and it offers limited diagnostic value about the model itself."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 8,
+      "utility_score": 0.34,
+      "rationale": "The learning-rate change is feasible and safe but is largely an unsupported optimizer sweep. The cited daily variability does not establish that the existing model is optimization-unstable, and the unchanged training budget creates material underfitting risk."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 9,
+      "utility_score": 0.31,
+      "rationale": "Hour coarsening is computationally safe and motivated by sparse weak hour slices, but those validation slices are diagnostic rather than independent evidence. The fixed four-bin design is a representation choice selected after inspecting validation behavior, increasing validation-overfitting risk."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 10,
+      "utility_score": 0.25,
+      "rationale": "User-by-tab is a large sparse interaction expansion motivated chiefly by retrospective tab diagnostics. It is close in spirit to the already unsuccessful tab-hour interaction, risks memorization for less-active users, and targets a low-primary tab slice that may reflect label prevalence rather than correctable ranking structure."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 11,
+      "utility_score": 0.2,
+      "rationale": "This is strongly tailored to the observed nDCG-versus-GAUC discrepancy and to validation diagnostics, creating high objective and validation-overfitting risk. It also adds medium runtime and implementation complexity while providing little evidence that current-score-ranked hard negatives generalize temporally."
+    },
+    {
+      "candidate_id": "c01",
+      "rank": 12,
+      "utility_score": 0.05,
+      "rationale": "This is an exact reversal of experiment 2 and recreates already-scored experiment 1, whose primary score was higher by only 0.0000501. It is therefore a duplicate rather than a scarce new experiment, and rerunning it would provide no new evidence unless the stated goal were replication rather than improvement."
+    }
+  ]
+}

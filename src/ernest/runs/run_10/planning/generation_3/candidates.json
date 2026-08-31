@@ -1,0 +1,377 @@
+[
+  {
+    "text": "Remove the unvalidated tab-by-hour interaction from experiment 2.",
+    "parent_experiment_id": 2,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "Experiment 2 raised GAUC from 0.66891 to 0.66919 versus experiment 1 but reduced nDCG@5 from 0.53696 to 0.53658, producing a primary decrease of 0.00005. This is the cleanest corrective ablation. Downside risk: the small GAUC gain may be real, so removal could slightly reduce GAUC even while recovering top-five order.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Starting from experiment 2, remove exactly the categorical tab_hour=(tab,hour) feature; retain user_id, video_id, tab, hour, weekday, additive architecture, binary cross-entropy loss, optimizer, seed, regularization, batch size, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.001 versus experiment 2; removing the interaction may surrender its small observed GAUC increase.",
+      "nDCG@5": "+0.000 to +0.002 versus experiment 2; expected recovery follows experiment 1's higher observed nDCG@5."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 8,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Increase L2 regularization for the experiment 1 additive context scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 10
+    },
+    "rationale": "The available context-only model has the best observed primary, while the added sparse interaction did not improve it. Increasing regularization is a single, low-cost way to test whether overconfident sparse ID/context weights are harming top-five ordering. Downside risk: excess shrinkage can erase useful item and context discrimination, reducing both metrics.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Starting from experiment 1, change exactly l2 from 0.000001 to 0.00001; keep features, additive architecture, binary cross-entropy loss, Adam settings, learning rate, seed, batch size, and early-stopping schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.002 versus experiment 1 as modest shrinkage may improve generalization but can weaken ID separation.",
+      "nDCG@5": "-0.001 to +0.003 versus experiment 1, with a possible gain if reduced score extremes repair top-five inversions."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Lower the learning rate for the experiment 1 additive context scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 3,
+      "feasibility": 10
+    },
+    "rationale": "The primary difference between experiments 1 and 2 is much smaller than the request-context screen's daily primary standard deviation, so optimization stability is a plausible but weak alternative explanation. Downside risk: slower convergence under the unchanged epoch budget can underfit and hurt both GAUC and nDCG@5.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Starting from experiment 1, change exactly the learning_rate from 0.01 to 0.005; keep all features, model parameters, loss, regularization, seed, batch size, maximum epochs, and patience unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.002 versus experiment 1; smaller updates may improve ordering stability but may underfit.",
+      "nDCG@5": "-0.001 to +0.002 versus experiment 1; any benefit is expected to be smaller than the screen's daily variability."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Use pairwise within-user BPR loss instead of pointwise binary cross-entropy.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The official objective is entirely based on within-user order, while experiment 1's pointwise loss was selected using an internal GAUC proxy and reaches GAUC 0.66891 with nDCG@5 0.53696. A pairwise objective directly targets positive-negative inversions. Downside risk: pair construction can be noisy for users with few impressions and may improve GAUC while reducing nDCG@5 through weaker calibration of high ranks.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Starting from experiment 1, replace exactly the pointwise binary cross-entropy training loss with uniformly sampled within-user Bayesian personalized ranking loss over training impressions; keep the five existing features, additive scorer, optimizer hyperparameters, seed, batch size, and early-stopping schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.005 versus experiment 1 because the loss directly optimizes within-user positive-negative comparisons.",
+      "nDCG@5": "-0.001 to +0.003 versus experiment 1; top-five gain is plausible but not guaranteed by pairwise optimization."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Use a top-heavy pairwise loss for the experiment 1 scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "Experiment 2's aggregate GAUC is slightly higher than experiment 1, yet its nDCG@5 is lower; this demonstrates that GAUC gains need not translate to top-five gains. A rank-weighted pairwise loss specifically tests whether emphasizing currently high-scoring negatives improves nDCG@5. Downside risk: it can overfocus on a small set of hard pairs, reduce broad ranking discrimination, and lower GAUC.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:0"
+    ],
+    "exact_ablation": "Starting from experiment 1, replace exactly binary cross-entropy with a within-user rank-weighted pairwise logistic loss that weights each sampled positive-negative pair by the negative item's current predicted rank; keep features, additive architecture, optimizer hyperparameters, seed, batch size, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.002 to +0.002 versus experiment 1 because top-heavy optimization can trade broad ordering for high-rank order.",
+      "nDCG@5": "+0.001 to +0.005 versus experiment 1 if hard negatives responsible for top-five inversions are corrected."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Replace the additive scorer with a low-rank factorization-machine scorer over the existing safe features.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 9,
+      "feasibility": 6
+    },
+    "rationale": "The negative result for an explicit tab-hour categorical interaction does not rule out compact shared interactions among user, item, and request context. A rank-8 factorization machine provides parameter sharing rather than a sparse standalone tab-hour table. Downside risk: it may overfit the short temporal training window or reproduce the interaction failure, lowering nDCG@5 despite higher model capacity.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "screen:request_context"
+    ],
+    "exact_ablation": "Starting from experiment 1, replace exactly the additive linear scorer with a rank-8 factorization-machine scorer over the unchanged user_id, video_id, tab, hour, and weekday fields; keep binary cross-entropy, optimizer family, seed, batch size, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.004 versus experiment 1 from shared user-item-context interactions.",
+      "nDCG@5": "-0.002 to +0.004 versus experiment 1; compact interactions may lift top-five ordering but the explicit interaction result makes this uncertain."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add a rank-8 user-item latent dot product to the additive experiment 1 scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 7
+    },
+    "rationale": "The present additive user and video ID effects cannot represent preference-specific user-item deviations. A low-rank dot product is a distinct architecture ablation that can change within-user item order without introducing new feature families. Downside risk: the temporal split may contain sparse or drifting user-item pairs, so latent factors can overfit and degrade both official metrics.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:segment:item_frequency:medium_5_19",
+      "experiment:2:segment:item_frequency:rare_1_4"
+    ],
+    "exact_ablation": "Starting from experiment 1, add exactly a rank-8 learned dot-product term between user_id and video_id embeddings to the existing additive logit; retain the five safe features, binary cross-entropy, optimizer hyperparameters, seed, batch size, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.004 versus experiment 1 through personalized within-user item ordering.",
+      "nDCG@5": "-0.001 to +0.004 versus experiment 1; gains are limited by weak rare and medium-frequency item slices."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Apply recency weighting to training examples in the experiment 1 scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "The official evaluation is temporally later than the training data, and date is known at impression time. A single exponential training-weighting change tests whether recent training impressions better match validation behavior. Downside risk: effective sample size falls and the model can overreact to late-training noise, degrading GAUC and nDCG@5.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "feature:date"
+    ],
+    "exact_ablation": "Starting from experiment 1, change exactly the training-example weight to exp(-0.1 times days_before_20220421), computed from each training row's date; keep features, additive architecture, binary cross-entropy form, optimizer hyperparameters, seed, batch size, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.003 versus experiment 1 if late-training ordering better transfers to validation.",
+      "nDCG@5": "-0.001 to +0.003 versus experiment 1; recency may help top ranks but reduced effective data can hurt."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "dataset.inventory_and_splits",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace uniform training-row sampling with uniform-user sampling.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 8
+    },
+    "rationale": "Official nDCG@5 is macro-averaged across users while GAUC is user-grouped, whereas row-uniform minibatches can disproportionately represent highly active users. Uniform-user sampling tests this objective-alignment mismatch without adding features. Downside risk: downweighting active users can increase estimator variance and harm both aggregate metrics.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:segment:user_active_degree:full_active",
+      "experiment:2:segment:user_active_degree:high_active"
+    ],
+    "exact_ablation": "Starting from experiment 1, replace exactly row-uniform minibatch sampling with user-uniform sampling followed by one uniformly sampled training impression for each selected user; keep features, additive architecture, binary cross-entropy, optimizer hyperparameters, seed, batch size, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.002 versus experiment 1 because equalized user exposure may trade weighted discrimination for broader coverage.",
+      "nDCG@5": "+0.000 to +0.003 versus experiment 1 because the macro top-five metric may benefit from less activity-skewed training."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Use a three-seed score ensemble of the unchanged experiment 1 model.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 7
+    },
+    "rationale": "The observed interaction delta is only 0.00005 primary, indicating that single-run differences may be dominated by optimization noise. Averaging independent training seeds is a concrete variance-reduction test without changing features or using unavailable data. Downside risk: three training runs increase cost and correlated models may produce no ranking improvement.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics"
+    ],
+    "exact_ablation": "Starting from experiment 1, replace exactly the single seed-0 score output with the arithmetic mean of three independently trained copies using seeds 0, 1, and 2; keep each copy's features, additive architecture, loss, hyperparameters, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.000 to +0.002 versus experiment 1 through reduced seed-specific ranking noise.",
+      "nDCG@5": "-0.000 to +0.003 versus experiment 1 if score averaging stabilizes borderline top-five positions."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "task.experiment_protocol"
+    ]
+  },
+  {
+    "text": "Replace categorical hour with a coarser four-bin time-of-day feature.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "Request context was the only positively screened feature family, but many hour slices remain weak and the explicit tab-hour expansion failed. Coarsening hour is a single representation ablation that reduces variance while retaining safe request-time information. Downside risk: grouping hours can discard genuine hour-specific preferences and reduce GAUC.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:2:segment:hour:3",
+      "experiment:2:segment:hour:4",
+      "experiment:2:segment:hour:8"
+    ],
+    "exact_ablation": "Starting from experiment 1, replace exactly the 24-category hour feature with a four-category time_of_day feature defined as hours 0-5, 6-11, 12-17, and 18-23; retain user_id, video_id, tab, weekday, architecture, loss, optimizer, seed, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.002 to +0.002 versus experiment 1; reduced sparsity may help weak hour slices but loses detail.",
+      "nDCG@5": "-0.001 to +0.003 versus experiment 1; smoother context effects may stabilize top-five ordering."
+    },
+    "expected_primary_gain": 0.0007,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Add a user-by-tab interaction to the experiment 1 additive scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 8
+    },
+    "rationale": "The largest observed weaknesses are concentrated by tab, including tab 0 with 13,726 rows and nDCG@5 of 0.06269. Unlike the failed global tab-hour interaction, user-by-tab lets each user express different tab-specific preference shifts while adding one defined feature. Downside risk: the interaction is sparse for less-active users and may overfit, especially because the tab-hour interaction already failed to improve primary.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:2:metrics",
+      "experiment:2:segment:tab:0",
+      "experiment:2:segment:tab:5"
+    ],
+    "exact_ablation": "Starting from experiment 1, add exactly one categorical user_tab=(user_id,tab) feature to the additive scorer, with a train-vocabulary unknown bucket; retain all existing features, binary cross-entropy loss, optimizer, regularization, seed, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.003 versus experiment 1 through user-specific context ordering.",
+      "nDCG@5": "-0.001 to +0.004 versus experiment 1 if the large tab-specific top-five deficit is partly personalized."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  }
+]

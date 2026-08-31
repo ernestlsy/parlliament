@@ -1,5 +1,8 @@
 import csv
 import json
+import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -75,6 +78,42 @@ def make_dataset(root: Path) -> Path:
 
 
 class ResearchEngineIntegrationTests(unittest.TestCase):
+    def test_kuairand_baseline_seed_contract_probe(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data = make_dataset(root)
+            seed = (
+                Path(__file__).parents[1]
+                / "agentic_recsys"
+                / "seed_kuairand_baseline"
+            )
+            output = root / "probe_predictions.npz"
+            environment = os.environ.copy()
+            environment["PYTHONDONTWRITEBYTECODE"] = "1"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "train.py",
+                    "--config",
+                    "config.json",
+                    "--data-dir",
+                    str(data),
+                    "--output",
+                    str(output),
+                    "--contract-check",
+                ],
+                cwd=seed,
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=30,
+                env=environment,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            report = json.loads(result.stdout)
+            self.assertEqual(report["fields"], 5)
+            self.assertEqual(report["interaction_dimension"], 16)
+
     def test_evidence_ids_include_all_experiment_metrics_but_only_latest_segments(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

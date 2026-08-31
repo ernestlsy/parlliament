@@ -1,0 +1,32 @@
+{
+  "text": "Replace pointwise BCE training with within-user pairwise logistic ranking loss using one positive-negative pair per eligible training user batch.",
+  "parent_experiment_id": 1,
+  "scores": {
+    "interestingness": 9,
+    "novelty": 8,
+    "feasibility": 6
+  },
+  "rationale": "The official objective is within-user ordering, whereas the current model is trained pointwise. The gap between useful global ordering and weak top-five slices makes an ordering-aligned objective a high-information alternative, though sparse users may provide few valid pairs.",
+  "candidate_id": "c03",
+  "evidence_ids": [
+    "experiment:1:metrics",
+    "experiment:1:segment:user_positive_count:one",
+    "experiment:1:segment:user_positive_count:two_to_four"
+  ],
+  "exact_ablation": "Replace only BCE with pairwise logistic loss over sampled same-user positive-negative pairs; preserve the FM architecture, seven fields, optimizer, split, pair construction cutoff, and evaluation code.",
+  "expected_effect": {
+    "GAUC": "Moderate positive increase, approximately +0.003 to +0.009, because optimization directly rewards positive-over-negative ordering within users.",
+    "nDCG@5": "Small positive or flat change, approximately -0.001 to +0.005; pair sampling may improve broad ordering without reliably improving the first five positions."
+  },
+  "expected_primary_gain": 0.004,
+  "confidence": 5,
+  "leakage_risk": "low",
+  "runtime_risk": "medium",
+  "active_components": [
+    "loss"
+  ],
+  "literature_document_ids": [
+    "evaluation.within_user_metrics",
+    "task.kuairand_ranking"
+  ]
+}

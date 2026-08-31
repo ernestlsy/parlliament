@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "data.encode returns encoded[split] as (features, labels, users). features is an int32 matrix in canonical source-row order with exactly five columns ordered as user_id, video_id, tab, hour, weekday; hour is floor(numeric raw hourmin / 100) constrained to 0..23, and weekday is the Monday=0 through Sunday=6 calendar weekday derived from raw date. labels is float32 long_view encoded as 1 when raw long_view is not '0' and 0 otherwise. users contains the raw user_id values used only by trainer for within-user pair membership. Vocabularies are fit on train only, and validation rows retain source order."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "For BPR training, Model.step receives positive_features and negative_features: aligned, equally shaped nonempty int32 matrices of shape (pair_count, 5). Every aligned pair is constructed by trainer from the same raw user_id, with the positive row having long_view=1 and the negative row having long_view=0. Model.predict receives an int32 feature matrix of shape (row_count, 5) and returns a one-dimensional score vector in exactly input-row order. The fixed training command saves only row_ids=np.arange(len(valid_labels), dtype=np.int64) and these validation-order scores to predictions_valid.npz."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

@@ -11,6 +11,7 @@ class SystemConfig:
     workspace: str
     data_dir: str
     run_name: str = "run_1"
+    seed_model: str = "simple"
     max_experiments: int = 50
     convergence_epsilon: float = 0.002
     convergence_window: int = 3
@@ -41,6 +42,10 @@ class SystemConfig:
         if not self.python_executable:
             import sys
             self.python_executable = sys.executable
+        if self.seed_model not in {"simple", "kuairand-baseline"}:
+            raise ValueError(
+                "seed_model must be 'simple' or 'kuairand-baseline'"
+            )
         for name in (
             "max_experiments", "convergence_window", "max_debug_attempts",
             "experiment_timeout_seconds", "max_consultant_rounds",

@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "data.load(data_dir, max_rows_per_split=None) must return the existing split mapping for train, valid, and test, with rows retained in canonical source-file iteration order after the existing date filtering and optional prefix truncation. Each internal row must retain date, user_id, video_id, tab, canonical hour, canonical weekday, and label information sufficient for encode(). data.encode(splits) must return (encoded, dimension), where encoded[name] is exactly (features, labels, users). features is an np.int32 array of shape (N, 5), with columns in exact order user_id, video_id, tab, hour, weekday. Each cell is a globally offset categorical index. Each field vocabulary is built only from training rows and has its own unknown index for absent non-training values. labels remains an np.float32 vector derived only from long_view, users remains the user_id vector used for grouping, and dimension equals the total count of all five vocabulary dimensions including unknown buckets."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives the encoded np.int32 feature matrix with five globally offset categorical indices per row in exact column order [user_id, video_id, tab, hour, weekday]. It must continue to add one learned scalar weight for each feature index plus its scalar bias; no interaction or model architecture change is part of this experiment. The fixed trainer must continue to train on encoded[\"train\"] and save predictions_valid.npz containing exactly row_ids and scores, with row_ids equal to np.arange(validation_row_count, dtype=np.int64) and scores aligned one-for-one to canonical validation row order."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "winner": {
+    "text": "Add request-context categorical features (tab, hour, weekday) to the additive user/video-ID scorer.",
+    "parent_experiment_id": 0,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "This is the only feature family with a positive training-only temporal screen, full coverage, and positive primary movement on each of four holdout dates. It directly permits context-dependent within-user video ordering.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context"
+    ],
+    "exact_ablation": "Add exactly three train-vocabulary categorical fields\u2014tab, hour derived from hourmin, and weekday derived from date\u2014to the existing additive user_id/video_id model; leave optimizer, loss, epochs, and all other features unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.004 versus the unscored ID scaffold, from context-specific score shifts among a user's displayed videos.",
+      "nDCG@5": "+0.001 to +0.004; top-five benefit is expected to be similar but must be independently verified."
+    },
+    "expected_primary_gain": 0.0022,
+    "confidence": 8,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "dataset.inventory_and_splits",
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  "selection_rationale": "c01 is the strongest reliable choice: it is the consultant's top-ranked candidate (utility 0.84), has direct training-only temporal evidence with full coverage and positive primary lift on all four holdout dates, and offers an expected primary gain of 0.0022 at confidence 8. Its low leakage and runtime risk, tightly controlled ablation, and independent expected improvements to both GAUC and nDCG@5 outweigh the higher but unvalidated upside and greater uncertainty of interaction-model alternatives.",
+  "counted_experiments_consumed": 0
+}

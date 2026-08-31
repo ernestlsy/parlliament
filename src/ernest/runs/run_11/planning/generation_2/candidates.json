@@ -1,0 +1,399 @@
+[
+  {
+    "text": "Add one leakage-safe categorical cross field formed as tab\u00d7hour to let the FM model assign distinct interaction effects to request surface and time of day.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 4,
+      "feasibility": 5
+    },
+    "rationale": "Request context was the only feature family with positive, stable train-only temporal screening lift (+0.00221 primary across all four reported days). Official diagnostics show substantial context heterogeneity, including poor ranking for tab 0 and tab 6 and weak hours 3 and 4, so a single explicit context conjunction is a focused remedy without introducing a new data source.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:tab:6",
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:4"
+    ],
+    "exact_ablation": "Add exactly one train-vocabulary categorical FM field, tab_hour, defined by concatenating the existing impression-time tab and derived hour values; retain all seven existing fields, FM dimension, loss, optimizer, seed, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.004 by improving within-user discrimination when tab effects vary by hour.",
+      "nDCG@5": "+0.002 to +0.006 by correcting context-specific top-five inversions, especially on large weak tabs."
+    },
+    "expected_primary_gain": 0.003,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features",
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Increase FM interaction embedding width from 16 to 32 while preserving the seven-field request-context feature schema.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "The scored model has credible GAUC (0.6670) but lower nDCG@5 (0.5358), suggesting that additional interaction capacity may recover local ordering errors without expanding to rejected feature families. The current compact FM has only 16 latent interaction dimensions.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:tab:6"
+    ],
+    "exact_ablation": "Change only FM interaction_dimension from 16 to 32; preserve data, fields, objective, optimizer, learning rate, regularization, seed, batch size, and checkpoint rule.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.003 from a richer low-rank representation of user-item-context interactions.",
+      "nDCG@5": "+0.001 to +0.004 if added capacity fixes top-ranked item ordering."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Increase FM L2 regularization to reduce overfitting of sparse user, item, and context combinations.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "Validation performance is dominated by warm items, while rare and medium-frequency items have materially weaker nDCG@5 (0.1717 and 0.2448 respectively). Stronger regularization is a bounded way to test whether sparse-combination memorization is impairing generalization.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:rare_1_4",
+      "experiment:1:segment:item_frequency:medium_5_19"
+    ],
+    "exact_ablation": "Change only the FM L2 coefficient from 0.000001 to 0.00001; preserve architecture, features, optimizer, learning rate, seed, and all training and checkpoint settings.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.002; regularization may trade small global ordering capacity for more stable sparse-entity ordering.",
+      "nDCG@5": "+0.000 to +0.003 if reduced memorization improves top-five generalization on infrequent items."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Apply bounded exponential recency weighting to the existing pointwise FM training loss using only training-impression dates.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 4
+    },
+    "rationale": "The official protocol is temporal, and the validation model has pronounced weakness in high-volume context slices. Reweighting recent training impressions can adapt the fitted interaction parameters to the population nearest the validation period without adding features or using validation outcomes.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:hour:16"
+    ],
+    "exact_ablation": "Multiply each training row's existing BCE loss by a date-derived bounded exponential recency weight with 14-day half-life, normalized to mean weight one over training rows; retain model, features, labels, optimizer, and all other training settings unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.003 if recent user-item-context relationships better match validation ordering.",
+      "nDCG@5": "+0.001 to +0.004 if temporal adaptation promotes currently relevant items into the top five."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training",
+      "loss"
+    ],
+    "literature_document_ids": [
+      "robustness.recency_weighted_causal_ranking_training",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace the single-best-checkpoint emission with predeclared contiguous late-checkpoint weight averaging on the same FM trajectory.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 3,
+      "feasibility": 4
+    },
+    "rationale": "The model's primary score is driven by two rank-sensitive metrics, and a single epoch checkpoint can be sensitive to late-training noise. Weight averaging changes neither data nor serving feature availability and may stabilize top-rank ordering.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:warm_20_plus",
+      "experiment:1:segment:user_frequency:warm_20_plus"
+    ],
+    "exact_ablation": "Replace best-single-checkpoint selection with arithmetic averaging of exactly three consecutive late-epoch FM checkpoints selected by the predeclared highest mean validation primary rule; keep the training trajectory, architecture, features, loss, and optimizer unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.002 from reduced sensitivity to late parameter fluctuations.",
+      "nDCG@5": "+0.001 to +0.003 if averaged parameters stabilize local top-five swaps."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "training.metric_aligned_checkpoint_averaging",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add adversarial embedding regularization to the existing FM training objective for user and video embedding lookups only.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 4,
+      "novelty": 4,
+      "feasibility": 3
+    },
+    "rationale": "The official model is weak for infrequent items and some low-support contexts, patterns consistent with sensitivity of learned embeddings to sparse observations. Embedding perturbation regularization directly tests robustness while retaining only currently eligible input features.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:item_frequency:rare_1_4",
+      "experiment:1:segment:item_frequency:medium_5_19",
+      "experiment:1:segment:tab:8"
+    ],
+    "exact_ablation": "Add one adversarial regularization term equal to 0.25 times BCE under detached per-vector L2 perturbations of the looked-up user_id and video_id embeddings at 3% of their training-batch median norm; preserve the base FM, features, ordinary BCE, and optimizer settings.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.002; robustness may help sparse embedding orderings but can constrain fit.",
+      "nDCG@5": "+0.000 to +0.003 if robust user-video interactions reduce fragile top-five swaps."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training",
+      "loss"
+    ],
+    "literature_document_ids": [
+      "training.adversarial_embedding_regularization",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Replace the FM scorer with an embedding-plus-MLP pointwise ranker over exactly the existing seven eligible categorical fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 3
+    },
+    "rationale": "The current FM can represent only pairwise interactions, whereas the demonstrated request-context signal may require nonlinear combinations of user, video, author, tab, hour, and weekday. This tests a materially different scorer without admitting feature groups rejected by screening.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:tab:6"
+    ],
+    "exact_ablation": "Replace only the FM architecture with a pointwise embedding-plus-MLP scorer using exactly user_id, video_id, author_id, tab, dur_bucket, hour, and weekday; retain the BCE objective, temporal splits, train-only vocabularies, seed, and early-stopping metric unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.005 from nonlinear user-item-context interactions beyond FM pairwise terms.",
+      "nDCG@5": "+0.002 to +0.006 if nonlinear context affinity improves top-five placement."
+    },
+    "expected_primary_gain": 0.0035,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Replace the FM scorer with a compact Deep & Cross ranker using exactly the existing seven eligible fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 5,
+      "novelty": 5,
+      "feasibility": 3
+    },
+    "rationale": "Large tab-specific failures despite globally acceptable GAUC indicate that bounded higher-order crosses among identity and request context are plausible. A DCN directly tests this explanation while excluding all screened-out and unavailable feature families.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:tab:6",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Replace only the FM architecture with a ranker comprising embeddings for the same seven fields, two explicit cross layers, and a two-layer MLP branch; preserve pointwise BCE, temporal data handling, train-only vocabularies, and early-stopping rule.",
+    "expected_effect": {
+      "GAUC": "+0.001 to +0.005 from context-conditioned higher-order within-user ordering.",
+      "nDCG@5": "+0.002 to +0.007 if explicit crosses correct top-five context interactions."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 3,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Remove the duration-bucket FM field to test whether its broad content prior is suppressing within-user top-five discrimination.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 3,
+      "feasibility": 5
+    },
+    "rationale": "Duration-stratified validation quality is low in every bucket, especially the longest-duration bucket (GAUC 0.6270 and nDCG@5 0.4115). The content-duration feature family was also rejected in train-only screening, so a clean removal test can determine whether duration contributes harmful shortcut signal beyond the retained baseline bucket.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:content_duration",
+      "experiment:1:metrics",
+      "experiment:1:segment:duration_bucket:(136900.0, inf]",
+      "experiment:1:segment:duration_bucket:(70233.0, 136900.0]"
+    ],
+    "exact_ablation": "Remove exactly the existing dur_bucket field from the FM input; retain user_id, video_id, author_id, tab, hour, weekday, model dimension, loss, optimizer, seed, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.002 to +0.001 because duration may contain weak global signal but may also distort within-user comparisons.",
+      "nDCG@5": "+0.000 to +0.003 if removing the duration prior improves top-five ordering across duration ranges."
+    },
+    "expected_primary_gain": 0.001,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Remove the weekday FM field to reduce possible overfitting to a short temporal training window while retaining tab and hour context.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "Request context as a block screened positively, but its measured gain does not identify which constituent field is responsible. Weekday has only seven categories and may encode short-window calendar artifacts rather than stable within-user ranking signal; this is an interpretable component ablation.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:4"
+    ],
+    "exact_ablation": "Remove exactly the weekday categorical field from the seven-field FM input; retain user_id, video_id, author_id, tab, dur_bucket, hour, architecture, loss, optimizer, seed, and schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.001 depending on whether weekday supplies stable interaction signal.",
+      "nDCG@5": "-0.001 to +0.002; removal may improve top-five robustness if weekday was a temporal shortcut."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Increase the FM learning rate from 0.001 to 0.002 to test whether the current model is under-optimized under its fixed early-stopping schedule.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 2,
+      "novelty": 2,
+      "feasibility": 5
+    },
+    "rationale": "The achieved model has meaningful global ranking signal but substantial context-slice headroom. Before adding feature families that screened negatively, a single optimizer-rate change is a low-cost test of whether the fixed model can reach a better interaction solution.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:0",
+      "experiment:1:segment:tab:6",
+      "experiment:1:segment:hour:16"
+    ],
+    "exact_ablation": "Change only the Adam learning_rate from 0.001 to 0.002; preserve fields, FM width, regularization, seed, batch size, maximum epochs, patience, and checkpoint criterion.",
+    "expected_effect": {
+      "GAUC": "-0.001 to +0.003 if faster optimization reaches a better within-user ordering basin.",
+      "nDCG@5": "-0.001 to +0.004 if improved optimization resolves high-score top-five inversions."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Increase FM interaction embedding width from 16 to 64 as a high-capacity latent-interaction stress test.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 3,
+      "novelty": 2,
+      "feasibility": 4
+    },
+    "rationale": "The seven-field model must represent high-cardinality user, video, and author interactions jointly with context. A substantially wider factor space is a distinct capacity regime from the 32-dimensional incremental expansion and can reveal whether the current ranker is representation-limited.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_frequency:warm_20_plus",
+      "experiment:1:segment:item_frequency:warm_20_plus",
+      "experiment:1:segment:tab:0"
+    ],
+    "exact_ablation": "Change only FM interaction_dimension from 16 to 64; preserve data processing, seven fields, objective, optimizer, learning rate, regularization, seed, batch size, and checkpoint rule.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.004 from more expressive latent user-item-author-context factors.",
+      "nDCG@5": "+0.000 to +0.005 if additional capacity improves fine-grained top-five ranking."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 2,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker",
+      "evaluation.within_user_metrics"
+    ]
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "KuaiRand context-aware recommender architectures modeling user-item-request context interactions (tab, hour, weekday) with Factorization Machines or field-aware interaction models, evaluated by within-user GAUC and nDCG@5 under temporal splits using impression-time-available features",
+      "Temporal evaluation of context-aware recommendation models for user-item ranking: interactions among user, item, tab, hour, and weekday features, comparing factorization machines, DeepFM, and cross networks on GAUC and nDCG@5 without outcome-derived or future-information features",
+      "Request-context feature interactions in recommender systems: architectures for incorporating tab, hour, and weekday alongside user and item IDs, with within-user ranking performance measured by GAUC and nDCG@5 on time-based train-test splits",
+      "Contextualized user-item recommendation under temporal splits using impression-time features: factorization machines and neural feature-interaction architectures for tab, hour, and weekday, with evidence on GAUC and top-five nDCG within users",
+      "Architecture comparisons for exploiting request_context in recommender systems, including user-item-context factorization machines, field-aware factorization machines, DeepFM, and neural cross models, evaluated on temporal within-user ranking with GAUC and nDCG@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "Implicit-feedback recommendation objectives and negative sampling methods comparing pointwise Factorization Machines with pairwise BPR, hinge loss, and listwise ranking for binary long-view labels; optimize within-user GAUC and nDCG@5 under a fixed evaluation protocol, including users with zero positive events.",
+      "Pairwise and listwise learning-to-rank losses for implicit-feedback video recommendation with binary long-view outcomes, focusing on GAUC and top-five nDCG improvements over pointwise FM training and handling users without positive interactions.",
+      "Negative sampling for implicit-feedback recommendation with sparse binary engagement labels and zero-positive users: compare uniform, popularity-aware, hard-negative, and within-user sampling for GAUC and nDCG@5 without changing the fixed evaluation protocol.",
+      "Ranking-aware training for implicit-feedback recommendation, including BPR, sampled softmax, LambdaRank, and nDCG-aware objectives, evaluated on within-user GAUC and nDCG@5 for binary long-view labels versus a pointwise Factorization Machine baseline.",
+      "Learning objectives and sampling strategies for improving both per-user AUC-style ranking and top-k nDCG in implicit-feedback recommendation, especially sparse binary long-view data and users with no positive events; exclude leakage-prone outcome-derived or unavailable-at-ranking-time features and retain fixed GAUC and nDCG@5 evaluation."
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

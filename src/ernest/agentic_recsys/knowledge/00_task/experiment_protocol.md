@@ -1,9 +1,10 @@
 # Counted-experiment and convergence protocol
 
 ## Summary and mechanism
-Ernest has a scarce budget of at most 50 successfully scored experiments. The neutral seed is
-unscored parent 0, not a baseline result. Train-only screening, planning, failed retries, and
-abandoned attempts do not receive experiment IDs and do not consume the counted budget.
+Ernest has a scarce budget of at most 50 successfully scored experiments. The selected seed scaffold
+is unscored parent 0. It may be the fresh simple scaffold or the optional KuaiRand FM baseline code,
+but neither selection inserts a measured baseline result. Train-only screening, planning, failed
+retries, and abandoned attempts do not receive experiment IDs or consume the counted budget.
 
 ## When to use / avoid
 Use this card whenever prioritizing hypotheses or interpreting lineage. Prefer one high-information,

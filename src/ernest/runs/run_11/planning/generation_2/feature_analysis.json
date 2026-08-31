@@ -1,0 +1,37 @@
+{
+  "priorities": [
+    {
+      "evidence_ids": [
+        "screen:request_context",
+        "experiment:1:metrics"
+      ],
+      "finding": "Retain request-context features (tab, hour, weekday). Training-only temporal screening shows the only positive candidate lift (+0.00221) with positive lift on all four reported days and full coverage; the resulting official-validation model reaches GAUC 0.6670 and nDCG@5 0.5358.",
+      "recommended_action": "Stop broad feature expansion and keep the leakage-safe request-context block as the selected increment. Allocate any remaining budget only to a tightly scoped, temporally validated treatment of weak request-context values rather than adding screened-out feature groups."
+    },
+    {
+      "evidence_ids": [
+        "experiment:1:segment:tab:0",
+        "experiment:1:segment:tab:6",
+        "experiment:1:segment:tab:8",
+        "experiment:1:metrics"
+      ],
+      "finding": "Tab performance is the material ranking risk. Tab 0 is large (13,726 rows) and has both weak within-user ranking (GAUC 0.5516) and very weak top-five retrieval (nDCG@5 0.0624). Tab 6 is also sizeable (5,170 rows) with GAUC 0.5989 and nDCG@5 0.1054. Tab 8 is worse but smaller (547 rows), with GAUC 0.2778 and nDCG@5 0.0255.",
+      "recommended_action": "If one additional experiment is permitted, test a leakage-safe tab-specific regularization/calibration or tab-by-hour interaction with predeclared temporal-holdout success criteria: no global primary regression and improvement in both GAUC and nDCG@5 for tab 0 and tab 6. Do not infer that the tab feature itself caused these slice weaknesses; these are post-score diagnostics."
+    },
+    {
+      "evidence_ids": [
+        "experiment:1:segment:hour:3",
+        "experiment:1:segment:hour:4",
+        "experiment:1:metrics"
+      ],
+      "finding": "Hours 3 and 4 have weak top-five ranking and weak GAUC relative to global performance: hour 3 has GAUC 0.5318 and nDCG@5 0.3871; hour 4 has GAUC 0.5446 and nDCG@5 0.3734. This supports diagnosing a genuine ranking weakness rather than relying on GAUC alone.",
+      "recommended_action": "Include hours 3 and 4 as guardrail slices in the single permitted context-treatment experiment, but do not launch a separate hour-only feature search under the strict stopping rule."
+    }
+  ],
+  "avoid": [
+    "Do not add user_profile, historical_user_author_affinity, upload_recency, content_duration, item_metadata, historical_author_response, or historical_item_response: each was rejected in training-only screening, and several have consistently negative daily lift. [screen:user_profile, screen:historical_user_author_affinity, screen:upload_recency, screen:content_duration, screen:item_metadata, screen:historical_author_response, screen:historical_item_response]",
+    "Do not use current-impression outcome fields or aggregate snapshots without per-impression availability timestamps; treat them as forbidden or quarantined leakage risks.",
+    "Do not optimize against the user_positive_count=zero slice: it is label-defined retrospective analysis with zero positives, so its zero top-five metrics are not an actionable serving feature signal. [experiment:1:segment:user_positive_count:zero]"
+  ],
+  "metric_diagnosis": "The selected model has credible global within-user ranking evidence (GAUC 0.6670), but its top-five quality is materially lower (nDCG@5 0.5358), so GAUC alone would mask retrieval failures. The most important weakness is tab 0, where both GAUC and nDCG@5 are poor at meaningful volume, establishing a ranking and top-five problem. Some low-GAUC small tabs can still show high nDCG@5, illustrating why the two metrics must be interpreted jointly and with sample size. Given that request_context is the sole positive, stable training-only screen result and all other candidate groups were rejected, the strict early-stopping decision is to retain the current block and permit at most one pre-registered context-slice remediation experiment. [screen:request_context, experiment:1:metrics, experiment:1:segment:tab:0, experiment:1:segment:tab:6, experiment:1:segment:tab:8]"
+}

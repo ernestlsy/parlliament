@@ -1,0 +1,37 @@
+{
+  "winner": {
+    "text": "Add a categorical tab-by-hour interaction feature to the additive scorer.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "The current context-aware scorer has strong overall within-user discrimination (GAUC 0.668912) but weak top-five results in several large hour slices, including hour 16 nDCG@5 0.357042 and hour 14 nDCG@5 0.363601. A single causal context conjunction can model time-of-surface effects that separate tab and hour weights cannot express.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:hour:16",
+      "experiment:1:segment:hour:14",
+      "experiment:1:segment:tab:0"
+    ],
+    "exact_ablation": "Add exactly one train-vocabulary categorical feature formed as the tuple (tab, hour) to experiment 1's existing additive user_id, video_id, tab, hour, and weekday scorer; retain the model, binary loss, optimizer, regularization, seed, and training schedule unchanged.",
+    "expected_effect": {
+      "GAUC": "+0.000 to +0.003 versus experiment 1, because tab-specific time effects may repair within-user inversions.",
+      "nDCG@5": "+0.001 to +0.005 versus experiment 1, with greater potential than GAUC because the diagnosed deficit is concentrated at top five in context slices."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.leakage_policy"
+    ]
+  },
+  "selection_rationale": "c01 is the best next scarce experiment because it is the consultant's top-ranked option (utility 0.78) and offers a focused, low-risk test of an evidenced gap: large, sufficiently populated hour slices have weak top-five performance (hour 16 nDCG@5 0.357042 across 6,858 rows; hour 14 nDCG@5 0.363601 across 6,003 rows). It preserves the proven additive model and all training settings while adding only one leakage-safe, train-vocabulary interaction that can capture tab-specific temporal effects absent from separate main effects. Its expected primary gain of 0.002 is lower than broad architecture alternatives, but its higher reliability, low runtime cost, limited validation-overfitting exposure, and clean causal attribution make it preferable under a one-experiment budget.",
+  "counted_experiments_consumed": 0
+}

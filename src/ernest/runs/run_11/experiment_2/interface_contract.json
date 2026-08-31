@@ -1,0 +1,46 @@
+{
+  "data_output": {
+    "description": "encode(splits) returns (encoded, total_dimension). encoded remains a mapping for train, valid, and test whose values are (features, labels, users). features is int32 with shape (rows, 8) in exactly this column order: user_id, video_id, author_id, tab, dur_bucket, hour, weekday, tab_hour. tab_hour is row[4] + \"\\t\" + str(math.floor(float(row[7]) / 100)); its vocabulary is fitted on train only and later-split unseen values map to its unknown bucket. labels and users retain their existing types and source-row alignment."
+  },
+  "config_keys": [
+    "seed",
+    "interaction_dimension",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Model receives the encoded int32 feature matrix of shape (batch_rows, 8), where every value is a globally offset categorical index in [0, total_dimension). Model behavior is unchanged and must score all eight fields, including their FM interactions."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

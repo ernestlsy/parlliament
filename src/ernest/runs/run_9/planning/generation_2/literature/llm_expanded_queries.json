@@ -1,0 +1,26 @@
+[
+  {
+    "alternative_queries": [
+      "Empirical studies comparing context-aware Factorization Machines with additive and interaction-only baselines for within-user recommendation ranking, using categorical impression-time context such as tab, hour, and weekday; report GAUC and nDCG@5.",
+      "Context-aware recommender systems and feature-interaction models for personalized ranking: evidence on the incremental value of tab, hour, and weekday request context beyond user, item, and content features, evaluated with GAUC and nDCG@5.",
+      "Factorization Machine architectures for within-user recommendation ranking with request-context features: studies of user-item-context interactions versus additive context effects and interaction-only baselines, including GAUC and top-five nDCG evaluation.",
+      "Empirical evaluation of categorical context features in recommendation ranking models, especially tab, hour, and weekday, comparing standard FMs, context-aware FMs, and other feature-crossing architectures on temporal holdouts with GAUC and nDCG@5.",
+      "Does a context-aware interaction architecture improve recommendation ranking over a five-field Factorization Machine? Search for studies measuring the contribution of impression-time request context and feature interactions to within-user ranking quality using GAUC and nDCG@5."
+    ],
+    "fallback_reason": null,
+    "request_index": 1,
+    "round": 1
+  },
+  {
+    "alternative_queries": [
+      "Recommender-system research on temporal distribution shift and exposure bias in logged impression data, evaluating within-user ranking robustness on fixed temporal holdouts with GAUC, nDCG@5, MAP@5, and Recall@5, including sparse-positive and cold-start user/item segments",
+      "Studies of offline recommender evaluation under logged bandit feedback and non-random exposure, focusing on temporal drift, within-user ranking validity, and robustness of GAUC and top-five metrics such as nDCG@5, MAP@5, and Recall@5 for sparse-feedback and cold-start cohorts",
+      "Empirical papers on temporal drift, impression exposure bias, and leakage-safe evaluation of recommender systems using logged impressions, with fixed-protocol confirmation of small feature gains across dates and analysis of weak tabs, sparse-positive users, and cold-start items using GAUC, nDCG@5, MAP@5, and Recall@5",
+      "Recommender-system experiment design for validating small request-context feature improvements under temporal holdout evaluation, including robustness to exposure bias and logged feedback, within-user ranking metrics, and segment-level failures among sparse-positive and cold-start users or items",
+      "Literature on robust offline ranking evaluation with temporal splits and logged impression data, covering exposure bias, sparse feedback, cold-start users/items, and discrepancies between global GAUC and top-five quality measured by nDCG@5, MAP@5, and Recall@5"
+    ],
+    "fallback_reason": null,
+    "request_index": 2,
+    "round": 1
+  }
+]

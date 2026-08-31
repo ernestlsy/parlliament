@@ -1,0 +1,45 @@
+{
+  "data_output": {
+    "description": "data.py remains unchanged and encode(splits) returns encoded split tuples (features, labels, user_ids), where features are int32 matrices with exact field order [user_id, video_id, author_id, tab, dur_bucket, hour, weekday], labels are float32 long_view values, and user_ids preserve canonical source row order. Training uses only rows dated 20220408..20220421 inclusive; validation uses the configured split. No ground truth is written to the prediction artifact."
+  },
+  "config_keys": [
+    "seed",
+    "learning_rate",
+    "l2",
+    "batch_size",
+    "max_epochs",
+    "patience",
+    "split"
+  ],
+  "model_input": {
+    "description": "Normal training supplies two equal-shaped int32 feature matrices, positive_features and negative_features, each containing encoded rows from the same user and the same seven fields [user_id, video_id, author_id, tab, dur_bucket, hour, weekday]. The pairwise method returns mean softplus(-(logit_positive-logit_negative)) with L2 regularization and updates the existing FM parameters via Adam. Prediction accepts one encoded feature matrix and returns a one-dimensional score array in input order."
+  },
+  "prediction_artifact": {
+    "path": "predictions_valid.npz",
+    "arrays": [
+      "row_ids",
+      "scores"
+    ]
+  },
+  "train_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}"
+  ],
+  "contract_command": [
+    "{python}",
+    "train.py",
+    "--config",
+    "config.json",
+    "--data-dir",
+    "{data_dir}",
+    "--output",
+    "{output}",
+    "--contract-check"
+  ]
+}

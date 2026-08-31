@@ -1,0 +1,76 @@
+{
+  "active_agents": [
+    "feature_engineer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.encode returns (encoded, total_dimension). encoded contains train, valid, and test tuples of (features, labels, users). For every split, features is an int32 array shaped (number_of_rows, 7) in field order user_id, video_id, author_id, tab, dur_bucket, hour, weekday; each column uses a vocabulary fitted exclusively on train plus that field's unknown ID and global field offset. labels remains float32 and users remains U32. Validation tuple order must exactly match canonical filtered source-log row order."
+    },
+    "config_keys": [
+      "seed",
+      "interaction_dimension",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Model receives the encoded int32 feature matrix with seven globally offset categorical IDs per row and the unchanged float32 labels during training. No model architecture or hyperparameter interface changes are required; the existing FM operates over the supplied variable-width field matrix."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "feature_engineer": {
+      "objective": "Implement the leakage-safe request-context ablation in data.py by retaining the existing tab FM field and adding exactly two new categorical FM fields, hour and weekday, so the resulting FM input has seven fields in this exact order: user_id, video_id, author_id, tab, dur_bucket, hour, weekday.",
+      "required_changes": [
+        "In data.py, change FIELDS to exactly [\"user_id\", \"video_id\", \"author_id\", \"tab\", \"dur_bucket\", \"hour\", \"weekday\"]. Do not add a second tab field: tab is already one of the parent baseline's five fields and must remain unchanged.",
+        "While reading both existing standard-log files, read the exact raw columns row[\"hourmin\"] and row[\"date\"] in addition to the existing fields. Preserve the canonical source-row append order and split filtering behavior.",
+        "Extend each internal loaded-row record consistently so raw(row) can access the raw hourmin and date values while labels, user IDs, duration bucketing, author lookup, split dates, and source row order retain their current semantics.",
+        "Derive hour exactly using the schema recipe: integer hour = floor(numeric hourmin / 100), constrained to 0..23. Implement this from raw row[\"hourmin\"]; validate the derived integer is within 0 through 23 and raise ValueError for an invalid value rather than silently remapping it. Return the categorical value as str(hour).",
+        "Derive weekday exactly using the schema recipe: calendar weekday from raw YYYYMMDD row[\"date\"], Monday=0 through Sunday=6. Parse the integer YYYYMMDD date with a calendar-date implementation (for example datetime.strptime(str(date_value), \"%Y%m%d\").weekday()), and return the categorical value as str(weekday).",
+        "Append the hour and weekday categorical values after the unchanged five baseline raw values in raw(row). Continue fitting all seven vocabularies only by iterating the training split, retain one unknown ID per field, and use those train-fitted vocabularies unchanged when encoding valid and test.",
+        "Do not read or use time_ms, long_view except as the existing label, any current-impression outcome field, or any quarantined aggregate field as an input feature."
+      ],
+      "preserve": [
+        "Keep the existing five baseline fields and their semantics unchanged: user_id from row[\"user_id\"], video_id from row[\"video_id\"], author_id from the video_features_basic_pure.csv video_id-to-author_id lookup with \"UNK\" fallback, tab from row[\"tab\"], and dur_bucket from train-only duration_ms quantile edges.",
+        "Keep LABEL, SPLITS, both existing source filenames, train/valid/test date boundaries, max_rows_per_split slicing semantics, encoded return shape convention, int32 feature dtype, float32 label dtype, U32 user dtype, and canonical input/source row ordering unchanged.",
+        "Do not modify model.py, train.py, or config.json. The FM already accepts a variable number of field indices and all optimization/model hyperparameters must remain exactly as configured."
+      ],
+      "coordination_notes": [
+        "The shared data-to-model interface after this change is encode(splits) -> (encoded, total_dimension), where encoded[split] remains (features, labels, users), features is int32 with shape (n_rows, 7), every feature entry is a globally offset categorical ID, and total_dimension is the sum of seven train-vocabulary field dimensions including unknown IDs.",
+        "Trainer behavior is not being changed: the fixed training command must continue to save predictions_valid.npz with row_ids=np.arange(len(valid_labels), dtype=np.int64) and one score per encoded validation row. Your data changes must preserve validation row order so those row_ids remain canonical validation row IDs.",
+        "The existing train.py contract-check output currently labels fields as 5, but train.py is outside this agent's ownership and is not part of this feature-only ablation; do not edit it."
+      ]
+    }
+  },
+  "reasoning": "Activate only feature_engineer because the requested ablation changes the categorical input fields while explicitly preserving the FM architecture, loss, optimizer, seed, existing configuration, and training/output behavior. The parent baseline already contains tab, so the exact non-duplicative implementation retains tab and adds canonical train-vocabulary hour and weekday, producing seven total FM fields."
+}

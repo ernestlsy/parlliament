@@ -1,0 +1,76 @@
+{
+  "ranking": [
+    {
+      "candidate_id": "c01",
+      "rank": 1,
+      "utility_score": 0.82,
+      "rationale": "Best single experiment: it directly implements the only feature family with positive aggregate lift, positive lift on all four temporal days, and full coverage. It is leakage-safe, low-runtime, and preserves a clean fixed-baseline comparison. Although the lift is smaller than its daily variability, the bundled ablation is more likely to capture the measured family signal than isolated fields."
+    },
+    {
+      "candidate_id": "c03",
+      "rank": 2,
+      "utility_score": 0.61,
+      "rationale": "Hour is the strongest compact follow-up to the positive request-context evidence, with a higher stated expected gain than tab or weekday and minimal execution risk. It is nevertheless dominated by c01 for a single scarce experiment because c01 tests the complete positively screened family."
+    },
+    {
+      "candidate_id": "c05",
+      "rank": 3,
+      "utility_score": 0.55,
+      "rationale": "A tab-by-hour token has a plausible interaction hypothesis and remains leakage-safe and cheap. However, no evidence isolates an interaction effect, and sparse or unseen joint values create more temporal-generalization risk than separate context fields. It is less evidence-grounded than c01 and less robust than c03."
+    },
+    {
+      "candidate_id": "c02",
+      "rank": 4,
+      "utility_score": 0.49,
+      "rationale": "A clean, inexpensive diagnostic of one member of the positive context family. Its expected upside is small, and it is largely subsumed by c01, which tests tab together with the other positively screened context fields."
+    },
+    {
+      "candidate_id": "c04",
+      "rank": 5,
+      "utility_score": 0.43,
+      "rationale": "Leakage-safe and cheap, but weekday has the weakest expected effect and lowest confidence among the individual context fields. It is also duplicated by the broader, better-supported c01 experiment."
+    },
+    {
+      "candidate_id": "c12",
+      "rank": 6,
+      "utility_score": 0.35,
+      "rationale": "The train-fitted seen-video flag is operationally safe and inexpensive, but there is no direct positive evidence that item coldness drives the target metric; the cited cold-item segment has only eight rows. The likely within-user ranking effect is uncertain and may merely duplicate item-ID information."
+    },
+    {
+      "candidate_id": "c07",
+      "rank": 7,
+      "utility_score": 0.31,
+      "rationale": "The objective is conceptually aligned with GAUC, but the proposal has weak empirical support, may have too few valid within-batch same-user pairs, can trade off nDCG@5, and introduces medium implementation/runtime risk. It is too risky relative to the evidence-backed context feature test."
+    },
+    {
+      "candidate_id": "c08",
+      "rank": 8,
+      "utility_score": 0.27,
+      "rationale": "A simple capacity change, but there is no diagnosis that the unscored seed FM is underfit. Doubling latent dimension raises memorization and temporal-overfit risk for sparse IDs while adding medium runtime cost."
+    },
+    {
+      "candidate_id": "c06",
+      "rank": 9,
+      "utility_score": 0.24,
+      "rationale": "Positive class weighting is easy to run but is poorly aligned with within-user ranking because it can primarily change calibration rather than ordering. No class-imbalance or ranking-loss diagnostic supports it, and it may broadly over-promote positive-prior items."
+    },
+    {
+      "candidate_id": "c11",
+      "rank": 10,
+      "utility_score": 0.2,
+      "rationale": "Rare-ID bucketing may regularize sparse entities, but it has no direct evidence of seed overfitting, requires selecting a threshold, and risks removing the personalized user-item signal most relevant to GAUC and nDCG@5. Its upside is highly uncertain."
+    },
+    {
+      "candidate_id": "c10",
+      "rank": 11,
+      "utility_score": 0.15,
+      "rationale": "This is low-risk operationally but has no evidence that the seed is overfit and only a zero expected primary gain. Stronger shrinkage can flatten useful sparse interactions; it is a weak use of the sole experiment compared with c01."
+    },
+    {
+      "candidate_id": "c09",
+      "rank": 12,
+      "utility_score": 0.11,
+      "rationale": "Reducing embedding dimension is similarly unsupported by an overfitting diagnosis, has zero expected primary gain, and has a more credible downside of underfitting fine-grained user-item ranking than c10. The stated high confidence is not justified by the supplied evidence."
+    }
+  ]
+}

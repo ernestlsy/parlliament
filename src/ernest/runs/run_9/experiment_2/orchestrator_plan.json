@@ -1,0 +1,97 @@
+{
+  "active_agents": [
+    "model_designer",
+    "trainer"
+  ],
+  "contract": {
+    "data_output": {
+      "description": "data.py remains unchanged and encode(splits) returns encoded split tuples (features, labels, user_ids), where features are int32 matrices with exact field order [user_id, video_id, author_id, tab, dur_bucket, hour, weekday], labels are float32 long_view values, and user_ids preserve canonical source row order. Training uses only rows dated 20220408..20220421 inclusive; validation uses the configured split. No ground truth is written to the prediction artifact."
+    },
+    "config_keys": [
+      "seed",
+      "learning_rate",
+      "l2",
+      "batch_size",
+      "max_epochs",
+      "patience",
+      "split"
+    ],
+    "model_input": {
+      "description": "Normal training supplies two equal-shaped int32 feature matrices, positive_features and negative_features, each containing encoded rows from the same user and the same seven fields [user_id, video_id, author_id, tab, dur_bucket, hour, weekday]. The pairwise method returns mean softplus(-(logit_positive-logit_negative)) with L2 regularization and updates the existing FM parameters via Adam. Prediction accepts one encoded feature matrix and returns a one-dimensional score array in input order."
+    },
+    "prediction_artifact": {
+      "path": "predictions_valid.npz",
+      "arrays": [
+        "row_ids",
+        "scores"
+      ]
+    },
+    "train_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}"
+    ],
+    "contract_command": [
+      "{python}",
+      "train.py",
+      "--config",
+      "config.json",
+      "--data-dir",
+      "{data_dir}",
+      "--output",
+      "{output}",
+      "--contract-check"
+    ]
+  },
+  "agent_instructions": {
+    "model_designer": {
+      "objective": "Replace pointwise BCE optimization with pairwise logistic optimization over supplied same-user positive-negative pairs while preserving the existing seven-field Factorization Machine architecture.",
+      "required_changes": [
+        "Modify only model.py.",
+        "Add a pairwise training method that accepts positive feature rows and negative feature rows with identical row counts, computes logits for both sides using the existing FM logits implementation, and minimizes mean softplus(-(positive_logit-negative_logit)) plus the existing L2 penalty.",
+        "Use pairwise gradient coefficient sigmoid(negative_logit-positive_logit); apply the positive coefficient to the positive-row FM gradients and the negative coefficient with opposite sign to the negative-row FM gradients.",
+        "Keep the existing Adam state, learning-rate, l2, seed handling, embeddings, linear weights, bias, logits, predict, state, and load_state interfaces compatible. Ensure empty-pair input returns a finite zero loss without updating parameters.",
+        "Keep prediction output as one-dimensional logits in input row order and retain numerically stable sigmoid and pairwise-loss calculations."
+      ],
+      "preserve": [
+        "Preserve the FM interaction formula and all seven encoded fields exactly: user_id, video_id, author_id, tab, dur_bucket, hour, weekday.",
+        "Preserve the current parameter initialization, optimizer hyperparameters, checkpoint state format, inference behavior, and no-ground-truth model interface.",
+        "Do not add features, change data encoding, alter the train/validation split, or use forbidden or quarantined dataset fields."
+      ],
+      "coordination_notes": [
+        "trainer will call the new pairwise method once per sampled batch using paired positive and negative feature matrices; the method must expose a stable name and return a scalar finite loss.",
+        "The pair matrices are constructed from encoded data whose exact raw sources remain user_id, video_id, tab, duration_ms, hourmin, date, and the video_features_basic_pure.csv author_id join; derived values remain hour=floor(numeric hourmin/100) constrained to 0..23, weekday from date with Monday=0, and dur_bucket from training-only duration_ms quantiles.",
+        "Do not require users or labels in model.py; pair eligibility and sampling are trainer responsibilities."
+      ]
+    },
+    "trainer": {
+      "objective": "Construct exactly one deterministic same-user positive-negative pair for each eligible training user represented in each minibatch, train through the model's pairwise method, and preserve the fixed evaluation and prediction artifact contract.",
+      "required_changes": [
+        "Modify only train.py; do not modify config.json because no configuration change is required.",
+        "Retain data loading, encode calls, training cutoff, configured split, validation feature order, early stopping, checkpoint selection, and fixed evaluator separation.",
+        "For every minibatch, group its training rows by the encoded user_ids returned by encode. Eligible users have at least one label equal to 1 and at least one label equal to 0. Sample exactly one positive row and one negative row per eligible user using the existing seeded NumPy generator, with deterministic behavior under the configured seed.",
+        "Call model.pairwise_step or the exact pairwise method name supplied by model_designer with positive_features and negative_features; do not call the old pointwise BCE step during normal training.",
+        "Keep contract-check execution finite and compatible by probing the pairwise method with a small valid pair set when available, while retaining the existing prediction-shape and finite-value checks.",
+        "After restoring the best checkpoint, write args.output with np.savez containing exactly two arrays named row_ids and scores. Set row_ids to np.arange(len(valid_labels), dtype=np.int64) and scores to model.predict(valid_features), preserving canonical validation source row order. Do not write labels or any other arrays."
+      ],
+      "preserve": [
+        "Preserve the current training-date cutoff through data.py's train split of dates 20220408 through 20220421 inclusive and preserve validation as configured, normally dates 20220422 through 20220428 inclusive.",
+        "Preserve the existing seven-field encoded input and its canonical order: user_id, video_id, author_id, tab, dur_bucket, hour, weekday.",
+        "Preserve validation metric computation, early stopping, checkpoint selection, output path handling, and the fixed evaluator as the sole loader of validation ground truth.",
+        "Do not introduce aliases for raw columns, outcome-derived inputs, validation statistics, forbidden fields, quarantined aggregates, or any new feature."
+      ],
+      "coordination_notes": [
+        "Use valid_users from encoded['train'] for grouping; pair selection must be within the current user batch and must never cross users.",
+        "The model_designer pairwise method must accept positive_features and negative_features with matching shapes and return a scalar loss.",
+        "Do not change config.json defaults or add configuration keys; the existing keys remain seed, interaction_dimension, learning_rate, l2, batch_size, max_epochs, patience, and split.",
+        "The fixed command must continue to emit predictions_valid.npz with exactly row_ids and scores in canonical validation row order."
+      ]
+    }
+  },
+  "reasoning": "The requested ablation changes both the optimization primitive and the required minibatch pair construction. model.py owns the pairwise FM gradient implementation, while train.py owns user grouping, one-pair sampling, batching, checkpointing, and the prediction artifact. data.py and config.json are not needed because the exact seven-field encoding, cutoff, split, and existing hyperparameter interface must remain unchanged."
+}

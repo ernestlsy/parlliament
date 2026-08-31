@@ -1,0 +1,377 @@
+[
+  {
+    "text": "Replace the Factorization Machine interaction scorer with an embedding-plus-MLP scorer while retaining the same seven fields, train/validation split, BCE objective, optimizer, and early-stopping rule.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The current model captures only second-order additive interactions. A nonlinear scorer could model context-dependent user-video preferences and may address the severe tab-specific ranking weaknesses. The measured request-context addition already produced a positive primary screening lift, indicating that the input fields contain incremental signal.",
+    "candidate_id": "c01",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context",
+      "experiment:1:segment:tab:8"
+    ],
+    "exact_ablation": "Replace only the FM scoring function with a two-layer embedding MLP; keep the seven encoded fields, data loader, labels, BCE loss, optimizer settings, split, and checkpoint selection unchanged.",
+    "expected_effect": {
+      "GAUC": "Moderate positive increase, approximately +0.003 to +0.008, if nonlinear user-video-context interactions improve within-user separation.",
+      "nDCG@5": "Small-to-moderate positive increase, approximately +0.002 to +0.007, with the largest potential benefit in weak context slices; it could be flat if the MLP overfits sparse combinations."
+    },
+    "expected_primary_gain": 0.005,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Add a single low-rank cross branch to the existing embedding scorer so bounded higher-order interactions among user, video, and request-context fields are learned explicitly.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 6
+    },
+    "rationale": "The positive request-context result suggests that context changes candidate ordering, while very low GAUC and nDCG@5 in tabs 8 and 3 suggest that additive field effects may be insufficient. A regularized cross branch is a targeted architecture change rather than a feature expansion.",
+    "candidate_id": "c02",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:tab:3"
+    ],
+    "exact_ablation": "Add exactly one two-layer low-rank cross branch to the current FM model and sum its output with the existing logit; leave fields, loss, optimizer, and all hyperparameters other than the new branch fixed.",
+    "expected_effect": {
+      "GAUC": "Small-to-moderate positive increase, approximately +0.002 to +0.006, from better context-conditioned ordering.",
+      "nDCG@5": "Moderate positive increase, approximately +0.003 to +0.008, if cross terms correct top-five placement in weak tabs; rare combinations may instead cause volatility."
+    },
+    "expected_primary_gain": 0.0045,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "architecture.deep_cross_ranker"
+    ]
+  },
+  {
+    "text": "Replace pointwise BCE training with within-user pairwise logistic ranking loss using one positive-negative pair per eligible training user batch.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 8,
+      "feasibility": 6
+    },
+    "rationale": "The official objective is within-user ordering, whereas the current model is trained pointwise. The gap between useful global ordering and weak top-five slices makes an ordering-aligned objective a high-information alternative, though sparse users may provide few valid pairs.",
+    "candidate_id": "c03",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:one",
+      "experiment:1:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Replace only BCE with pairwise logistic loss over sampled same-user positive-negative pairs; preserve the FM architecture, seven fields, optimizer, split, pair construction cutoff, and evaluation code.",
+    "expected_effect": {
+      "GAUC": "Moderate positive increase, approximately +0.003 to +0.009, because optimization directly rewards positive-over-negative ordering within users.",
+      "nDCG@5": "Small positive or flat change, approximately -0.001 to +0.005; pair sampling may improve broad ordering without reliably improving the first five positions."
+    },
+    "expected_primary_gain": 0.004,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  },
+  {
+    "text": "Use a top-rank-weighted pairwise loss that emphasizes the highest-scoring positive-negative violations during training.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 9,
+      "novelty": 9,
+      "feasibility": 5
+    },
+    "rationale": "nDCG@5 is materially lower than GAUC in the current result, and the weakest tabs show that top-five quality is the principal user-facing weakness. A top-weighted ranking loss directly targets this metric tradeoff rather than adding more fields.",
+    "candidate_id": "c04",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:user_positive_count:one"
+    ],
+    "exact_ablation": "Replace only the current BCE objective with a top-rank-weighted pairwise logistic loss using model-score-based violation weights; retain the FM, features, optimizer, batch construction, and split.",
+    "expected_effect": {
+      "GAUC": "Small positive or slightly negative change, approximately -0.002 to +0.004, because emphasizing top violations can sacrifice some broad pair ordering.",
+      "nDCG@5": "Moderate positive increase, approximately +0.003 to +0.010, if the loss concentrates learning on candidates that can enter the top five."
+    },
+    "expected_primary_gain": 0.0035,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "loss"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Increase the FM interaction embedding dimension from 16 to 32 without changing the fields or training procedure.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "The current seven-field model may be capacity-limited when representing user-video-context interactions. This is a clean low-risk capacity ablation, especially because the request-context screen showed measurable incremental signal but the observed gain was modest.",
+    "candidate_id": "c05",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context",
+      "experiment:1:segment:hour:4"
+    ],
+    "exact_ablation": "Change only interaction_dimension from 16 to 32; keep the seven fields, FM equations, BCE objective, learning rate, L2, batch size, seed, split, and stopping rule fixed.",
+    "expected_effect": {
+      "GAUC": "Small positive increase, approximately +0.001 to +0.004, if additional dimensions capture stable context interactions.",
+      "nDCG@5": "Small positive or flat change, approximately -0.001 to +0.003; extra capacity may not improve top-five ordering in sparse slices."
+    },
+    "expected_primary_gain": 0.0018,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings"
+    ]
+  },
+  {
+    "text": "Reduce FM interaction embedding dimension from 16 to 8 to regularize sparse context combinations.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 6,
+      "feasibility": 10
+    },
+    "rationale": "Request-context gains vary substantially by date, and several small context segments are unstable. Lower capacity could reduce memorization of rare tab-hour combinations and improve temporal robustness, although it may underfit warm users.",
+    "candidate_id": "c06",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:3",
+      "experiment:1:segment:hour:3"
+    ],
+    "exact_ablation": "Change only interaction_dimension from 16 to 8; keep fields, FM equations, loss, optimizer, L2, seed, split, and checkpoint selection unchanged.",
+    "expected_effect": {
+      "GAUC": "Flat to slightly positive, approximately -0.002 to +0.003, if regularization improves stability across context slices.",
+      "nDCG@5": "Flat to slightly negative, approximately -0.003 to +0.002, because lower capacity may lose useful personalized top-five distinctions."
+    },
+    "expected_primary_gain": 0.0002,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "architecture"
+    ],
+    "literature_document_ids": [
+      "features.entity_id_embeddings"
+    ]
+  },
+  {
+    "text": "Represent hour as a cyclic pair of normalized sine and cosine values instead of a categorical hour field.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "Hour segments 3 and 4 have particularly weak ranking metrics, suggesting that independent categorical hour embeddings may generalize poorly across adjacent times. A cyclic representation shares strength between neighboring hours while preserving impression-time availability.",
+    "candidate_id": "c07",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:hour:3",
+      "experiment:1:segment:hour:4"
+    ],
+    "exact_ablation": "Replace only the categorical hour field with two cyclic numeric features sin(2\u03c0hour/24) and cos(2\u03c0hour/24); retain tab, weekday, the other five fields, FM implementation, and training configuration.",
+    "expected_effect": {
+      "GAUC": "Small positive increase, approximately +0.001 to +0.004, from smoother temporal generalization within users.",
+      "nDCG@5": "Small positive increase, approximately +0.001 to +0.004, if adjacent-hour behavior is similar; categorical effects may otherwise be stronger."
+    },
+    "expected_primary_gain": 0.002,
+    "confidence": 5,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy"
+    ]
+  },
+  {
+    "text": "Remove weekday while retaining hour, tab, and the original five fields to test whether the measured request-context benefit is driven by weekday rather than the more granular context fields.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 7,
+      "feasibility": 10
+    },
+    "rationale": "The completed experiment added three context fields together, so their individual contributions are unidentified. This single-field ablation is a useful portfolio member because it can isolate unnecessary capacity and distinguish robust hour/tab signal from weaker calendar effects.",
+    "candidate_id": "c08",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:hour:13"
+    ],
+    "exact_ablation": "Remove only the weekday categorical field; retain tab, hour, user_id, video_id, author_id, duration bucket, model, loss, optimizer, and split unchanged.",
+    "expected_effect": {
+      "GAUC": "Small negative or flat change, approximately -0.003 to +0.001, if weekday contributes little incremental within-user ordering.",
+      "nDCG@5": "Small negative or flat change, approximately -0.003 to +0.001, with no expected benefit unless weekday overfits."
+    },
+    "expected_primary_gain": -0.001,
+    "confidence": 6,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics"
+    ]
+  },
+  {
+    "text": "Add impression date as a categorical field to model short-term temporal drift beyond weekday and hour.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 7,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The request-context screen had positive lift on three of four dates, with especially large late holdout-day gains, indicating possible non-periodic temporal variation. Date is known at impression time, but the small number of dates creates a clear overfitting risk.",
+    "candidate_id": "c09",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:metrics",
+      "experiment:1:segment:hour:20"
+    ],
+    "exact_ablation": "Add only a train-vocabulary categorical date field; retain all existing fields, FM architecture, BCE objective, optimizer, and split policy unchanged, with unknown date handling for later dates.",
+    "expected_effect": {
+      "GAUC": "Small positive or flat change, approximately -0.001 to +0.004, if date captures temporal drift that reorders candidates within users.",
+      "nDCG@5": "Small positive or negative change, approximately -0.003 to +0.004, because date memorization may improve some periods while harming generalization."
+    },
+    "expected_primary_gain": 0.0008,
+    "confidence": 4,
+    "leakage_risk": "medium",
+    "runtime_risk": "low",
+    "active_components": [
+      "features"
+    ],
+    "literature_document_ids": [
+      "task.leakage_policy",
+      "dataset.inventory_and_splits"
+    ]
+  },
+  {
+    "text": "Apply feature dropout only to the request-context fields during FM training so the model does not rely excessively on unstable tab-hour combinations.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 8
+    },
+    "rationale": "The context addition is promising but its daily primary lift has high variability, and several context slices are weak. Context-specific dropout could preserve the signal while improving robustness to distribution shift and rare combinations.",
+    "candidate_id": "c10",
+    "evidence_ids": [
+      "screen:request_context",
+      "experiment:1:segment:tab:8",
+      "experiment:1:segment:hour:4"
+    ],
+    "exact_ablation": "During training only, independently mask tab, hour, and weekday categorical inputs with probability 0.10; leave inference inputs, fields, FM equations, loss, optimizer, and all other settings unchanged.",
+    "expected_effect": {
+      "GAUC": "Small positive increase, approximately +0.001 to +0.004, if robustness improves across unstable context slices.",
+      "nDCG@5": "Small positive or flat change, approximately -0.002 to +0.004; masking may reduce precise top-five personalization."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "architecture.embedding_mlp_ranker"
+    ]
+  },
+  {
+    "text": "Lower the learning rate from 0.001 to 0.0005 while retaining the same model, fields, loss, batch size, and early-stopping patience.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 6,
+      "novelty": 5,
+      "feasibility": 10
+    },
+    "rationale": "The observed request-context gain is close to the scale of daily variability, so optimization noise may materially affect the checkpoint. A smaller step size may stabilize the interaction embeddings and improve reproducibility, especially in weak context slices.",
+    "candidate_id": "c11",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "screen:request_context",
+      "experiment:1:segment:tab:8"
+    ],
+    "exact_ablation": "Change only learning_rate from 0.001 to 0.0005; preserve architecture, fields, BCE, batch size, seed, maximum epochs, patience, split, and checkpoint selection.",
+    "expected_effect": {
+      "GAUC": "Flat to slightly positive, approximately -0.002 to +0.003, through more stable embedding optimization.",
+      "nDCG@5": "Flat to slightly positive, approximately -0.003 to +0.003; slower optimization may miss the best checkpoint under the fixed epoch budget."
+    },
+    "expected_primary_gain": 0.0005,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "low",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "experiment.paired_group_bootstrap_confirmation"
+    ]
+  },
+  {
+    "text": "Replace uniform BCE minibatches with user-stratified minibatches that preserve multiple impressions per user while keeping the natural validation distribution unchanged.",
+    "parent_experiment_id": 1,
+    "scores": {
+      "interestingness": 8,
+      "novelty": 8,
+      "feasibility": 7
+    },
+    "rationale": "The official metrics are within-user ranking metrics, and sparse-positive users show very different top-five behavior from users with more positives. More user-coherent training batches may expose the model to within-user contrasts instead of letting high-volume users dominate optimization.",
+    "candidate_id": "c12",
+    "evidence_ids": [
+      "experiment:1:metrics",
+      "experiment:1:segment:user_positive_count:zero",
+      "experiment:1:segment:user_positive_count:two_to_four"
+    ],
+    "exact_ablation": "Change only training minibatch construction to sample a fixed number of users and impressions per user per batch, without changing row inclusion, labels, model, loss, optimizer, or validation scoring.",
+    "expected_effect": {
+      "GAUC": "Small positive increase, approximately +0.001 to +0.005, if user-level contrast structure is learned more evenly.",
+      "nDCG@5": "Small positive or negative change, approximately -0.002 to +0.004, because rebalancing training users can alter emphasis away from the natural impression distribution."
+    },
+    "expected_primary_gain": 0.0015,
+    "confidence": 4,
+    "leakage_risk": "low",
+    "runtime_risk": "medium",
+    "active_components": [
+      "training"
+    ],
+    "literature_document_ids": [
+      "evaluation.within_user_metrics",
+      "task.kuairand_ranking"
+    ]
+  }
+]
